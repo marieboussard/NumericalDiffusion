@@ -1,0 +1,1 @@
+apply(f::Base.Callable, X) = [f(x) for x in X]
