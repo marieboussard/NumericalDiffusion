@@ -6,13 +6,19 @@ struct FVSolution
     domain::Domain
     u_approx
     Nt::Int
-    dt_vec::Vector{Real}
-    t_vec::Vector{Real}
+    dt_vec
+    t_vec
 end
 
 function scheme_step(v, dt, dx, equation::Equation, method::FVMethod)
     Nx = length(v)
-    numericalFluxVec = vcat(numFlux(method, equation, v[end], v[1]), [numFlux(method, equation, v[j], v[j+1]) for j in 1:Nx-1], numFlux(method, equation, v[end], v[1]))
+    numericalFluxVec = zeros(eltype(v), Nx + 1)
+    #vcat(numFlux(method, equation, v[end], v[1]), [numFlux(method, equation, v[j], v[j+1]) for j in 1:Nx-1], numFlux(method, equation, v[end], v[1]))
+    for i ∈ 2:Nx
+        numericalFluxVec[i] = numFlux(method, equation, v[i-1], v[i])
+    end
+    numericalFluxVec[1] = numFlux(method, equation, v[end], v[1])
+    numericalFluxVec[end] = numericalFluxVec[1]
     v - dt / dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1])
 end
 
@@ -21,12 +27,11 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
     t0, Tf, dx = domain.t0, domain.Tf, domain.dx
     t = t0
-    Nt::Int = 0
+    Nt = 0
 
-    u_approx = Vector{Real}[]
-    dt_vec = Real[]
-    t_vec = Real[]
-    push!(u_approx, apply(u_init, domain.x))
+    u_approx = [u_init.(domain.x)]
+    dt_vec = Float64[]
+    t_vec = Float64[]
 
     while t < Tf
 

@@ -27,3 +27,25 @@ function u0_burgers_article(x::Real)
         return 3 - 3 / 2 * x
     end
 end
+
+""" Saint Venant equation """
+
+struct SaintVenant <: Equation end
+
+g = 9.8
+
+
+function flux_SV(v)
+    h, hu = v
+    return [hu, hu^2 / h + g * h^2 / 2]
+end
+
+
+function Df_SV(v)
+    res =
+        for vi in v
+            h, hu = vi
+            res.append(np.array([[0, 1], [-(hu^2) / h^2 + g * h, 2 * hu / h]]))
+        end
+    return np.array(res)
+end
