@@ -15,9 +15,11 @@ end
 get_sL(::Roe) = 1
 get_sR(::Roe) = 1
 
-function numFlux(::Rusanov, equation::Equation, uL::Real, uR::Real)
-    A = max(abs(D_flux(equation, uL)), abs(D_flux(equation, uR)))
-    (flux(equation, uL) + flux(equation, uR)) / 2 - A / 2 * (uR - uL)
+function numFlux(::Rusanov, equation::Equation, uL, uR)
+    #A = max(abs(D_flux(equation, uL)), abs(D_flux(equation, uR)))
+    #A = max(CFL_cond(equation, uL), CFL_cond(equation, uR))
+    A = CFL_cond(equation, [uL, uR])
+    (flux(equation, uL) .+ flux(equation, uR)) / 2 .- A / 2 * (uR .- uL)
 end
 
 function numFlux(::Roe, equation::Equation, uL::Real, uR::Real)
@@ -41,7 +43,17 @@ function exactG(method::Rusanov, equation::Equation, u)
     for i in 1:Nx-1
         G[i+1] = exactEntropicNumFlux(method, equation, u[i], u[i+1])
     end
-    G[1] = exactEntropicNumFlux(method, equation, u[end], u[1])
-    G[end] = G[1]
+    G[begin] = exactEntropicNumFlux(method, equation, u[end], u[begin])
+    G[end] = G[begin]
     G
 end
+
+
+# # CFL condition
+
+# abstract type CFLType end
+# struct ScalarCFL <: CFLType end
+# struct SVCFL <: CFLType end
+
+# CFL_cond(::ScalarCFL, v, equation) = max(abs(D_flux(equation, v)))
+# CFL_cond(::SVCFL, v; equation=SaintVenant) = max([vi[1] / vi[0] + sqrt(g * vi[0]) for vi in v])

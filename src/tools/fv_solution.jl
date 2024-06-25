@@ -12,7 +12,7 @@ end
 
 function scheme_step(v, dt, dx, equation::Equation, method::FVMethod)
     Nx = length(v)
-    numericalFluxVec = zeros(eltype(v), Nx + 1)
+    numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)#zeros(eltype(v), Nx + 1)
     #vcat(numFlux(method, equation, v[end], v[1]), [numFlux(method, equation, v[j], v[j+1]) for j in 1:Nx-1], numFlux(method, equation, v[end], v[1]))
     for i ∈ 2:Nx
         numericalFluxVec[i] = numFlux(method, equation, v[i-1], v[i])
@@ -35,7 +35,10 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
     while t < Tf
 
-        dt = min(method.CFL_factor * dx / max(D_flux(equation, u_approx[end])...), Tf - t)
+        #dt = min(method.CFL_factor * dx / max(D_flux(equation, u_approx[end])...), Tf - t)
+        #print(u_approx[end])
+        #@show typeof(CFL_cond(equation, u_approx[end]))
+        dt = min(method.CFL_factor * dx / CFL_cond(equation, u_approx[end]), Tf - t)
 
         push!(dt_vec, dt)
         push!(t_vec, t + dt)
