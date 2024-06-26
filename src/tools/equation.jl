@@ -1,7 +1,18 @@
 abstract type Equation end
 abstract type ScalarEquation <: Equation end
 
-struct Burgers <: ScalarEquation end
+# Handling of source terms
+
+abstract type Source end
+struct NullSource <: Source end
+
+
+
+struct Burgers <: ScalarEquation
+    source::Source
+end
+
+burgers() = Burgers(NullSource())
 
 flux(::Burgers, x) = x^2 / 2
 D_flux(::Burgers, x) = x
@@ -31,7 +42,12 @@ end
 
 """ Saint Venant equation """
 
-struct SaintVenant <: Equation end
+struct SaintVenant <: Equation
+    source::Source
+end
+
+abstract type ZbSource <: Source end
+struct Bump_zb <: ZbSource end
 
 g = 9.8
 
@@ -66,15 +82,15 @@ end
 # def source_ex(v, x):
 #     return np.array([np.zeros(v.T[0].shape), -v.T[0] * g * (-x + 0.5)]).T
 
-abstract type ZbFun end
-struct Bump_zb <: ZbFun end
-
 zb(::Bump_zb, x) = -0.5 .* x .* (-1 .+ x)
+Dzb(::Bump_zb, x) = -x .+ 0.5
 
-#v0_lake_at_rest(x, zbFun::ZbFun; c=1) = [[c - zb(zbFun, xi), 0] for xi in x]
-v0_lake_at_rest(x, zbFun::ZbFun; c=1) = [c - zb(zbFun, x), 0]
 
-bump_source(v, x) = [[0.0, -v[i][0] * g * (-x[i] + 0.5)] for i in eachindex(v)]
+v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [c - zb(zbSource, x), 0]
+
+sourceTerm(zbSource::ZbSource, x, v) = [[0.0, -v[i][1] * g * Dzb(zbSource, x)[i]] for i in eachindex(v)]
+
+#bump_source(v, x) = [[0.0, -v[i][0] * g * (-x[i] + 0.5)] for i in eachindex(v)]
 
 CFL_cond(equation::ScalarEquation, v) = max(abs.(D_flux(equation, v))...)
 CFL_cond(::SaintVenant, v) = max([vi[2] / vi[1] + sqrt(g * vi[1]) for vi in v]...)

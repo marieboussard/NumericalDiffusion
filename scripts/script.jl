@@ -8,7 +8,7 @@ include("../src/opt_diffusion.jl")
 
 CFL_number = 0.5
 domain = createInterval(-2, 2, 100, 0, 0.4)
-@time sol = fv_solve(domain, u0_burgers_article, Burgers(), Rusanov(CFL_number))
+@time sol = fv_solve(domain, u0_burgers_article, burgers(), Rusanov(CFL_number))
 plot_fv_sol(sol, uexact_burgers_article)
 
 # @time sol = optimize_for_entropy(u0_burgers_article, domain, Burgers(), Roe(CFL_number))

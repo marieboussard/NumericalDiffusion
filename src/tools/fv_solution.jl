@@ -2,6 +2,8 @@ include("utils.jl")
 include("domain.jl")
 include("method.jl")
 
+
+
 struct FVSolution
     domain::Domain
     u_approx
@@ -10,7 +12,7 @@ struct FVSolution
     t_vec
 end
 
-function scheme_step(v, dt, dx, equation::Equation, method::FVMethod)
+function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
     Nx = length(v)
     numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)#zeros(eltype(v), Nx + 1)
     #vcat(numFlux(method, equation, v[end], v[1]), [numFlux(method, equation, v[j], v[j+1]) for j in 1:Nx-1], numFlux(method, equation, v[end], v[1]))
@@ -19,7 +21,18 @@ function scheme_step(v, dt, dx, equation::Equation, method::FVMethod)
     end
     numericalFluxVec[1] = numFlux(method, equation, v[end], v[1])
     numericalFluxVec[end] = numericalFluxVec[1]
-    v - dt / dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1])
+    v - dt / domain.dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1])
+end
+
+function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    Nx = length(v)
+    numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
+    for i ∈ 2:Nx
+        numericalFluxVec[i] = giveNumFlux(method, equation, v[i-1], v[i]; xL=domain.x[i-1], xR=domain.x[i])
+    end
+    numericalFluxVec[1] = giveNumFlux(method, equation, v[end], v[1]; xL=domain.x[end], xR=domain.x[1])
+    numericalFluxVec[end] = numericalFluxVec[1]
+    v - dt / domain.dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1]) + dt * sourceTerm(zbSource, domain.x, v)
 end
 
 
@@ -31,7 +44,7 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
     u_approx = [u_init.(domain.x)]
     dt_vec = Float64[]
-    t_vec = Float64[]
+    t_vec = Float64[0.0]
 
     while t < Tf
 
@@ -42,7 +55,7 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
         push!(dt_vec, dt)
         push!(t_vec, t + dt)
-        push!(u_approx, scheme_step(u_approx[end], dt, dx, equation, method))
+        push!(u_approx, scheme_step(equation.source, u_approx[end], dt, domain, equation, method))
 
         t += dt
         Nt += 1

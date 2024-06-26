@@ -15,15 +15,18 @@ end
 get_sL(::Roe) = 1
 get_sR(::Roe) = 1
 
+struct Hydrostatic <: FVMethod
+    CFL_factor::Float64
+    subMethod::FVMethod
+end
+
 function numFlux(::Rusanov, equation::Equation, uL, uR)
-    #A = max(abs(D_flux(equation, uL)), abs(D_flux(equation, uR)))
-    #A = max(CFL_cond(equation, uL), CFL_cond(equation, uR))
     A = CFL_cond(equation, [uL, uR])
     (flux(equation, uL) .+ flux(equation, uR)) / 2 .- A / 2 * (uR .- uL)
 end
 
-function numFlux(::Roe, equation::Equation, uL::Real, uR::Real)
-    sigma = (flux(equation, uR) - flux(equation, uL)) / (uR - uL)
+function numFlux(::Roe, equation::Equation, uL, uR)
+    sigma = (flux(equation, uR) .- flux(equation, uL)) ./ (uR .- uL)
     if sigma < 0
         return flux(equation, uR)
     else
@@ -31,6 +34,15 @@ function numFlux(::Roe, equation::Equation, uL::Real, uR::Real)
     end
 end
 
+function numFlux(hydro::Hydrostatic, equation::Equation, vL, vR; xL=0, xR=0)
+    zL, zR = zb(ZbSource, xL), zb(ZbSource, xR)
+    hminus, hplus = max(0, vL[1] + zL - max(zL, zR)), max(0, vR[1] + zR - max(zL, zR))
+    vminus, vplus = [hminus, hminus * vL[2] / vL[1]], [hplus, hplus * vR[2] / vR[1]]
+    numFlux(hydro.subMethod, equation, vminus, vplus)
+end
+
+giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)
+giveNumFlux(method::FVMethod, equation::Equation, vL, vR; kwargs...) = numFlux(method, equation::Equation, vL, vR)
 
 function exactEntropicNumFlux(::Rusanov, equation::Equation, uL, uR)
     A = max(abs(D_flux(equation, uL)), abs(D_flux(equation, uR)))
