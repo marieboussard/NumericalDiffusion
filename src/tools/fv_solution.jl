@@ -1,7 +1,7 @@
 include("utils.jl")
 include("domain.jl")
 include("method.jl")
-
+include("source_term.jl")
 
 
 struct FVSolution
@@ -32,7 +32,7 @@ function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equati
     end
     numericalFluxVec[1] = giveNumFlux(method, equation, v[end], v[1]; xL=domain.x[end], xR=domain.x[1])
     numericalFluxVec[end] = numericalFluxVec[1]
-    v - dt / domain.dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1]) + dt * sourceTerm(zbSource, domain.x, v)
+    v - dt / domain.dx * (numericalFluxVec[2:end] - numericalFluxVec[1:end-1]) + dt * sourceTerm(method, zbSource, domain, v)
 end
 
 
@@ -42,7 +42,8 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
     t = t0
     Nt = 0
 
-    u_approx = [u_init.(domain.x)]
+    #u_approx = [u_init.(domain.x)]
+    u_approx = [u_init]
     dt_vec = Float64[]
     t_vec = Float64[0.0]
 

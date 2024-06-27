@@ -1,3 +1,5 @@
+#include("method.jl")
+
 abstract type Equation end
 abstract type ScalarEquation <: Equation end
 
@@ -70,25 +72,6 @@ function D_flux(::SaintVenant, v)
 end
 
 
-# def v0_lake_at_rest(x, zb, c):
-#     # c is the constant surface (c=h+z)
-#     return np.array([c - zb(x), np.zeros(len(x))]).T
-
-
-# def v0_init(x):
-#     return v0_lake_at_rest(x, lambda x: -0.5 * x * (x - 1), 1)
-
-
-# def source_ex(v, x):
-#     return np.array([np.zeros(v.T[0].shape), -v.T[0] * g * (-x + 0.5)]).T
-
-zb(::Bump_zb, x) = -0.5 .* x .* (-1 .+ x)
-Dzb(::Bump_zb, x) = -x .+ 0.5
-
-
-v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [c - zb(zbSource, x), 0]
-
-sourceTerm(zbSource::ZbSource, x, v) = [[0.0, -v[i][1] * g * Dzb(zbSource, x)[i]] for i in eachindex(v)]
 
 #bump_source(v, x) = [[0.0, -v[i][0] * g * (-x[i] + 0.5)] for i in eachindex(v)]
 
