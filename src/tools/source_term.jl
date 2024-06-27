@@ -8,12 +8,15 @@ Dzb(::Bump_zb, x) = (-x .+ 0.5) .* 5
 # zb(::Bump_zb, x) = 0.1 * cos.(100 * pi * x)
 # Dzb(::Bump_zb, x) = -0.1 * 100 * pi * sin.(10 * pi * x)
 
+#perturb(x, xleft, xright) = sin(pi * (x - xleft) / (xright - xleft))
+perturb(x, xleft, xright) = 1
+
 function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.1)
     #@show xleft, xright, x
     if x < xleft
         return [max(0, c - zb(zbSource, x)), 0]
-    elseif x < xright
-        return [max(0, c - zb(zbSource, x)) + c * height * sin(pi * (x - xleft) / (xright - xleft)), 0]
+    elseif x <= xright
+        return [max(0, c - zb(zbSource, x)) + c * height * perturb(x, xleft, xright), 0]
     else
         return [max(0, c - zb(zbSource, x)), 0]
     end

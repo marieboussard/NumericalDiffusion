@@ -2,7 +2,7 @@ using Plots
 
 include("../src/tools/fv_solution.jl")
 
-Nx = 100
+Nx = 20
 
 omega = createUnitInterval(Nx, 0.0, 0.4)
 v0 = v0_lake_at_rest(omega.x, Bump_zb())
@@ -53,30 +53,30 @@ end
 pltfin = plot(pltA..., layout=(2, 2), size=(1200, 1000))
 
 
-# Water flow
+# # Water flow
 
-pltB = []
+# pltB = []
 
-for j in eachindex(sol_vec)
+# for j in eachindex(sol_vec)
 
-    p = div(sol_vec[j].Nt, nb_plots)
+#     p = div(sol_vec[j].Nt, nb_plots)
 
-    plt = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
-        legendfontsize=10,
-        titlefontsize=14,
-        guidefontsize=14,
-        tickfontsize=14)
+#     plt = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
+#         legendfontsize=10,
+#         titlefontsize=14,
+#         guidefontsize=14,
+#         tickfontsize=14)
 
-    xlabel!("x")
-    ylabel!("Water flow")
-    title!(label_vec[j] * " " * string(Nx))
+#     xlabel!("x")
+#     ylabel!("Water flow")
+#     title!(label_vec[j] * " " * string(Nx))
 
-    for k in 0:nb_plots-1
-        plot!(omega.x, [sol_vec[j].u_approx[k*p+1][i][2] for i in 1:Nx], label="t = " * string(round(sol_vec[j].t_vec[k*p+1], sigdigits=2)))
-    end
+#     for k in 0:nb_plots-1
+#         plot!(omega.x, [sol_vec[j].u_approx[k*p+1][i][2] for i in 1:Nx], label="t = " * string(round(sol_vec[j].t_vec[k*p+1], sigdigits=2)))
+#     end
 
-    push!(pltB, plt)
+#     push!(pltB, plt)
 
-end
+# end
 
-pltfinB = plot(pltB..., layout=(2, 2), size=(1200, 1000))
+# pltfinB = plot(pltB..., layout=(2, 2), size=(1200, 1000))
