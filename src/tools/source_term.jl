@@ -1,5 +1,5 @@
-include("equation.jl")
-include("method.jl")
+# include("equation.jl")
+# include("method.jl")
 
 
 zb(::Bump_zb, x) = (-0.5 .* x .* (-1 .+ x)) .* 5

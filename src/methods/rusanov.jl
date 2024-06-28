@@ -1,4 +1,4 @@
-include("abstract_methods.jl")
+#include("abstract_methods.jl")
 
 struct Rusanov <: FVMethod
     CFL_factor::Float64

@@ -1,4 +1,4 @@
-include("abstract_equations.jl")
+#include("abstract_equations.jl")
 
 struct Burgers <: ScalarEquation
     source::Source

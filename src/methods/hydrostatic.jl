@@ -1,10 +1,12 @@
-include("abstract_methods.jl")
-include("../equations/source_terms.jl")
+# include("abstract_methods.jl")
+# include("../equations/source_terms.jl")
 
 struct Hydrostatic <: FVMethod
     CFL_factor::Float64
     subMethod::FVMethod
 end
+
+createHydrostatic(CFL_factor::Float64, subMethod::DataType) = Hydrostatic(CFL_factor, subMethod(CFL_factor))
 
 get_sL(::Hydrostatic) = 1
 get_sR(::Hydrostatic) = 1

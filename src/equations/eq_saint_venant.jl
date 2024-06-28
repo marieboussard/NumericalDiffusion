@@ -1,5 +1,5 @@
-include("abstract_equations.jl")
-include("source_terms.jl")
+# include("abstract_equations.jl")
+# include("source_terms.jl")
 
 g = 9.8
 
@@ -20,11 +20,21 @@ end
 
 CFL_cond(::SaintVenant, v) = max([vi[2] / vi[1] + sqrt(g * vi[1]) for vi in v]...)
 
+get_unknowns_number(::SaintVenant) = 2
+
 """Initial conditions"""
 
 # 1 # Lake at rest 
 
-v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [[max(0, c - zb(zbSource, xi)), 0] for xi in x]
+#v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [[max(0, c - zb(zbSource, xi)), 0] for xi in x]
+function v0_lake_at_rest(x, zbSource::ZbSource; c=1)
+    v0 = zeros(size(x)..., 2)
+    for I in CartesianIndices(x)
+        v0[I,1] = max(0, c - zb(zbSource, x[I]))
+        v0[I,2] = 0
+    end
+    v0
+end
 
 # 2 # Lake at rest with a perturbation
 

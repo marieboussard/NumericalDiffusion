@@ -1,7 +1,7 @@
-include("utils.jl")
-include("domain.jl")
-include("method.jl")
-include("source_term.jl")
+# include("utils.jl")
+# include("domain.jl")
+# include("method.jl")
+# include("source_term.jl")
 
 
 struct FVSolution
@@ -25,6 +25,7 @@ function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, me
 end
 
 function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    #Nx, p = length(v[:,1]), get_unknowns_number(equation)
     Nx = length(v)
     numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
     for i ∈ 2:Nx
@@ -42,16 +43,13 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
     t = t0
     Nt = 0
 
-    #u_approx = [u_init.(domain.x)]
     u_approx = [u_init]
     dt_vec = Float64[]
     t_vec = Float64[0.0]
 
     while t < Tf
 
-        #dt = min(method.CFL_factor * dx / max(D_flux(equation, u_approx[end])...), Tf - t)
-        #print(u_approx[end])
-        #@show typeof(CFL_cond(equation, u_approx[end]))
+        # Find the next time step with a CFL condition
         dt = min(method.CFL_factor * dx / CFL_cond(equation, u_approx[end]), Tf - t)
 
         push!(dt_vec, dt)
@@ -68,9 +66,16 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 end
 
 
-function plot_fv_sol(sol::FVSolution)
+function plot_fv_sol(sol::FVSolution; nb_plots::Int64=2)
 
-    plot!(sol.domain.x, sol.u_approx[end])
+    p = div(sol.Nt, nb_plots)
+
+    plt = plot()
+
+    for k in 0:nb_plots-2
+        plot!(sol.domain.x, sol.u_approx[k*p+1], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)))
+    end
+    plot!(sol.domain.x, sol.u_approx[end], label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
     xlabel!("x")
     ylabel!("u")
 

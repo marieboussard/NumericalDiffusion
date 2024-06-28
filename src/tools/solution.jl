@@ -1,4 +1,4 @@
-using Plots
+#using Plots
 
 struct OptForEntropySol
     domain::Domain
