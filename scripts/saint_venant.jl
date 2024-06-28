@@ -3,7 +3,7 @@ using Plots
 # include("../src/tools/equation.jl")
 # include("../src/tools/method.jl")
 # include("../src/tools/domain.jl")
-include("../src/tools/fv_solution.jl")
+include("../src/fv_solution.jl")
 
 Nx = 100
 

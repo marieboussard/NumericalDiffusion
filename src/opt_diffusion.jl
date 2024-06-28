@@ -20,7 +20,7 @@ function extractLocalData(u, j, sL, sR)
     i = 1
 
     for k in j-sL+1:j+sR
-        u_short[i] = u[nmod(k, Nx)]
+        u_short[i] = u[mod1(k, Nx)]
         i += 1
     end
 
@@ -77,15 +77,15 @@ function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int; 
         elseif (jleft <= k && ileft > k) || (
             jleft % Nx <= k && jleft < 1 && k < ileft % Nx
         )
-            ut[k] = u[nmod(ileft, Nx)]
+            ut[k] = u[mod1(ileft, Nx)]
         elseif (iright < k && jright >= k) || (
             jright % Nx >= k && jright > Nx && k > iright % Nx
         )
-            ut[k] = u[nmod(iright, Nx)]
+            ut[k] = u[mod1(iright, Nx)]
         elseif jright < k
-            ut[k] = u[nmod(iright, Nx)]
+            ut[k] = u[mod1(iright, Nx)]
         elseif jleft > k
-            ut[k] = u[nmod(ileft, Nx)]
+            ut[k] = u[mod1(ileft, Nx)]
         end
     end
     ut
@@ -100,10 +100,10 @@ function compute_u_hat(ut, dx, dt, j, equation, method::FVMethod)
 
     for k in j-sL-sR+1:j+sR+sL
 
-        uh[nmod(k, Nx)] = ut[nmod(k, Nx)] - dt / dx * (
-            numFlux(method, equation, ut[nmod(k, Nx)], ut[nmod(k + 1, Nx)])
+        uh[mod1(k, Nx)] = ut[mod1(k, Nx)] - dt / dx * (
+            numFlux(method, equation, ut[mod1(k, Nx)], ut[mod1(k + 1, Nx)])
             -
-            numFlux(method, equation, ut[nmod(k - 1, Nx)], ut[nmod(k, Nx)])
+            numFlux(method, equation, ut[mod1(k - 1, Nx)], ut[mod1(k, Nx)])
         )
 
     end
@@ -116,16 +116,16 @@ function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, s
     return GK, GK
 end
 
-initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equation, u[nmod(j + sR, length(u))]), G(equation, u[nmod(j - sL + 1, length(u))])
+initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equation, u[mod1(j + sR, length(u))]), G(equation, u[mod1(j - sL + 1, length(u))])
 
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
 
     for k in j-sL-sR+1:j
-        M += dx / dt * (eta(equation, ut[nmod(k, Nx)]) - eta(equation, uh[nmod(k, Nx)]))
+        M += dx / dt * (eta(equation, ut[mod1(k, Nx)]) - eta(equation, uh[mod1(k, Nx)]))
     end
 
     for k in j+1:j+sL+sR
-        m += dx / dt * (eta(equation, uh[nmod(k, Nx)]) - eta(equation, ut[nmod(k, Nx)]))
+        m += dx / dt * (eta(equation, uh[mod1(k, Nx)]) - eta(equation, ut[mod1(k, Nx)]))
     end
 
     m, M
@@ -135,11 +135,11 @@ end
 function updateBounds!(::AsymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
 
     for k in j-sL-sR+2:j
-        M += dx / dt * (eta(equation, ut[nmod(k, Nx)]) - eta(equation, uh[nmod(k, Nx)]))
+        M += dx / dt * (eta(equation, ut[mod1(k, Nx)]) - eta(equation, uh[mod1(k, Nx)]))
     end
 
     for k in j+1:j+sL+sR-1
-        m += dx / dt * (eta(equation, uh[nmod(k, Nx)]) - eta(equation, ut[nmod(k, Nx)]))
+        m += dx / dt * (eta(equation, uh[mod1(k, Nx)]) - eta(equation, ut[mod1(k, Nx)]))
     end
 
     m, M
