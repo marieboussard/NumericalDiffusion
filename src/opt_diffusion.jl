@@ -14,13 +14,16 @@ struct MinModifiedData <: SymmetricModifiedData end
 struct AsymmetricModifiedData <: ModifiedDataType end
 
 function extractLocalData(u, j, sL, sR)
+
     # To keep only cells that K takes as arguments
-    Nx = length(u)
-    u_short = zeros(sL + sR)
+    #Nx = length(u)
+    size(u)
+    Nx, p = size(u)
+    u_short = zeros(sL + sR, p)
     i = 1
 
     for k in j-sL+1:j+sR
-        u_short[i] = u[mod1(k, Nx)]
+        u_short[i,:] = u[mod1(k, Nx),:]
         i += 1
     end
 
@@ -28,7 +31,17 @@ function extractLocalData(u, j, sL, sR)
 end
 
 computeK(clModifiedData::CLModifiedData, u) = sum(clModifiedData.weights .* u) / length(u)
-computeK(::MaxModifiedData, u) = max(u...)
+function computeK(clModifiedData::CLModifiedData, u)
+    Nx, p = size(u)
+    K = zeros(p)
+    for k in 1:p
+        K[p] = sum(clModifiedData.weights .* u[:,p]) / Nx
+    end
+    K
+end
+
+#computeK(::MaxModifiedData, u) = max(u...)
+computeK(::MaxModifiedData, u) = maximum(u, dims=1)
 computeK(::MinModifiedData, u) = min(u...)
 
 meanK(sL, sR) = CLModifiedData(ones(sL + sR))
@@ -43,15 +56,22 @@ function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::In
 
     K = computeK(KFun, extractLocalData(u, j, sL, sR))
 
-    Nx = length(u)
+    Nx, p = size(u) 
 
-    ut = K * ones(Nx)
+    ut = zero(u)
 
+    #ut = K * ones(Nx, p)
+
+    
     for i in 1:Nx
         if (j - sL + 1 <= i && i <= j + sR) || (((j - sL + 1) % Nx <= i) && (j - sL + 1 < 1)) || ((i <= (j + sR) % Nx) & (j + sR > Nx))
-            ut[i] = u[i]
+            ut[i,:] = u[i,:]
+        else
+            ut[i,:] .= K
         end
     end
+    
+
     ut
 
 end
@@ -94,16 +114,17 @@ end
 function compute_u_hat(ut, dx, dt, j, equation, method::FVMethod)
 
     uh = copy(ut)
-    Nx = length(ut)
+    Nx, p = size(ut)
+    #Nx = length(ut)
 
     sL, sR = get_sL(method), get_sR(method)
 
     for k in j-sL-sR+1:j+sR+sL
 
-        uh[mod1(k, Nx)] = ut[mod1(k, Nx)] - dt / dx * (
-            numFlux(method, equation, ut[mod1(k, Nx)], ut[mod1(k + 1, Nx)])
-            -
-            numFlux(method, equation, ut[mod1(k - 1, Nx)], ut[mod1(k, Nx)])
+        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+            numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+            .-
+            numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
         )
 
     end
@@ -121,13 +142,14 @@ initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equat
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
 
     for k in j-sL-sR+1:j
-        M += dx / dt * (eta(equation, ut[mod1(k, Nx)]) - eta(equation, uh[mod1(k, Nx)]))
+        M = M .+ dx / dt .* (eta(equation, ut[mod1(k, Nx),:]) - eta(equation, uh[mod1(k, Nx),:]))
     end
 
     for k in j+1:j+sL+sR
-        m += dx / dt * (eta(equation, uh[mod1(k, Nx)]) - eta(equation, ut[mod1(k, Nx)]))
+        m = m .+ dx / dt .* (eta(equation, uh[mod1(k, Nx),:]) - eta(equation, ut[mod1(k, Nx),:]))
+        
     end
-
+    
     m, M
 
 end
@@ -142,6 +164,7 @@ function updateBounds!(::AsymmetricModifiedData, ::NormalBounds, equation::Equat
         m += dx / dt * (eta(equation, uh[mod1(k, Nx)]) - eta(equation, ut[mod1(k, Nx)]))
     end
 
+    
     m, M
 
 end
@@ -158,11 +181,11 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, method::FVMethod, m
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR)
         m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
 
-        if m > M
+        if m[1] > M[1]
             @warn "m greater than M !!!"
         end
 
-        m_vec[j+1], M_vec[j+1] = m, M
+        m_vec[j+1], M_vec[j+1] = m[1], M[1]
 
     end
 
@@ -177,7 +200,7 @@ function J(gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation)
     JC = 0
 
     for j in 1:Nx
-        JD += max(0, eta(equation, up[j]) - eta(equation, u[j]) + dt / dx * (gamma[j+1] - gamma[j]))^2
+        JD += max(0, eta(equation, up[j,:])[1] - eta(equation, u[j,:])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
     end
 
     for j in 1:Nx+1
@@ -187,7 +210,7 @@ function J(gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation)
     JD + JC
 end
 
-diffusion(u, up, gamma, dx, dt, equation) = [eta(equation, up[i]) - eta(equation, u[i]) for i in eachindex(u)] + dt / dx * (gamma[2:end] - gamma[1:end-1])
+diffusion(u, up, gamma, dx, dt, equation) = [eta(equation, up[i,:])[1] - eta(equation, u[i,:])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
 
 initial_guess(m_vec, M_vec) = 0.5 * (m_vec + M_vec)
 

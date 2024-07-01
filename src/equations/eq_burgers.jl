@@ -6,10 +6,10 @@ end
 
 burgers() = Burgers(NullSource())
 
-flux(::Burgers, x) = x^2 / 2
+flux(::Burgers, x) = x.^2 ./ 2
 D_flux(::Burgers, x) = x
-eta(::Burgers, x) = x^2
-G(::Burgers, x) = 2.0 * x^3 / 3.0
+eta(::Burgers, x) = x.^2
+G(::Burgers, x) = 2.0 .* x.^3 ./ 3.0
 
 # Initial conditions
 

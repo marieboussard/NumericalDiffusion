@@ -30,5 +30,11 @@ end
 giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)
 function sourceTerm(::Hydrostatic, zbSource::ZbSource, domain::Domain, v)
     x, dx, Nx = domain.x, domain.dx, domain.Nx
-    1 / dx .* [[0.0, g / 2 * ((hMinus(v[mod1(i, Nx)], x[mod1(i, Nx)], x[mod1(i + 1, Nx)], zbSource))^2 - (hPlus(v[mod1(i, Nx)], x[mod1(i - 1, Nx)], x[mod1(i, Nx)], zbSource))^2)] for i in 1:Nx]
+    result = zero(v)
+    for i in 1:Nx
+        result[i,1] = 0.0
+        result[i,2] = 1 / dx * g / 2 * ((hMinus(v[mod1(i, Nx),:], x[mod1(i, Nx)], x[mod1(i + 1, Nx)], zbSource))^2 - (hPlus(v[mod1(i, Nx),:], x[mod1(i - 1, Nx)], x[mod1(i, Nx)], zbSource))^2)
+    end
+    result
+    #1 / dx .* [[0.0, g / 2 * ((hMinus(v[mod1(i, Nx)], x[mod1(i, Nx)], x[mod1(i + 1, Nx)], zbSource))^2 - (hPlus(v[mod1(i, Nx)], x[mod1(i - 1, Nx)], x[mod1(i, Nx)], zbSource))^2)] for i in 1:Nx]
 end

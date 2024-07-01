@@ -18,7 +18,11 @@ function D_flux(::SaintVenant, v)
     return res
 end
 
-CFL_cond(::SaintVenant, v) = max([vi[2] / vi[1] + sqrt(g * vi[1]) for vi in v]...)
+eta(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
+G(equation::SaintVenant, v, x) = (v[2]^2/(2*v[1]) + g*v[1]^2 + v[1]*g*zb(equation.source, x))*v[2]/v[1]
+
+CFL_cond(::SaintVenant, v::Vector) = max([vi[2] / vi[1] + sqrt(g * vi[1]) for vi in v]...)
+CFL_cond(::SaintVenant, v::Matrix) = max((v[:,2]./v[:,1] + sqrt.(g*v[:,1]))...)
 
 get_unknowns_number(::SaintVenant) = 2
 
@@ -41,18 +45,38 @@ end
 perturb(x, xleft, xright) = 1
 #perturb(x, xleft, xright) = sin(pi * (x - xleft) / (xright - xleft))
 
+# function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.1)
+#     if x < xleft
+#         return [max(0, c - zb(zbSource, x)), 0]
+#     elseif x <= xright
+#         return [max(0, c - zb(zbSource, x)) + c * height * perturb(x, xleft, xright), 0]
+#     else
+#         return [max(0, c - zb(zbSource, x)), 0]
+#     end
+# end
+
 function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.1)
     if x < xleft
-        return [max(0, c - zb(zbSource, x)), 0]
+        return max(0, c - zb(zbSource, x))
     elseif x <= xright
-        return [max(0, c - zb(zbSource, x)) + c * height * perturb(x, xleft, xright), 0]
+        return max(0, c - zb(zbSource, x)) + c * height * perturb(x, xleft, xright)
     else
-        return [max(0, c - zb(zbSource, x)), 0]
+        return max(0, c - zb(zbSource, x))
     end
 end
 
+
+# function v0_lake_at_rest_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.4)
+#     return [h_perturbated(xi, zbSource; c=c, xleft=xleft, xright=xright, height=height) for xi in x]
+# end
+
 function v0_lake_at_rest_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.4)
-    return [h_perturbated(xi, zbSource; c=c, xleft=xleft, xright=xright, height=height) for xi in x]
+    v0 = zeros(size(x)..., 2)
+    for I in CartesianIndices(x)
+        v0[I,1] = h_perturbated(x[I], zbSource; c=c, xleft=xleft, xright=xright, height=height)
+        v0[I,2] = 0
+    end
+    v0
 end
 
 ## TO DO ## maybe put Source instead of ZbSource

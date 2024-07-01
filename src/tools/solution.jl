@@ -14,13 +14,22 @@ struct OptForEntropySol
 end
 
 function plot_solution(sol::OptForEntropySol)
-    plot(sol.domain.interfaces, sol.Gopt, label="Gopt")
+
+    plt = []
+
+    plt1 = plot(sol.domain.interfaces, sol.Gopt, label="Gopt")
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
 
-    plot(sol.domain.x, sol.Dopt, label="Dopt")
+    push!(plt, plt1)
+
+    plt2 = plot(sol.domain.x, sol.Dopt, label="Dopt")
     xlabel!("x")
     ylabel!("Numerical Diffusion")
+
+    push!(plt, plt2)
+
+    pltfin = plot(plt..., layout=(1, 2), size=(700, 350))
 end
 
 function plot_bounds(sol::OptForEntropySol)
