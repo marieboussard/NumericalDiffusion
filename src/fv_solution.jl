@@ -24,18 +24,22 @@ function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, me
     end
     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
+    
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
 end
 
 function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(Nx+1, p)
     #numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
     for i ∈ 2:Nx
+        v[i-1,:], v[i,:]
         numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:]; xL=domain.x[i-1], xR=domain.x[i])
     end
     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; xL=domain.x[end], xR=domain.x[1])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
+    numericalFluxMat
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(method, zbSource, domain, v)
 end
 
@@ -57,6 +61,7 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
         push!(dt_vec, dt)
         push!(t_vec, t + dt)
+        
         #@show size(scheme_step(equation.source, u_approx[end], dt, domain, equation, method))
         push!(u_approx, scheme_step(equation.source, u_approx[end], dt, domain, equation, method))
 

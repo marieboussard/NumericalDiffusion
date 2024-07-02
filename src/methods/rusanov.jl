@@ -8,8 +8,9 @@ get_sL(::Rusanov) = 1
 get_sR(::Rusanov) = 1
 
 function numFlux(::Rusanov, equation::Equation, uL, uR)
-    #@show [uL, uR]
+    [uL, uR]
     A = CFL_cond(equation, [uL, uR])
+    flux(equation, uL)
     (flux(equation, uL) .+ flux(equation, uR)) / 2 .- A / 2 * (uR .- uL)
 end
 

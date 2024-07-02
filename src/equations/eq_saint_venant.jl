@@ -7,7 +7,14 @@ struct SaintVenant <: Equation
     source::Source
 end
 
-flux(::SaintVenant, v) = (h = v[1]; hu = v[2]; [hu, hu^2 / h + g * h^2 / 2])
+function flux(::SaintVenant, v; treshold=1e-10)
+    h = v[1]
+    if h > treshold
+        hu = v[2]; return [hu, hu^2 / h + g * h^2 / 2]
+    else
+        return [0.0, 0.0]
+    end
+end
 
 function D_flux(::SaintVenant, v)
     res = Matrix[]
@@ -18,11 +25,20 @@ function D_flux(::SaintVenant, v)
     return res
 end
 
-eta(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
-G(equation::SaintVenant, v, x) = (v[2]^2/(2*v[1]) + g*v[1]^2 + v[1]*g*zb(equation.source, x))*v[2]/v[1]
+#eta(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
+eta(equation::SaintVenant, v, z) = v[2]^2/(2*v[1]) .+ g/2*v[1]^2 .+ v[1]*g*z
+#etaTilde(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
+#G(equation::SaintVenant, v, x) = (v[2]^2/(2*v[1]) + g*v[1]^2 + v[1]*g*zb(equation.source, x))*v[2]/v[1]
+function G(equation::SaintVenant, v, z)
+    @show v, z
+    @show (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+    (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+end
+get_eta(equation::SaintVenant, v; z=zero(v)) = eta(equation, v, z)
+get_G(equation::SaintVenant, v; z=zero(v)) = G(equation, v, z)
 
-CFL_cond(::SaintVenant, v::Vector) = max([vi[2] / vi[1] + sqrt(g * vi[1]) for vi in v]...)
-CFL_cond(::SaintVenant, v::Matrix) = max((v[:,2]./v[:,1] + sqrt.(g*v[:,1]))...)
+CFL_cond(::SaintVenant, v::Vector) = max([vi[2] / max(vi[1], 1e-3) + sqrt(g * abs.(vi[1])) for vi in v]...)
+CFL_cond(::SaintVenant, v::Matrix) = max((v[:,2]./max.(v[:,1], 1e-3) + sqrt.(g*abs.(v[:,1])))...)
 
 get_unknowns_number(::SaintVenant) = 2
 

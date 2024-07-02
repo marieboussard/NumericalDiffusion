@@ -22,8 +22,18 @@ function hPlus(vR, xL, xR, zbSource::ZbSource)
 end
 
 function numFlux(hydro::Hydrostatic, equation::Equation, vL, vR; xL=0, xR=0)
-    hminus, hplus = hMinus(vL, xL, xR, equation.source), hPlus(vR, xL, xR, equation.source)
-    vminus, vplus = [hminus, hminus * vL[2] / vL[1]], [hplus, hplus * vR[2] / vR[1]]
+    if vL[1] > 1e-10
+        hminus = hMinus(vL, xL, xR, equation.source)
+        vminus = [hminus, hminus * vL[2] / vL[1]]
+    else
+        vminus = [0.0, 0.0]
+    end
+    if vR[1] > 1e-10
+        hplus = hPlus(vR, xL, xR, equation.source)
+        vplus = [hplus, hplus * vR[2] / vR[1]]
+    else
+        vplus = [0.0, 0.0]
+    end
     numFlux(hydro.subMethod, equation, vminus, vplus)
 end
 

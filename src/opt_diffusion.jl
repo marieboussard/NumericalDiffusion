@@ -52,7 +52,7 @@ abstract type BoundsType end
 struct NormalBounds <: BoundsType end
 struct LightBounds <: BoundsType end
 
-function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int; K=0)
+function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
 
     K = computeK(KFun, extractLocalData(u, j, sL, sR))
 
@@ -77,7 +77,7 @@ function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::In
 end
 
 
-function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int; K=0)
+function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
 
     Nx = length(u)
 
@@ -111,6 +111,15 @@ function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int; 
     ut
 end
 
+compute_z_tilde(::NullSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR) = nothing
+function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR)
+    z = zeros(domain.Nx,1)
+    for k in 1:Nx
+        z[k] = zb(zbSource, domain.x[k])
+    end
+    compute_u_tilde(modifiedDataType, z, j, sL, sR)
+end
+
 function compute_u_hat(ut, dx, dt, j, equation, method::FVMethod)
 
     uh = copy(ut)
@@ -132,21 +141,21 @@ function compute_u_hat(ut, dx, dt, j, equation, method::FVMethod)
     return uh
 end
 
-function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR)
-    GK = G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)))
+function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
+    GK = get_G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)); z=computeK(KFun, extractLocalData(z, j, sL, sR)))
     return GK, GK
 end
 
 initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equation, u[mod1(j + sR, length(u))]), G(equation, u[mod1(j - sL + 1, length(u))])
 
-function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
+function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=nothing)
 
     for k in j-sL-sR+1:j
-        M = M .+ dx / dt .* (eta(equation, ut[mod1(k, Nx),:]) - eta(equation, uh[mod1(k, Nx),:]))
+        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt) - get_eta(equation, uh[mod1(k, Nx),:]; z=zt))
     end
 
     for k in j+1:j+sL+sR
-        m = m .+ dx / dt .* (eta(equation, uh[mod1(k, Nx),:]) - eta(equation, ut[mod1(k, Nx),:]))
+        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt) - get_eta(equation, ut[mod1(k, Nx),:]; z=zt))
         
     end
     
@@ -169,7 +178,7 @@ function updateBounds!(::AsymmetricModifiedData, ::NormalBounds, equation::Equat
 
 end
 
-function compute_G_bounds(u, Nx, dx, dt, equation::Equation, method::FVMethod, modifiedDataType::ModifiedDataType=SymmetricModifiedData(), boundsType::BoundsType=NormalBounds())
+function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, method::FVMethod, modifiedDataType::ModifiedDataType=SymmetricModifiedData(), boundsType::BoundsType=NormalBounds())
 
     M_vec, m_vec = zeros(Nx + 1), zeros(Nx + 1)
     sL, sR = get_sL(method), get_sR(method)
@@ -178,8 +187,12 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, method::FVMethod, m
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
         uh = compute_u_hat(ut, dx, dt, j, equation, method)
 
-        m, M = initBounds(modifiedDataType, equation, u, j, sL, sR)
-        m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
+        # source
+        z = zb(equation.source, domain.x)
+        zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
+
+        @show m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+        @show m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
 
         if m[1] > M[1]
             @warn "m greater than M !!!"
@@ -194,13 +207,15 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, method::FVMethod, m
     m_vec, M_vec
 end
 
-function J(gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation)
+function J(gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
 
     JD = 0
     JC = 0
 
+    z = zb(equation.source, domain.x)
+
     for j in 1:Nx
-        JD += max(0, eta(equation, up[j,:])[1] - eta(equation, u[j,:])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
+        JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
     end
 
     for j in 1:Nx+1
@@ -210,7 +225,10 @@ function J(gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation)
     JD + JC
 end
 
-diffusion(u, up, gamma, dx, dt, equation) = [eta(equation, up[i,:])[1] - eta(equation, u[i,:])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
+function diffusion(u, up, gamma, dx, dt, equation, domain::Domain)
+    z = zb(equation.source, domain.x)
+    [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
+end
 
 initial_guess(m_vec, M_vec) = 0.5 * (m_vec + M_vec)
 
@@ -220,13 +238,13 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
     FVsol = fv_solve(domain, u_init, equation, method)
     u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 
-    m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, method, modifiedDataType, boundsType)
+    m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType, boundsType)
     gamma_init = initial_guess(m_vec, M_vec)
 
-    sol = optimize(gamma -> J(gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation), gamma_init; iterations=100000, kwargs...)
+    sol = optimize(gamma -> J(gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; iterations=100000, kwargs...)
 
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
-    Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation)
+    Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, m_vec, M_vec)
 
 end

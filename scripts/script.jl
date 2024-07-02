@@ -29,7 +29,7 @@ include("../src/include_file.jl")
 
 # 2 # Saint Venant
 
-Nx, t0, Tf = 20, 0, 0.4
+Nx, t0, Tf = 5, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
 eq = SaintVenant(Bump_zb())
