@@ -26,13 +26,24 @@ function D_flux(::SaintVenant, v)
 end
 
 #eta(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
-eta(equation::SaintVenant, v, z) = v[2]^2/(2*v[1]) .+ g/2*v[1]^2 .+ v[1]*g*z
+function eta(equation::SaintVenant, v, z)
+    if v[1] == 0.0
+        return 0.0
+    else
+        return v[2]^2/(2*v[1]) .+ g/2*v[1]^2 .+ v[1]*g*z
+    end
+end
 #etaTilde(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
 #G(equation::SaintVenant, v, x) = (v[2]^2/(2*v[1]) + g*v[1]^2 + v[1]*g*zb(equation.source, x))*v[2]/v[1]
 function G(equation::SaintVenant, v, z)
     @show v, z
-    @show (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
-    (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+    #@show (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+
+    if v[1] == 0
+        return 0
+    else
+        return (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+    end
 end
 get_eta(equation::SaintVenant, v; z=zero(v)) = eta(equation, v, z)
 get_G(equation::SaintVenant, v; z=zero(v)) = G(equation, v, z)
@@ -47,10 +58,10 @@ get_unknowns_number(::SaintVenant) = 2
 # 1 # Lake at rest 
 
 #v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [[max(0, c - zb(zbSource, xi)), 0] for xi in x]
-function v0_lake_at_rest(x, zbSource::ZbSource; c=1)
+function v0_lake_at_rest(x, source::Source; c=1)
     v0 = zeros(size(x)..., 2)
     for I in CartesianIndices(x)
-        v0[I,1] = max(0, c - zb(zbSource, x[I]))
+        v0[I,1] = max(0, c - zb(source, x[I]))
         v0[I,2] = 0
     end
     v0

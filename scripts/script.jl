@@ -33,11 +33,13 @@ Nx, t0, Tf = 5, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
 eq = SaintVenant(Bump_zb())
+#eq = SaintVenant(NullSource())
 
 v0 = v0_lake_at_rest(domain.x, Bump_zb())
+#v0 = v0_lake_at_rest(domain.x, NullSource())
 
-plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x))
-plot!(domain.x, zb(eq.source, domain.x))
+plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x), label="Water surface")
+plot!(domain.x, zb(eq.source, domain.x), label="Topography")
 
 # solSV = fv_solve(domain, v0, eq, Rusanov(CFL_factor))
 

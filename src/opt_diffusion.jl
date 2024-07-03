@@ -17,7 +17,6 @@ function extractLocalData(u, j, sL, sR)
 
     # To keep only cells that K takes as arguments
     #Nx = length(u)
-    size(u)
     Nx, p = size(u)
     u_short = zeros(sL + sR, p)
     i = 1
@@ -47,6 +46,9 @@ computeK(::MinModifiedData, u) = min(u...)
 meanK(sL, sR) = CLModifiedData(ones(sL + sR))
 maxK() = MaxModifiedData()
 minK() = MinModifiedData()
+
+computeZ(KFun::ModifiedDataType, z, j, sL, sR) = computeK(KFun, extractLocalData(z, j, sL, sR))
+computeZ(KFun::ModifiedDataType, ::Nothing, j, sL, sR) = nothing
 
 abstract type BoundsType end
 struct NormalBounds <: BoundsType end
@@ -120,29 +122,70 @@ function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType,
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
-function compute_u_hat(ut, dx, dt, j, equation, method::FVMethod)
+# function compute_u_hat(::NullSource, ut, dx, dt, j, equation, method::FVMethod)
 
+#     uh = copy(ut)
+#     Nx, p = size(ut)
+#     #Nx = length(ut)
+
+#     sL, sR = get_sL(method), get_sR(method)
+
+#     for k in j-sL-sR+1:j+sR+sL
+
+#         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+#             numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+#             .-
+#             numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
+#         )
+
+#     end
+
+#     return uh
+# end
+
+# function compute_u_hat(zbSource::ZbSource, ut, dx, dt, j, equation, method::FVMethod)
+
+#     uh = copy(ut)
+#     Nx, p = size(ut)
+#     #Nx = length(ut)
+
+#     sL, sR = get_sL(method), get_sR(method)
+
+#     for k in j-sL-sR+1:j+sR+sL
+
+#         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+#             numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+#             .-
+#             numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]) .+ dt * sourceTerm(method, zbSource, domain, v)
+#         )
+
+#     end
+
+#     return uh
+# end
+
+function compute_u_hat(ut, dx, dt, j::Int, equation::Equation, method::FVMethod)
     uh = copy(ut)
     Nx, p = size(ut)
-    #Nx = length(ut)
-
     sL, sR = get_sL(method), get_sR(method)
 
+    uh_short = zeros(2*(sR+sL),p)
+    i=1
     for k in j-sL-sR+1:j+sR+sL
-
-        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
-            .-
-            numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
-        )
-
+        uh_short[i,:] = uh[mod1(k, Nx), :]
+        i+=1
     end
-
-    return uh
+    uh_short = scheme_step(equation.source, uh_short, dt, domain, equation, method)
+    i=1
+    for k in j-sL-sR+1:j+sR+sL
+        uh[mod1(k, Nx), :] = uh_short[i, :]
+        i+=1
+    end
+    uh
 end
 
 function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
-    GK = get_G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)); z=computeK(KFun, extractLocalData(z, j, sL, sR)))
+    GK = get_G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)); z=computeZ(KFun, z, j, sL, sR))
     return GK, GK
 end
 
@@ -188,11 +231,12 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
         uh = compute_u_hat(ut, dx, dt, j, equation, method)
 
         # source
-        z = zb(equation.source, domain.x)
+        z = zeros(domain.Nx,1)
+        for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
         zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
 
-        @show m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
-        @show m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+        m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+        m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
 
         if m[1] > M[1]
             @warn "m greater than M !!!"
