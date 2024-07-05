@@ -34,7 +34,7 @@ function computeK(clModifiedData::CLModifiedData, u)
     Nx, p = size(u)
     K = zeros(p)
     for k in 1:p
-        K[p] = sum(clModifiedData.weights .* u[:,p]) / Nx
+        K[k] = sum(clModifiedData.weights .* u[:,k]) / Nx
     end
     K
 end
@@ -48,7 +48,7 @@ maxK() = MaxModifiedData()
 minK() = MinModifiedData()
 
 computeZ(KFun::ModifiedDataType, z, j, sL, sR) = computeK(KFun, extractLocalData(z, j, sL, sR))
-computeZ(KFun::ModifiedDataType, ::Nothing, j, sL, sR) = nothing
+computeZ(::ModifiedDataType, ::Nothing, j, sL, sR) = nothing
 
 abstract type BoundsType end
 struct NormalBounds <: BoundsType end
@@ -164,7 +164,7 @@ end
 #     return uh
 # end
 
-function compute_u_hat(ut, dx, dt, j::Int, equation::Equation, method::FVMethod)
+function compute_u_hat(ut, dx, dt, j::Int, domain::Domain, equation::Equation, method::FVMethod)
     uh = copy(ut)
     Nx, p = size(ut)
     sL, sR = get_sL(method), get_sR(method)
@@ -194,11 +194,11 @@ initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equat
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=nothing)
 
     for k in j-sL-sR+1:j
-        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt) - get_eta(equation, uh[mod1(k, Nx),:]; z=zt))
+        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt) .- get_eta(equation, uh[mod1(k, Nx),:]; z=zt))
     end
 
     for k in j+1:j+sL+sR
-        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt) - get_eta(equation, ut[mod1(k, Nx),:]; z=zt))
+        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt))
         
     end
     
@@ -228,7 +228,7 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
 
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-        uh = compute_u_hat(ut, dx, dt, j, equation, method)
+        uh = compute_u_hat(ut, dx, dt, j, domain, equation, method)
 
         # source
         z = zeros(domain.Nx,1)

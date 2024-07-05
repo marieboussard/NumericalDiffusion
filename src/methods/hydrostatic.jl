@@ -11,6 +11,8 @@ createHydrostatic(CFL_factor::Float64, subMethod::DataType) = Hydrostatic(CFL_fa
 get_sL(::Hydrostatic) = 1
 get_sR(::Hydrostatic) = 1
 
+get_name(::Hydrostatic) = "Hydrostatic"
+
 function hMinus(vL, xL, xR, zbSource::ZbSource)
     zL, zR = zb(zbSource, xL), zb(zbSource, xR)
     hminus = max(0, vL[1] + zL - max(zL, zR))
@@ -39,7 +41,8 @@ end
 
 giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)
 function sourceTerm(::Hydrostatic, zbSource::ZbSource, domain::Domain, v)
-    x, dx, Nx = domain.x, domain.dx, domain.Nx
+    x, dx = domain.x, domain.dx
+    Nx = size(v)[1]
     result = zero(v)
     for i in 1:Nx
         result[i,1] = 0.0

@@ -29,23 +29,27 @@ include("../src/include_file.jl")
 
 # 2 # Saint Venant
 
-Nx, t0, Tf = 5, 0, 0.4
+Nx, t0, Tf = 50, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
-eq = SaintVenant(Bump_zb())
+height_bump = 3.0
+source_term = bump_zb(height_bump)
+eq = SaintVenant(source_term, 1e-10)
 #eq = SaintVenant(NullSource())
 
-v0 = v0_lake_at_rest(domain.x, Bump_zb())
+#method = Rusanov(CFL_factor)
+method = createHydrostatic(CFL_factor, Rusanov)
+
+v0 = v0_lake_at_rest(domain.x, source_term)
+#v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
 #v0 = v0_lake_at_rest(domain.x, NullSource())
 
 plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x), label="Water surface")
 plot!(domain.x, zb(eq.source, domain.x), label="Topography")
 
-# solSV = fv_solve(domain, v0, eq, Rusanov(CFL_factor))
+solSV = fv_solve(domain, v0, eq, method)
+nb_plots = 5
+display(plot_fv_sol(solSV, solSV.equation; nb_plots=nb_plots))
 
-# nb_plots = 5
-
-# plot_fv_sol(solSV, solSV.equation; nb_plots=nb_plots)
-
-solEnt = optimize_for_entropy(v0, domain, eq, Rusanov(CFL_number))
+solEnt = optimize_for_entropy(v0, domain, eq, method, modifiedDataType=meanK(1,1))
 plot_solution(solEnt)

@@ -3,6 +3,8 @@
 using Plots
 using LinearAlgebra
 using Optim
+using Optimization
+using OptimizationBBO
 
 include("domain.jl")
 include("equations/abstract_equations.jl")
@@ -24,3 +26,4 @@ include("fv_solution.jl")
 # Optimization process
 include("tools/solution.jl")
 include("opt_diffusion.jl")
+include("worst_initial_data.jl")

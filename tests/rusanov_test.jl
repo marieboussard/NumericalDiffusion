@@ -2,7 +2,7 @@ include("../src/include_file.jl")
 
 # # 1 # Solving Burgers equation
 
-# xmin, xmax, Nx, t0, Tf = -2, 2, 5, 0, 0.4
+# xmin, xmax, Nx, t0, Tf = -2, 2, 100, 0, 0.4
 # CFL_factor = 0.5
 # omega = createInterval(xmin, xmax, Nx, t0, Tf)
 
@@ -15,14 +15,33 @@ include("../src/include_file.jl")
 # #plot_fv_sol(solBurgers, nb_plots=6)
 
 
-# 2 # Solving Saint Venant equation
+# # 2 # Solving Saint Venant equation
 
-Nx, t0, Tf = 20, 0, 0.4
+# Nx, t0, Tf = 100, 0, 0.4
+# CFL_factor = 0.5
+# domain = createUnitInterval(Nx, t0, Tf)
+# eq = SaintVenant(Bump_zb())
+
+# v0 = v0_lake_at_rest(domain.x, Bump_zb())
+
+# # plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x))
+# # plot!(domain.x, zb(eq.source, domain.x))
+
+# solSV = fv_solve(domain, v0, eq, Rusanov(CFL_factor))
+
+# nb_plots = 2
+
+# plot_fv_sol(solSV, solSV.equation; nb_plots=nb_plots)
+
+
+# 2 # Solving Saint Venant equation with perturbation
+
+Nx, t0, Tf = 20, 0, 0.1
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
-eq = SaintVenant(Bump_zb())
+eq = SaintVenant(Bump_zb(), 1e-10)
 
-v0 = v0_lake_at_rest(domain.x, Bump_zb())
+v0 = v0_lake_at_rest_perturbated(domain.x, Bump_zb())
 
 # plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x))
 # plot!(domain.x, zb(eq.source, domain.x))

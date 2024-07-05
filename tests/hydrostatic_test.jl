@@ -21,10 +21,10 @@ include("../src/include_file.jl")
 
 # 2 # Hydrostatic scheme for the perturbated lake at rest
 
-Nx, t0, Tf = 100, 0, 0.1
+Nx, t0, Tf = 20, 0, 0.1
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
-eq = SaintVenant(Bump_zb())
+eq = SaintVenant(Bump_zb(), 1e-10)
 
 v0 = v0_lake_at_rest_perturbated(domain.x, Bump_zb())
 

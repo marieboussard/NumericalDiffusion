@@ -7,6 +7,8 @@ end
 get_sL(::Rusanov) = 1
 get_sR(::Rusanov) = 1
 
+get_name(::Rusanov) = "Rusanov"
+
 function numFlux(::Rusanov, equation::Equation, uL, uR)
     [uL, uR]
     A = CFL_cond(equation, [uL, uR])

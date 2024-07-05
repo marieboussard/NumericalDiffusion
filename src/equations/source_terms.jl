@@ -7,15 +7,22 @@ abstract type Source end
 struct NullSource <: Source end
 
 abstract type ZbSource <: Source end
-struct Bump_zb <: ZbSource end
+struct Bump_zb <: ZbSource
+    height::Float64
+end
+
+bump_zb(height=3) = Bump_zb(height)
 
 zb(::NullSource, x) = zero(x)
 
-# zb(::Bump_zb, x) = (-0.5 .* x .* (-1 .+ x)) .* 5
-# Dzb(::Bump_zb, x) = (-x .+ 0.5) .* 5
+# zb(::Bump_zb, x) = (-0.5 .* x .* (-1 .+ x)) .* 8
+# Dzb(::Bump_zb, x) = (-x .+ 0.5) .* 8
 
-zb(::Bump_zb, x) = zero(x)
-Dzb(::Bump_zb, x) = zero(x)
+zb(bz::Bump_zb, x) = -0.1 * (cos.(2*pi * x) .- 1)*bz.height
+Dzb(bz::Bump_zb, x) = 0.1 * pi * sin.(2*pi * x)*bz.height
+
+# zb(::Bump_zb, x) = zero(x)
+# Dzb(::Bump_zb, x) = zero(x)
 
 zb_tilde(::Bump_zb, ut, c) = c - ut[1]
 

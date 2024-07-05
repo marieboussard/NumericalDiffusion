@@ -7,6 +7,7 @@
 struct FVSolution
     domain::Domain
     equation::Equation
+    method::FVMethod
     u_approx
     Nt::Int
     dt_vec
@@ -70,7 +71,7 @@ function fv_solve(domain::Domain, u_init, equation::Equation, method::FVMethod)
 
     end
 
-    FVSolution(domain, equation, u_approx, Nt, dt_vec, t_vec)
+    FVSolution(domain, equation, method, u_approx, Nt, dt_vec, t_vec)
 
 end
 
@@ -107,6 +108,7 @@ function plot_fv_sol(sol::FVSolution, equation::SaintVenant; nb_plots::Int64=2)
     plot!(sol.domain.x, sol.u_approx[end][:,1] .+ zb(sol.equation.source, sol.domain.x), label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
     plot!(sol.domain.x, zb(sol.equation.source, sol.domain.x), label="zb")
     xlabel!("x")
+    title!(get_name(sol.method))
     display(ylabel!("Surface of the lake"))
 
 end

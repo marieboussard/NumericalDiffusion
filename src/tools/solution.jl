@@ -30,6 +30,8 @@ function plot_solution(sol::OptForEntropySol)
     push!(plt, plt2)
 
     pltfin = plot(plt..., layout=(1, 2), size=(700, 350))
+
+    title!(get_name(sol.method))
 end
 
 function plot_bounds(sol::OptForEntropySol)
@@ -58,7 +60,7 @@ end
 
 function compare_exact_flux(sol::OptForEntropySol)
     Gexact = exactG(sol.method, sol.equation, sol.u_approx[end-1])
-    Dexact = diffusion(sol.u_approx[end-1], sol.u_approx[end], Gexact, sol.domain.dx, sol.dt_vec[end], sol.equation)
+    Dexact = diffusion(sol.u_approx[end-1], sol.u_approx[end], Gexact, sol.domain.dx, sol.dt_vec[end], sol.equation, sol.domain)
 
     plot(sol.domain.interfaces, sol.Gopt, label="Gopt")
     plot!(sol.domain.interfaces, Gexact, label="Gexact")
