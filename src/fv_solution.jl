@@ -36,9 +36,9 @@ function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equati
     #numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
     for i ∈ 2:Nx
         v[i-1,:], v[i,:]
-        numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:]; xL=domain.x[i-1], xR=domain.x[i])
+        numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:]; zL=domain.sourceVec[i-1], zR=domain.sourceVec[i])
     end
-    numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; xL=domain.x[end], xR=domain.x[1])
+    numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
     numericalFluxMat
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(method, zbSource, domain, v)
