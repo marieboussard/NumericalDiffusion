@@ -29,6 +29,23 @@ function extractLocalData(u, j, sL, sR)
     return u_short
 end
 
+function extractExtendedLocalData(u, j, sL, sR)
+
+    # To keep only cells for which the modified flux is not G(K)
+    Nx, p = size(u)
+
+    u_short = zeros(2*(sR+sL),p)
+    i=1
+    for k in j-sL-sR+1:j+sR+sL
+        u_short[i,:] = u[mod1(k, Nx), :]
+        i+=1
+    end
+
+    return u_short
+end
+
+extractExtendedLocalData(u::Nothing, j, sL, sR) = nothing
+
 computeK(clModifiedData::CLModifiedData, u) = sum(clModifiedData.weights .* u) / length(u)
 function computeK(clModifiedData::CLModifiedData, u)
     Nx, p = size(u)
@@ -122,85 +139,130 @@ function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType,
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
-# function compute_u_hat(::NullSource, ut, dx, dt, j, equation, method::FVMethod)
+function compute_u_hat(::NullSource, ut, dx, dt, j, equation, method::FVMethod; zt=nothing)
 
-#     uh = copy(ut)
-#     Nx, p = size(ut)
-#     #Nx = length(ut)
+    uh = copy(ut)
+    Nx, p = size(ut)
 
-#     sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(method), get_sR(method)
 
-#     for k in j-sL-sR+1:j+sR+sL
+    for k in j-sL-sR+1:j+sR+sL
 
-#         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-#             numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
-#             .-
-#             numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
-#         )
+        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+            numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+            .-
+            numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
+        )
 
-#     end
+    end
 
-#     return uh
-# end
+    return uh
+end
 
-# function compute_u_hat(zbSource::ZbSource, ut, dx, dt, j, equation, method::FVMethod)
+function compute_u_hat(zbSource::ZbSource, ut, dx, dt, j, equation, method::FVMethod)
 
-#     uh = copy(ut)
-#     Nx, p = size(ut)
-#     #Nx = length(ut)
+    uh = copy(ut)
+    Nx, p = size(ut)
+    #Nx = length(ut)
 
-#     sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(method), get_sR(method)
 
-#     for k in j-sL-sR+1:j+sR+sL
+    for k in j-sL-sR+1:j+sR+sL
 
-#         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-#             numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
-#             .-
-#             numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]) .+ dt * sourceTerm(method, zbSource, domain, v)
-#         )
+        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+            numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+            .-
+            numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]) .+ dt * sourceTerm(method, zbSource, domain, v)
+        )
 
-#     end
+    end
 
-#     return uh
-# end
+    return uh
+end
 
-function compute_u_hat(ut, dx, dt, j::Int, domain::Domain, equation::Equation, method::FVMethod)
+function compute_u_hat(ut, j::Int, domain::Domain, equation::Equation, method::FVMethod, zt=nothing)
     uh = copy(ut)
     Nx, p = size(ut)
     sL, sR = get_sL(method), get_sR(method)
 
-    uh_short = zeros(2*(sR+sL),p)
-    i=1
-    for k in j-sL-sR+1:j+sR+sL
-        uh_short[i,:] = uh[mod1(k, Nx), :]
-        i+=1
-    end
-    uh_short = scheme_step(equation.source, uh_short, dt, domain, equation, method)
-    i=1
-    for k in j-sL-sR+1:j+sR+sL
-        uh[mod1(k, Nx), :] = uh_short[i, :]
-        i+=1
-    end
-    uh
+    uh_short = extractExtendedLocalData(uh, j, sL, sR)
+    zt_short = extractExtendedLocalData(zt, j, sL, sR)
+
+
+    
 end
 
+# function compute_u_hat(ut, dx, dt, j::Int, domain::Domain, equation::Equation, method::FVMethod)
+
+#     @show method
+#     @show ut
+    
+#     uh = scheme_step(equation.source, ut, dt, domain, equation, method)
+#     @show uh
+#     uh
+
+#     # @show ut
+    
+#     # uh = copy(ut)
+#     # Nx, p = size(ut)
+#     # sL, sR = get_sL(method), get_sR(method)
+
+#     # uh_short = zeros(2*(sR+sL),p)
+#     # i=1
+#     # for k in j-sL-sR+1:j+sR+sL
+#     #     uh_short[i,:] = uh[mod1(k, Nx), :]
+#     #     i+=1
+#     # end
+#     # @show uh_short
+#     # uh_short = scheme_step(equation.source, uh_short, dt, domain, equation, method)
+#     # i=1
+
+#     # @show uh_short
+
+#     # for k in j-sL-sR+1:j+sR+sL
+#     #     uh[mod1(k, Nx), :] = uh_short[i, :]
+#     #     i+=1
+#     # end
+#     # uh
+# end
+
 function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
+    #@show computeZ(KFun, z, j, sL, sR)
+    #@show computeK(KFun, extractLocalData(u, j, sL, sR))
     GK = get_G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)); z=computeZ(KFun, z, j, sL, sR))
-    return GK, GK
+    return GK[1], GK[1]
 end
 
 initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equation, u[mod1(j + sR, length(u))]), G(equation, u[mod1(j - sL + 1, length(u))])
 
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=nothing)
 
+    #@show z
+    # @show j
+    # @show zt
+    #display(scatter(zt, label=string(j)))
+
+    if j==10
+        @show zt
+    end
+
     for k in j-sL-sR+1:j
-        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt) .- get_eta(equation, uh[mod1(k, Nx),:]; z=zt))
+        # @show ut[mod1(k, Nx),:]
+        # @show  uh[mod1(k, Nx),:]
+        # @show zt
+        #@show get_eta(equation, ut[mod1(k, Nx),:]; z=zt)
+        #get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
+
+        # @show size(get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
+        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
     end
 
     for k in j+1:j+sL+sR
-        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt))
+        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
         
     end
+
+    #@show m, M
     
     m, M
 
@@ -226,17 +288,29 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     M_vec, m_vec = zeros(Nx + 1), zeros(Nx + 1)
     sL, sR = get_sL(method), get_sR(method)
 
+    # source
+    z = zeros(domain.Nx,1)
+    for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
+    display(scatter(domain.x, z))
+
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
         uh = compute_u_hat(ut, dx, dt, j, domain, equation, method)
 
-        # source
-        z = zeros(domain.Nx,1)
-        for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
-        zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
+        #zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
+        # scatter(domain.x, zt)
+        # display(ylims!(0.0, 0.13))
+        #zt = copy(z)
+        zt=zero(z)
+        z = zero(z)
 
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+
+        #@show(size(m))
+
         m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+
+        #@show size(m)
 
         if m[1] > M[1]
             @warn "m greater than M !!!"

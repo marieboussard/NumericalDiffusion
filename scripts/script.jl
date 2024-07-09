@@ -1,11 +1,3 @@
-#using Plots
-
-#include("../src/tools/fv_solution.jl")
-#include("../src/tools/method.jl")
-#include("../src/tools/equation.jl")
-#include("../src/tools/domain.jl")
-#include("../src/opt_diffusion.jl")
-
 include("../src/include_file.jl")
 
 # # 1 # Burgers equation
@@ -29,10 +21,10 @@ include("../src/include_file.jl")
 
 # 2 # Saint Venant
 
-Nx, t0, Tf = 50, 0, 0.4
+Nx, t0, Tf = 5, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
-height_bump = 3.0
+height_bump = 1.0
 source_term = bump_zb(height_bump)
 eq = SaintVenant(source_term, 1e-10)
 #eq = SaintVenant(NullSource())
@@ -52,4 +44,6 @@ nb_plots = 5
 display(plot_fv_sol(solSV, solSV.equation; nb_plots=nb_plots))
 
 solEnt = optimize_for_entropy(v0, domain, eq, method, modifiedDataType=meanK(1,1))
-plot_solution(solEnt)
+display(plot_solution(solEnt))
+
+plot_bounds(solEnt)

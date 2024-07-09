@@ -15,11 +15,14 @@ bump_zb(height=3) = Bump_zb(height)
 
 zb(::NullSource, x) = zero(x)
 
-# zb(::Bump_zb, x) = (-0.5 .* x .* (-1 .+ x)) .* 8
-# Dzb(::Bump_zb, x) = (-x .+ 0.5) .* 8
+zb(bz::Bump_zb, x) = (-0.5 .* x .* (-1 .+ x)) .* bz.height
+Dzb(bz::Bump_zb, x) = (-x .+ 0.5) .* bz.height
 
-zb(bz::Bump_zb, x) = -0.1 * (cos.(2*pi * x) .- 1)*bz.height
-Dzb(bz::Bump_zb, x) = 0.1 * pi * sin.(2*pi * x)*bz.height
+# zb(bz::Bump_zb, x) = x .* bz.height
+# Dzb(bz::Bump_zb, x) = (ones(size(x))) .* bz.height
+
+# zb(bz::Bump_zb, x) = -0.1 * (cos.(2*pi * x) .- 1)*bz.height
+# Dzb(bz::Bump_zb, x) = 0.1 * pi * sin.(2*pi * x)*bz.height
 
 # zb(::Bump_zb, x) = zero(x)
 # Dzb(::Bump_zb, x) = zero(x)

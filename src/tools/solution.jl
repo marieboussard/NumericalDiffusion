@@ -34,25 +34,33 @@ function plot_solution(sol::OptForEntropySol)
     title!(get_name(sol.method))
 end
 
-function plot_bounds(sol::OptForEntropySol)
+function plot_bounds(sol::OptForEntropySol; exactG_known=false)
 
-    Gexact = exactG(sol.method, sol.equation, sol.u_approx[end-1])
+    if exactG_known
 
-    Gexact_test = zeros(sol.domain.Nx + 1)
-    Gexact_test[2:end] = Gexact[1:end-1]
-    Gexact_test[1] = Gexact[end]
+        Gexact = exactG(sol.method, sol.equation, sol.u_approx[end-1])
+
+        Gexact_test = zeros(sol.domain.Nx + 1)
+        Gexact_test[2:end] = Gexact[1:end-1]
+        Gexact_test[1] = Gexact[end]
+    end
 
     plot(sol.domain.interfaces, sol.m_vec, label="m")
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt")
-    plot!(sol.domain.interfaces, Gexact_test, label="Gexact")
+    if exactG_known
+        plot!(sol.domain.interfaces, Gexact_test, label="Gexact")
+    end
     plot!(sol.domain.interfaces, sol.M_vec, label="M")
     xlabel!("x")
     display(ylabel!("Numerical Entropy Flux"))
 
     print("m_vec", "\n")
     print(sol.m_vec, "\n")
-    print("Gexact", "\n")
-    print(Gexact, "\n")
+    if exactG_known
+        print("Gexact", "\n")
+        print(Gexact, "\n")
+    end
+    
     print("M_vec", "\n")
     print(sol.M_vec, "\n")
 

@@ -41,13 +41,13 @@ end
 #etaTilde(equation::SaintVenant, v, x) = v[2]^2/(2*v[1]) + g/2*v[1]^2 + v[1]*g*zb(equation.source, x)
 #G(equation::SaintVenant, v, x) = (v[2]^2/(2*v[1]) + g*v[1]^2 + v[1]*g*zb(equation.source, x))*v[2]/v[1]
 function G(equation::SaintVenant, v, z)
-    @show v, z
+    #@show v, z
     #@show (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
 
     if v[1] < equation.treshold
         return 0
     else
-        return (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g*z)*v[2]/v[1]
+        return (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g.*z)*v[2]/v[1]
     end
 end
 get_eta(equation::SaintVenant, v; z=zero(v)) = eta(equation, v, z)

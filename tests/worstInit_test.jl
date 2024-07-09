@@ -8,7 +8,7 @@ CFL_factor = 0.5
 
 Nx = 100
 
-#@time sol = iterate_WID(Nx, burgers(), Rusanov(CFL_factor))
-@time solRoe = iterate_WID(Nx, burgers(), Roe(CFL_factor))
+@time sol = iterate_WID(Nx, burgers(), Rusanov(CFL_factor))
+#@time solRoe = iterate_WID(Nx, burgers(), Roe(CFL_factor))
 
 #worstData, worstLowDiff = find_worst_initial_data(Nx, burgers(), Rusanov(CFL_factor))

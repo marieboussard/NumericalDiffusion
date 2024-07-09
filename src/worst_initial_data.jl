@@ -97,6 +97,7 @@ end
 function iterate_WID(Nx, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds(), nb_it=100)
 
     box_size = 10.0
+    p = get_unknowns_number(equation)
     sL, sR = get_sL(method), get_sR(method)
     res = zeros(nb_it)
     for k in 1:nb_it

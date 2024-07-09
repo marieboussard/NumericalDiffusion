@@ -37,4 +37,6 @@ function u0_burgers_article(x::Real)
     else
         return 3 - 3 / 2 * x
     end
+   
 end
+u0_burgers_article(x::Real) = x <= 0 ? -2 -x : 3 - 3 / 2 * x
