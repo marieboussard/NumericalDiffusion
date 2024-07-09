@@ -2,7 +2,7 @@ include("../src/include_file.jl")
 
 # # 1 # Burgers equation
 
-# Nx = 100
+# Nx = 10
 
 # CFL_number = 0.5
 # domain = createInterval(-2, 2, Nx, 0, 0.4)
@@ -13,27 +13,29 @@ include("../src/include_file.jl")
 # plot_fv_sol(sol, uexact_burgers_article)
 
 # @time sol = optimize_for_entropy(u0, domain, burgers(), Rusanov(CFL_number), modifiedDataType=maxK())
-# plot_solution(sol)
-# #plot_bounds(sol)
+# display(plot_solution(sol))
+# plot_bounds(sol)
 
 
 #compare_exact_flux(sol)
 
 # 2 # Saint Venant
 
-Nx, t0, Tf = 5, 0, 0.4
+Nx, t0, Tf = 50, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
 height_bump = 1.0
 source_term = bump_zb(height_bump)
 eq = SaintVenant(source_term, 1e-10)
+addSource!(eq.source, domain)
+
 #eq = SaintVenant(NullSource())
 
 #method = Rusanov(CFL_factor)
 method = createHydrostatic(CFL_factor, Rusanov)
 
-v0 = v0_lake_at_rest(domain.x, source_term)
-#v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
+#v0 = v0_lake_at_rest(domain.x, source_term)
+v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
 #v0 = v0_lake_at_rest(domain.x, NullSource())
 
 plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x), label="Water surface")

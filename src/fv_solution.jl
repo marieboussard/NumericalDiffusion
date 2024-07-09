@@ -29,7 +29,7 @@ function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, me
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
 end
 
-function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+function scheme_step(::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
     
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(Nx+1, p)
@@ -41,7 +41,7 @@ function scheme_step(zbSource::ZbSource, v, dt, domain::Domain, equation::Equati
     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
     numericalFluxMat
-    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(method, zbSource, domain, v)
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(method, domain, v)
 end
 
 
@@ -91,7 +91,7 @@ function plot_fv_sol(sol::FVSolution; nb_plots::Int64=2)
 
 end
 
-function plot_fv_sol(sol::FVSolution, equation::SaintVenant; nb_plots::Int64=2)
+function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2)
 
     p = div(sol.Nt, nb_plots)
 
@@ -110,6 +110,20 @@ function plot_fv_sol(sol::FVSolution, equation::SaintVenant; nb_plots::Int64=2)
     xlabel!("x")
     title!(get_name(sol.method))
     display(ylabel!("Surface of the lake"))
+
+    plt2 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=14,
+    titlefontsize=14,
+    guidefontsize=14,
+    tickfontsize=14)
+
+    for k in 0:nb_plots-2
+        plot!(sol.domain.x, sol.u_approx[k*p+1][:,2], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)))
+    end
+    plot!(sol.domain.x, sol.u_approx[end][:,2], label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
+    xlabel!("x")
+    title!(get_name(sol.method))
+    display(ylabel!("Water flow"))
 
 end
 

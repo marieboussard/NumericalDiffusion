@@ -6,8 +6,8 @@ CFL_factor = 0.5
 
 domain = createUnitInterval(Nx, t0, Tf)
 eq = SaintVenant(Bump_zb(sourceHeight), 1e-10)
-#method = createHydrostatic(CFL_factor, Rusanov)
-method = Rusanov(CFL_factor)
+method = createHydrostatic(CFL_factor, Rusanov)
+#method = Rusanov(CFL_factor)
 addSource!(eq.source, domain)
 
 v0 = v0_lake_at_rest(domain.x, eq.source)
