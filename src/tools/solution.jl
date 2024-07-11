@@ -31,7 +31,9 @@ function plot_solution(sol::OptForEntropySol)
 
     pltfin = plot(plt..., layout=(1, 2), size=(700, 350))
 
-    title!(get_name(sol.method))
+    display(title!(get_name(sol.method)))
+
+    println("Maximal diffusion value : ", maximum(sol.Dopt))
 end
 
 function plot_bounds(sol::OptForEntropySol; exactG_known=false)
@@ -54,15 +56,15 @@ function plot_bounds(sol::OptForEntropySol; exactG_known=false)
     xlabel!("x")
     display(ylabel!("Numerical Entropy Flux"))
 
-    print("m_vec", "\n")
-    print(sol.m_vec, "\n")
-    if exactG_known
-        print("Gexact", "\n")
-        print(Gexact, "\n")
-    end
+    # print("m_vec", "\n")
+    # print(sol.m_vec, "\n")
+    # if exactG_known
+    #     print("Gexact", "\n")
+    #     print(Gexact, "\n")
+    # end
     
-    print("M_vec", "\n")
-    print(sol.M_vec, "\n")
+    # print("M_vec", "\n")
+    # print(sol.M_vec, "\n")
 
 end
 

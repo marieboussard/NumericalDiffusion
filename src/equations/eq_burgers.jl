@@ -4,6 +4,8 @@ struct Burgers <: ScalarEquation
     source::Source
 end
 
+get_name(::Burgers) = "Burgers"
+
 burgers() = Burgers(NullSource())
 
 flux(::Burgers, u) = u.^2 ./ 2

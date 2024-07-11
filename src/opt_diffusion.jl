@@ -132,7 +132,7 @@ function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType,
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
-function compute_u_hat(::NullSource, ut, dx, dt, j, equation, method::FVMethod; zt=nothing)
+function compute_u_hat(::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=nothing)
 
     uh = copy(ut)
     Nx, p = size(ut)
@@ -152,7 +152,7 @@ function compute_u_hat(::NullSource, ut, dx, dt, j, equation, method::FVMethod; 
     return uh
 end
 
-function compute_u_hat(::ZbSource, ut, dx, dt, j, equation, method::FVMethod; zt=nothing)
+function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=zero(ut))
 
     uh = copy(ut)
     Nx, p = size(ut)
@@ -195,7 +195,6 @@ initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equat
 
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
 
-    #@show ut, uh
     for k in j-sL-sR+1:j
         M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
     end
@@ -236,17 +235,18 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
 
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-        zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
-        zt = isnothing(zt) ? zero(ut) : zt
-        uh = compute_u_hat(equation.source, ut, dx, dt, j, equation, method; zt=zt)
+        # zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
+        # zt = isnothing(zt) ? zero(ut) : zt
+        zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+        uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
 
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
 
         m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
 
-        if m[1] > M[1]
-            @warn "m greater than M !!!"
-        end
+        # if m[1] > M[1]
+        #     @warn "m greater than M !!!"
+        # end
 
         m_vec[j+1], M_vec[j+1] = m[1], M[1]
 

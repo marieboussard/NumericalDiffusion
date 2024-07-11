@@ -34,8 +34,8 @@ addSource!(eq.source, domain)
 #method = Rusanov(CFL_factor)
 method = createHydrostatic(CFL_factor, Rusanov)
 
-#v0 = v0_lake_at_rest(domain.x, source_term)
-v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
+v0 = v0_lake_at_rest(domain.x, source_term)
+#v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
 #v0 = v0_lake_at_rest(domain.x, NullSource())
 
 plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x), label="Water surface")

@@ -8,6 +8,8 @@ struct SaintVenant <: Equation
     treshold::Float64
 end
 
+get_name(::SaintVenant) = "Saint-Venant"
+
 function flux(equation::SaintVenant, v)
     h = v[1]
     if h > equation.treshold

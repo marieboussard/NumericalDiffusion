@@ -49,3 +49,5 @@ function addSource!(zbSource::ZbSource, domain::Domain)
     domain.sourceVec = zb(zbSource, domain.x)
     domain.DSourceVec = Dzb(zbSource, domain.x)
 end
+
+function addSource!(::NullSource, domain::Domain) end
