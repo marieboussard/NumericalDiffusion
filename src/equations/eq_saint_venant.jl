@@ -60,7 +60,7 @@ function CFL_cond(equation::SaintVenant, v::Vector)
     lamb = zeros(n)
     for i in 1:n
         if v[i][1] > equation.treshold
-            lamb[i] = v[i][2] / v[i][1] + sqrt(g * abs.(v[i][1]))
+            lamb[i] = abs.(v[i][2] / v[i][1]) + sqrt(g * abs.(v[i][1]))
         else
             lamb[i] = 0.0
         end
@@ -75,7 +75,7 @@ function CFL_cond(equation::SaintVenant, v::Matrix)
     lamb = zeros(n)
     for i in 1:n
         if v[i,1] > equation.treshold
-            lamb[i] = v[i,2] / v[i,1] + sqrt(g * abs.(v[i,1]))
+            lamb[i] = abs.(v[i,2] / v[i,1]) + sqrt(g * abs.(v[i,1]))
         else
             lamb[i] = 0.0
         end

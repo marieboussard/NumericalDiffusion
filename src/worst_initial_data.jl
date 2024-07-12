@@ -31,13 +31,41 @@ end
 
 function plotWorstWD(wd::WorstData, ::SaintVenant)
     i = argmin(wd.worstLowDiffVec)
-    plot(wd.initDataMat[i,:,1] .+ wd.initSource[i], label="Initial", markershape = :circ, mc=:blue3, lc=:blue3)
-    plot!(wd.worstDataMat[i,:,1] .+ wd.worstSource[i], label="Worst", markershape = :circ, mc=:red3, lc=:red3)
-    plot!(wd.initSource[i], label="Initial topography", markershape = :x, markerstrokewidth=2, mc=:blue3, lc=:blue3)
-    plot!(wd.worstSource[i], label="Worst topography", markershape = :x, markerstrokewidth=2, mc=:red3, lc=:red3)
+
+    pltA = []
+
+    plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18)
+
+    plot!(wd.initDataMat[i,:,1] .+ wd.initSource[i], label="Initial", markershape = :circ, mc=:blue3, lc=:blue3, lw=2, ms=8)
+    plot!(wd.worstDataMat[i,:,1] .+ wd.worstSource[i], label="Worst", markershape = :circ, mc=:red3, lc=:red3, lw=2, ms=8)
+    plot!(wd.initSource[i], label="Initial topography", markershape = :x, markerstrokewidth=2, mc=:blue3, lc=:blue3, lw=2, ms=8)
+    plot!(wd.worstSource[i], label="Worst topography", markershape = :x, markerstrokewidth=2, mc=:red3, lc=:red3, lw=2, ms=8)
     xlabel!("x")
     title!("Worst Initial Data for Saint-Venant with "*get_name(wd.method))
-    display(ylabel!("Water Surface"))
+    ylabel!("Water Surface")
+
+    push!(pltA, plt)
+
+    plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18)
+
+    plot!(wd.initDataMat[i,:,2], label="Initial", markershape = :circ, mc=:blue3, lc=:blue3, lw=2, ms=8)
+    plot!(wd.worstDataMat[i,:,2], label="Worst", markershape = :circ, mc=:red3, lc=:red3, lw=2, ms=8)
+    xlabel!("x")
+    title!("Worst Initial Data for Saint-Venant with "*get_name(wd.method))
+    ylabel!("Water Flow")
+
+    push!(pltA, plt2)
+
+    display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
+
     println("Worst value found for epsilon : "*string(wd.worstLowDiffVec[i]))
 end
 
@@ -104,12 +132,6 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
 end
 
 function find_worst_initial_data(u_init, lower, upper, equation::Equation, method::FVMethod, domain::Domain; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds())
-
-    # Bounds for the constraint
-    # lower = -1 .+ u_init
-    # upper = 1 .+ u_init
-    # lower = u_bounds[:,1]
-    # upper = u_bounds[:,2]
 
     prob = OptimizationProblem((u, p) -> epsilon(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init, p=u_init, lb = lower, ub = upper)
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())

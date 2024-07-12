@@ -51,7 +51,7 @@ function computeK(clModifiedData::CLModifiedData, u)
 end
 
 #computeK(::MaxModifiedData, u) = max(u...)
-computeK(::MaxModifiedData, u) = maximum(u, dims=1)
+computeK(::MaxModifiedData, u) = transpose(maximum(u, dims=1))
 computeK(::MinModifiedData, u) = min(u...)
 
 meanK(sL, sR) = CLModifiedData(ones(sL + sR))
@@ -66,9 +66,9 @@ struct NormalBounds <: BoundsType end
 struct LightBounds <: BoundsType end
 
 function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
-
+    
     K = computeK(KFun, extractLocalData(u, j, sL, sR))
-
+    #@show size(K)
     Nx, p = size(u) 
 
     ut = zero(u)

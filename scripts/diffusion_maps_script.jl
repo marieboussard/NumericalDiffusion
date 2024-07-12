@@ -24,28 +24,24 @@ include("../src/include_file.jl")
 Nx, t0, Tf = 50, 0, 0.4
 CFL_factor = 0.5
 domain = createUnitInterval(Nx, t0, Tf)
-height_bump = 1.0
+height_bump = 0.9
 source_term = bump_zb(height_bump)
 eq = SaintVenant(source_term, 1e-10)
 addSource!(eq.source, domain)
 
-#eq = SaintVenant(NullSource())
-
 #method = Rusanov(CFL_factor)
 method = createHydrostatic(CFL_factor, Rusanov)
 
-v0 = v0_lake_at_rest(domain.x, source_term)
-#v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
+#v0 = v0_lake_at_rest(domain.x, source_term)
+v0 = v0_lake_at_rest_perturbated(domain.x, source_term)
 #v0 = v0_lake_at_rest(domain.x, NullSource())
 
-plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x), label="Water surface")
-plot!(domain.x, zb(eq.source, domain.x), label="Topography")
-
 solSV = fv_solve(domain, v0, eq, method)
-nb_plots = 5
+nb_plots = 10
 display(plot_fv_sol(solSV, solSV.equation; nb_plots=nb_plots))
+#savefig("images/DiffusionMapsSaintVenant/hydro50_las_few_water_res.png")
 
-solEnt = optimize_for_entropy(v0, domain, eq, method, modifiedDataType=meanK(1,1))
+solEnt = optimize_for_entropy(v0, domain, eq, method, modifiedDataType=maxK())
 display(plot_solution(solEnt))
+#savefig("images/DiffusionMapsSaintVenant/hydro50_las_few_water_diff.png")
 
-plot_bounds(solEnt)

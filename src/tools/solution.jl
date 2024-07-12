@@ -17,22 +17,32 @@ function plot_solution(sol::OptForEntropySol)
 
     plt = []
 
-    plt1 = plot(sol.domain.interfaces, sol.Gopt, label="Gopt")
+    plt1 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
+    title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
+    plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
+    plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
+    plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
 
     push!(plt, plt1)
 
-    plt2 = plot(sol.domain.x, sol.Dopt, label="Dopt")
+    plt2 = plot(sol.domain.x, sol.Dopt, label="Dopt", size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18, lw=2)
     xlabel!("x")
     ylabel!("Numerical Diffusion")
+    title!("Max Diff : "*string(maximum(sol.Dopt)))
 
     push!(plt, plt2)
 
-    pltfin = plot(plt..., layout=(1, 2), size=(700, 350))
-
-    display(title!(get_name(sol.method)))
-
+    display(plot(plt..., layout=(2, 1), size=(1500, 1200)))
     println("Maximal diffusion value : ", maximum(sol.Dopt))
 end
 

@@ -95,35 +95,43 @@ function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2)
 
     p = div(sol.Nt, nb_plots)
 
-    plt = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=14,
-    titlefontsize=14,
-    guidefontsize=14,
-    tickfontsize=14)
+    pltA = []
+
+    plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18)
 
     for k in 0:nb_plots-2
         #plot!(domain.x, [solSV.u_approx[k*p+1][i][1] for i in 1:Nx] .+ zb(Bump_zb(), domain.x), label="t = " * string(round(solSV.t_vec[k*p+1], sigdigits=2)))
-        plot!(sol.domain.x, sol.u_approx[k*p+1][:,1] .+ zb(sol.equation.source, sol.domain.x), label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)))
+        plot!(sol.domain.x, sol.u_approx[k*p+1][:,1] .+ domain.sourceVec, label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)), lw=2)
     end
-    plot!(sol.domain.x, sol.u_approx[end][:,1] .+ zb(sol.equation.source, sol.domain.x), label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
-    plot!(sol.domain.x, zb(sol.equation.source, sol.domain.x), label="zb")
+    plot!(sol.domain.x, sol.u_approx[end][:,1] .+ domain.sourceVec, label="t = " * string(round(sol.t_vec[end], sigdigits=2)), lw=2)
+    plot!(sol.domain.x, domain.sourceVec, label="zb", lw=2)
     xlabel!("x")
-    title!(get_name(sol.method))
-    display(ylabel!("Surface of the lake"))
+    title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
+    ylabel!("Surface of the lake")
 
-    plt2 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=14,
-    titlefontsize=14,
-    guidefontsize=14,
-    tickfontsize=14)
+    push!(pltA, plt)
+
+    plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    legendfontsize=15,
+    titlefontsize=21,
+    guidefontsize=21,
+    tickfontsize=18)
 
     for k in 0:nb_plots-2
-        plot!(sol.domain.x, sol.u_approx[k*p+1][:,2], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)))
+        plot!(sol.domain.x, sol.u_approx[k*p+1][:,2], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)), lw=2)
     end
-    plot!(sol.domain.x, sol.u_approx[end][:,2], label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
+    plot!(sol.domain.x, sol.u_approx[end][:,2], label="t = " * string(round(sol.t_vec[end], sigdigits=2)), lw=2)
     xlabel!("x")
-    title!(get_name(sol.method))
-    display(ylabel!("Water flow"))
+    #title!(get_name(sol.method))
+    ylabel!("Water flow")
+
+    push!(pltA, plt2)
+
+    display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
 
 end
 
