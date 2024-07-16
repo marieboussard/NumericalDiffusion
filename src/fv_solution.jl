@@ -91,17 +91,19 @@ function plot_fv_sol(sol::FVSolution; nb_plots::Int64=2)
 
 end
 
-function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2)
+function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2, plotMode::PlottingMode=DisplayMode())
 
     p = div(sol.Nt, nb_plots)
 
     pltA = []
 
-    plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18)
+    plt = createPlot(plotMode)
+    
+    # plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18)
 
     for k in 0:nb_plots-2
         #plot!(domain.x, [solSV.u_approx[k*p+1][i][1] for i in 1:Nx] .+ zb(Bump_zb(), domain.x), label="t = " * string(round(solSV.t_vec[k*p+1], sigdigits=2)))
@@ -115,11 +117,13 @@ function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2)
 
     push!(pltA, plt)
 
-    plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18)
+    plt2 = createPlot(plotMode)
+
+    # plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18)
 
     for k in 0:nb_plots-2
         plot!(sol.domain.x, sol.u_approx[k*p+1][:,2], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)), lw=2)
@@ -131,7 +135,10 @@ function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2)
 
     push!(pltA, plt2)
 
-    display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
+    display(assemblePlot(plotMode, pltA))
+
+    #display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
+    #display(plot(pltA..., layout=(2, 1), size=(750, 600)))
 
 end
 

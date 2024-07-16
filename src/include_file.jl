@@ -6,6 +6,7 @@ using Optim
 using Optimization
 using OptimizationBBO
 
+include("tools/plotting_tools.jl")
 include("domain.jl")
 include("equations/abstract_equations.jl")
 include("methods/abstract_methods.jl")

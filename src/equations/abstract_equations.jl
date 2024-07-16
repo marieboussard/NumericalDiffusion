@@ -7,8 +7,6 @@ function CFL_cond(equation::ScalarEquation, v::Vector{Vector{Real}})
     max(abs.(D_flux(equation, [v[i][1] for i in eachindex(v)]))...)
 end
 function CFL_cond(equation::ScalarEquation, v::Vector{Vector{Float64}})
-    #@show typeof(v)
-    #@show D_flux(equation, [v[i][1] for i in eachindex(v)])
     max(abs.(D_flux(equation, [v[i][1] for i in eachindex(v)]))...)
 end
 #CFL_cond(equation::ScalarEquation, v::Vector{Float64}) = max(abs.(D_flux(equation, v))...)

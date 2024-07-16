@@ -12,8 +12,8 @@ include("../src/include_file.jl")
 # @time sol = iterate_WID(Nx, burgers(), Roe(CFL_factor), nb_it=10, boxBounds=[-3 3;])
 # plotWorstWD(sol)
 
-# # 2 # Saint-Venant
-# Nx = 50
+# 2 # Saint-Venant
+Nx = 50
 CFL_factor = 0.5
 topoHeight = 2.0
 eq = SaintVenant(Bump_zb(topoHeight), 1e-10)
