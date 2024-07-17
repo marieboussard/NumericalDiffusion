@@ -70,12 +70,7 @@ function extendInitialDataToK(wd::WorstData, Nx::Int)
     u_init, z = zeros(Nx, p), zeros(Nx, 1)
     j = Int(round(Nx/2))
 
-    @show wd.worstDataMat[i,:,:]
-    @show extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR)
-
-    @show wd.worstSource[i]
-
-    @show K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
+    K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
     Z = computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
 
     for k in 1:Nx
