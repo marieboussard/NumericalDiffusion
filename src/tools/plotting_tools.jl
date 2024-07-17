@@ -24,5 +24,5 @@ end
 function assemblePlot(::DisplayMode, pltA)
     n_plots = length(pltA)
     n, m = 2, Int(n_plots/2)
-    plot(pltA..., layout=(n, m))
+    plot(pltA..., layout=(n, m), size=(375*n_plots, 300*n_plots))
 end

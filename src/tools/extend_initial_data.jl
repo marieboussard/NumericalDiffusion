@@ -62,3 +62,31 @@ function extendInitialDataToLinear(wd::WorstData, Nx::Int; boxBounds=nothing, so
 
     u_init, z
 end
+
+function extendInitialDataToK(wd::WorstData, Nx::Int)
+    i = argmin(wd.worstLowDiffVec)
+    p = get_unknowns_number(wd.equation)
+    sL, sR = get_sL(wd.method), get_sR(wd.method)
+    u_init, z = zeros(Nx, p), zeros(Nx, 1)
+    j = Int(round(Nx/2))
+
+    @show wd.worstDataMat[i,:,:]
+    @show extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR)
+
+    @show wd.worstSource[i]
+
+    @show K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
+    Z = computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
+
+    for k in 1:Nx
+        if j-sL ≤ k ≤ j+sR
+            u_init[k,:] = wd.worstDataMat[i,k-j+sL+1,:]
+            z[k,:] .= wd.worstSource[i][k-j+sL+1]
+        else
+            u_init[k,:] = K
+            z[k,:] = Z 
+        end
+    end
+
+    u_init, z
+end

@@ -13,36 +13,44 @@ struct OptForEntropySol
     M_vec
 end
 
-function plot_solution(sol::OptForEntropySol)
+function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode())
 
     plt = []
 
-    plt1 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18)
+    plt1 = createPlot(plotMode)
+
+    # plt1 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
     title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
+    xlims!((0.45, 0.55))
 
     push!(plt, plt1)
 
-    plt2 = plot(sol.domain.x, sol.Dopt, label="Dopt", size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18, lw=2)
+    plt2 = createPlot(plotMode)
+
+    # plt2 = plot(sol.domain.x, sol.Dopt, label="Dopt", size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18, lw=2)
+    plot!(sol.domain.x, sol.Dopt, label="Dopt")
     xlabel!("x")
     ylabel!("Numerical Diffusion")
     title!("Max Diff : "*string(maximum(sol.Dopt)))
 
     push!(plt, plt2)
 
-    display(plot(plt..., layout=(2, 1), size=(1500, 1200)))
+    display(assemblePlot(plotMode, plt))
+
+    #display(plot(plt..., layout=(2, 1), size=(1500, 1200)))
     println("Maximal diffusion value : ", maximum(sol.Dopt))
 end
 

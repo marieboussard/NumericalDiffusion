@@ -7,6 +7,7 @@ struct WorstData
     equation::Equation
     method::FVMethod
     domain::Domain
+    modifiedDataType::ModifiedDataType
 end
 
 function plotWorstWD(wd::WorstData)
@@ -29,16 +30,18 @@ function plotWorstWD(wd::WorstData)
     println("Worst value found for epsilon : "*string(wd.worstLowDiffVec[i]))
 end
 
-function plotWorstWD(wd::WorstData, ::SaintVenant)
+function plotWorstWD(wd::WorstData, ::SaintVenant, plotMode::PlottingMode=DisplayMode())
     i = argmin(wd.worstLowDiffVec)
 
     pltA = []
 
-    plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18)
+    plt = createPlot(plotMode)
+
+    # plt = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18)
 
     plot!(wd.initDataMat[i,:,1] .+ wd.initSource[i], label="Initial", markershape = :circ, mc=:blue3, lc=:blue3, lw=2, ms=8)
     plot!(wd.worstDataMat[i,:,1] .+ wd.worstSource[i], label="Worst", markershape = :circ, mc=:red3, lc=:red3, lw=2, ms=8)
@@ -50,11 +53,13 @@ function plotWorstWD(wd::WorstData, ::SaintVenant)
 
     push!(pltA, plt)
 
-    plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
-    legendfontsize=15,
-    titlefontsize=21,
-    guidefontsize=21,
-    tickfontsize=18)
+    plt2 = createPlot(plotMode)
+
+    # plt2 = plot(size=(750, 600), margin=0.5Plots.cm, legend=:bottomright,
+    # legendfontsize=15,
+    # titlefontsize=21,
+    # guidefontsize=21,
+    # tickfontsize=18)
 
     plot!(wd.initDataMat[i,:,2], label="Initial", markershape = :circ, mc=:blue3, lc=:blue3, lw=2, ms=8)
     plot!(wd.worstDataMat[i,:,2], label="Worst", markershape = :circ, mc=:red3, lc=:red3, lw=2, ms=8)
@@ -64,7 +69,9 @@ function plotWorstWD(wd::WorstData, ::SaintVenant)
 
     push!(pltA, plt2)
 
-    display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
+    display(assemblePlot(plotMode, pltA))
+
+    #display(plot(pltA..., layout=(2, 1), size=(1500, 1200)))
 
     println("Worst value found for epsilon : "*string(wd.worstLowDiffVec[i]))
 end
@@ -190,7 +197,7 @@ function iterate_WID(Nx, equation::Equation, method::FVMethod; modifiedDataType:
         length(worstData) > (sL+sR+1)*p ? push!(worstSource, worstData[(sL+sR+1)*p+1:end]) : push!(worstSource, nothing)
     end
 
-    WorstData(initDataMat, initSource, worstDataMat, worstLowDiffVec, worstSource, equation, method, domain)
+    WorstData(initDataMat, initSource, worstDataMat, worstLowDiffVec, worstSource, equation, method, domain, modifiedDataType)
 
 end
 

@@ -10,15 +10,28 @@ struct Bump_zb <: ZbSource
     height::Real
     width::Real
 end
-bump_zb(;height::Real=3, width::Real=1.0) = Bump_zb(height, width)
+bump_zb(;height::Real=0.5, width::Real=1.0) = Bump_zb(height, width)
 zb(bz::Bump_zb, x) = max.(0, -1/bz.width*(bz.height/0.5^2)*(x .-0.5).^2 .+ bz.height)
-Dzb(bz::Bump_zb, x) = max.(0, 2*-1/bz.width*(bz.height/0.5^2)*(x .-0.5))
+function Dzb(bz::Bump_zb, x)
+    res = zeros(size(x))
+    for i in eachindex(x)
+        if -1/bz.width*(bz.height/0.5^2)*(x[i] .-0.5).^2 .+ bz.height < 0
+            res[i] = 0
+        else
+            res[i] = -2.0/bz.width*(bz.height/0.5^2)*(x[i] .-0.5)
+        end
+    end
+    res
+end
 
 # Sinusoidal
 struct Sinus_zb <: ZbSource
     height::Real
     freq::Real
 end
+sinus_zb(;height::Real=0.5, freq::Real=1.0) = Sinus_zb(height, freq)
+zb(sz::Sinus_zb, x) = (-cos.(2*pi*sz.freq * x) .+ 1)*sz.height/2
+Dzb(sz::Sinus_zb, x) = pi*sz.freq*(sin.(2*pi*sz.freq * x))*sz.height
 
 # Flat
 struct Flat_zb <: ZbSource

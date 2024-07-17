@@ -291,7 +291,7 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
     m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType, boundsType)
     gamma_init = initial_guess(m_vec, M_vec)
 
-    @show sol = optimize(gamma -> J(gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init;g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
+    @show sol = optimize(gamma -> J(gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
 
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
