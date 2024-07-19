@@ -72,13 +72,8 @@ struct LightBounds <: BoundsType end
 function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
     
     K = computeK(KFun, extractLocalData(u, j, sL, sR))
-    #@show size(K)
-    Nx, p = size(u) 
-
+    Nx= size(u)[1]
     ut = zero(u)
-
-    #ut = K * ones(Nx, p)
-
     
     for i in 1:Nx
         if (j - sL + 1 <= i && i <= j + sR) || (((j - sL + 1) % Nx <= i) && (j - sL + 1 < 1)) || ((i <= (j + sR) % Nx) & (j + sR > Nx))
@@ -95,9 +90,8 @@ end
 
 function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
 
-    Nx = length(u)
-
-    ut = zeros(Nx)
+    Nx = size(u)[1]
+    ut = zero(u)
 
     ileft, iright = j - sL + 1, j + sR
     jleft, jright = j - sL - sR + 2, j + sL + sR - 1
@@ -109,19 +103,19 @@ function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
             || (ileft % Nx <= k && ileft < 1)
             || (iright % Nx >= k && iright > Nx)
         )
-            ut[k] = u[k]
+            ut[k,:] = u[k,:]
         elseif (jleft <= k && ileft > k) || (
             jleft % Nx <= k && jleft < 1 && k < ileft % Nx
         )
-            ut[k] = u[mod1(ileft, Nx)]
+            ut[k,:] = u[mod1(ileft, Nx),:]
         elseif (iright < k && jright >= k) || (
             jright % Nx >= k && jright > Nx && k > iright % Nx
         )
-            ut[k] = u[mod1(iright, Nx)]
+            ut[k,:] = u[mod1(iright, Nx),:]
         elseif jright < k
-            ut[k] = u[mod1(iright, Nx)]
+            ut[k,:] = u[mod1(iright, Nx),:]
         elseif jleft > k
-            ut[k] = u[mod1(ileft, Nx)]
+            ut[k,:] = u[mod1(ileft, Nx),:]
         end
     end
     ut
@@ -195,7 +189,14 @@ function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, s
     return GK[1], GK[1]
 end
 
-initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR) = G(equation, u[mod1(j + sR, length(u))]), G(equation, u[mod1(j - sL + 1, length(u))])
+function initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
+    Nx = size(u)[1]
+    zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx),:]
+    zR = isnothing(z) ? nothing : z[mod1(j - sL + 1, Nx),:]
+    Gm = get_G(equation, u[mod1(j + sR, Nx),:]; z=zR)
+    GM = get_G(equation, u[mod1(j - sL + 1, length(u)),:]; z=zL)
+    Gm[1], GM[1]
+end
 
 function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
 
@@ -212,16 +213,41 @@ function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equati
 
 end
 
-function updateBounds!(::AsymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt)
+function updateBounds!(::AsymmetricModifiedData, ::NormalBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
 
     for k in j-sL-sR+2:j
-        M += dx / dt * (eta(equation, ut[mod1(k, Nx)]) - eta(equation, uh[mod1(k, Nx)]))
+        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
     end
 
     for k in j+1:j+sL+sR-1
-        m += dx / dt * (eta(equation, uh[mod1(k, Nx)]) - eta(equation, ut[mod1(k, Nx)]))
+        m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
+    end
+    
+    m, M
+
+end
+
+function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
+
+    Deta_uj = get_D_eta(equation, u[j,:]; z=zt[j,:])
+    eta_uj = get_eta(equation, u[j,:]; z=zt[j,:])
+    fj = giveNumFlux(method, equation, u[j,:], u[mod1(j+1, Nx),:]; zL=zt[j], zR=zt[mod1(j + 1, Nx)])
+    K, Z = computeK(KFun, extractLocalData(u, j, sL, sR)), computeZ(KFun, z, j, sL, sR)
+
+    M = M .+ Deta_uj * (fj .- get_flux(equation, K; z= Z))
+    M = M .+ dx/dt * (j + 1 - (j - sL - sR + 1))* (Deta_uj.*u[j,:] .- eta_uj)
+
+    m = m .+ Deta_uj * (fj .- get_flux(equation, K; z= Z))
+    m = m .+ dx/dt * ((j + sL + sR + 1) - j - 1)* (eta_uj .- Deta_uj.*u[j,:])
+    
+    for k in j-sL-sR+1:j
+        M = M .+ dx / dt .* (get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- Deta_uj * ut[mod1(k, Nx),:])
     end
 
+    for k in j+1:j+sL+sR
+        m = m .+ dx / dt .* (Deta_uj * ut[mod1(k, Nx),:] .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
+        
+    end
     
     m, M
 
@@ -317,6 +343,6 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
 
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
-    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, m_vec, M_vec)
+    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, m_vec, M_vec,"")
 
 end

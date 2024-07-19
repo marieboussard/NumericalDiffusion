@@ -1,6 +1,6 @@
 #using Plots
 
-struct OptForEntropySol
+mutable struct OptForEntropySol
     domain::Domain
     equation::Equation
     method::FVMethod
@@ -11,6 +11,7 @@ struct OptForEntropySol
     Dopt
     m_vec
     M_vec
+    label
 end
 
 function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode())
@@ -30,7 +31,7 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
-    xlims!((0.45, 0.55))
+    #xlims!((0.45, 0.55))
 
     push!(plt, plt1)
 
@@ -52,6 +53,32 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
 
     #display(plot(plt..., layout=(2, 1), size=(1500, 1200)))
     println("Maximal diffusion value : ", maximum(sol.Dopt))
+end
+
+function plot_solutions(solVec, plotMode::PlottingMode=DisplayMode())
+
+    plt = []
+
+    # Numerical Entropy Flux
+    plt1 = createPlot(plotMode)
+    xlabel!("x")
+    ylabel!("Numerical Entropy Flux")
+    title!(get_name(solVec[1].method)*", Nx = "*string(solVec[1].domain.Nx))
+    for sol in solVec
+        plot!(sol.domain.interfaces, sol.Gopt, label=sol.label, lw=2)
+    end
+    push!(plt, plt1)
+
+    # Numerical Diffusion
+    plt2 = createPlot(plotMode)
+    xlabel!("x")
+    ylabel!("Numerical Diffusion")
+    for sol in solVec
+        plot!(sol.domain.x, sol.Dopt, label=sol.label)
+    end
+    push!(plt, plt2)
+
+    display(assemblePlot(plotMode, plt))
 end
 
 function plot_bounds(sol::OptForEntropySol; exactG_known=false)

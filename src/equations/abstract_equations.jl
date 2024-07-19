@@ -1,6 +1,8 @@
 abstract type Equation end
 abstract type ScalarEquation <: Equation end
 
+D_eta(equation::Equation, args...) = @error "Dη not given for equation "*get_name(equation)
+
 function CFL_cond(equation::ScalarEquation, v::Vector{Vector{Real}})
     #@show typeof(v)
     #@show D_flux(equation, [v[i][1] for i in eachindex(v)])

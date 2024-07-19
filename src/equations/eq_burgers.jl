@@ -11,12 +11,13 @@ burgers() = Burgers(NullSource())
 flux(::Burgers, u) = u.^2 ./ 2
 D_flux(::Burgers, u) = u
 eta(::Burgers, u) = u.^2
-#etaTilde(::Burgers, u; x=0) = eta(::Burgers, u; x=0)
 G(::Burgers, u) = 2.0 .* u.^3 ./ 3.0
-#GTilde(::Burgers, u; x=0) = G(::Burgers, u; x=0)
+D_eta(::Burgers, u) = 2.0*u
 
+get_flux(equation::Burgers, u; z=nothing) = flux(equation, u)
 get_eta(equation::Burgers, u; z=nothing) = eta(equation, u)
 get_G(equation::Burgers, u; z=nothing) = G(equation, u)
+get_D_eta(equation::Burgers, u; z=nothing) = D_eta(equation, u)
 
 # Initial conditions
 
