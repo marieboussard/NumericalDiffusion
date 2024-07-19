@@ -10,6 +10,7 @@ struct AsymmetricModifiedData <: ModifiedDataType end
 abstract type OptimFunctional end
 struct SquareMinFun <: OptimFunctional end
 struct AbsMinFun <: OptimFunctional end
+struct SqrtMinFun <: OptimFunctional end
 
 function extractLocalData(u, j, sL, sR)
 
@@ -302,8 +303,27 @@ function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equ
         JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2)
     end
 
+    JD + JC + 1
+end
+
+function J(::SqrtMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
+
+    JD = 0
+    JC = 0
+
+    z = zb(equation.source, domain.x)
+
+    for j in 1:Nx
+        JD += sqrt(max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j])))
+    end
+
+    for j in 1:Nx+1
+        JC += sqrt((dt / dx)) * (sqrt(max(0, (gamma[j] - M_vec[j]))) + sqrt(max(0, 1 * (m_vec[j] - gamma[j]))))
+    end
+
     JD + JC
 end
+
 
 function J(::AbsMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
 
