@@ -37,6 +37,9 @@ Dzb(sz::Sinus_zb, x) = pi*sz.freq*(sin.(2*pi*sz.freq * x))*sz.height
 struct Flat_zb <: ZbSource
     height::Real
 end
+flat_zb(;height::Real=0.5) = Flat_zb(height)
+zb(fz::Flat_zb, x) = zero(x) .+ fz.height
+Dzb(::Flat_zb, x) = zero(x)
 
 zb(::NullSource, x) = zero(x)
 

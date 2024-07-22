@@ -260,7 +260,7 @@ function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equ
 
 end
 
-function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, method::FVMethod, modifiedDataType::ModifiedDataType=SymmetricModifiedData(), boundsType::BoundsType=NormalBounds())
+function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, method::FVMethod, modifiedDataType::ModifiedDataType, boundsType::BoundsType=NormalBounds())
 
     M_vec, m_vec = zeros(Nx + 1), zeros(Nx + 1)
     sL, sR = get_sL(method), get_sR(method)
@@ -269,7 +269,7 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     # z = zeros(domain.Nx,1)
     # for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
-
+    
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
         # zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
@@ -356,7 +356,7 @@ end
 
 initial_guess(m_vec, M_vec) = 0.5 * (m_vec + M_vec)
 
-function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1, 1), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), kwargs...)
+function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(get_sL(method), get_sR(method)), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), kwargs...)
 
     Nx, dx = domain.Nx, domain.dx
     FVsol = fv_solve(domain, u_init, equation, method)
