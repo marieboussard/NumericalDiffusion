@@ -12,6 +12,12 @@ abstract type OptimFunctional end
 struct SquareMinFun <: OptimFunctional end
 struct AbsMinFun <: OptimFunctional end
 struct SqrtMinFun <: OptimFunctional end
+struct HeavyConsistencyMinFun <:OptimFunctional end
+struct WeightedMinFun <: OptimFunctional end
+
+abstract type InitGuess end
+struct MeanInitGuess <: InitGuess end
+struct NullInitGuess <: InitGuess end
 
 function extractLocalData(u, j, sL, sR)
 
@@ -130,10 +136,11 @@ end
 
 compute_z_tilde(::NullSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR) = nothing
 function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR)
-    z = zeros(domain.Nx,1)
-    for k in 1:Nx
-        z[k] = zb(zbSource, domain.x[k])
-    end
+    # z = zeros(domain.Nx,1)
+    # for k in 1:Nx
+    #     z[k] = zb(zbSource, domain.x[k])
+    # end
+    z = reshape(domain.sourceVec, (domain.Nx, 1))
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
@@ -269,7 +276,7 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     # z = zeros(domain.Nx,1)
     # for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
-    
+
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
         # zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
@@ -299,7 +306,8 @@ function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equ
     JD = 0
     JC = 0
 
-    z = zb(equation.source, domain.x)
+    #z = zb(equation.source, domain.x)
+    z = domain.sourceVec
 
     for j in 1:Nx
         JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
@@ -307,6 +315,29 @@ function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equ
 
     for j in 1:Nx+1
         JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2)
+        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j])))
+        #JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j])))
+        #JC += (dt / dx)^2 * (sqrt(max(0, (gamma[j] - M_vec[j]))) + sqrt(max(0, 1 * (m_vec[j] - gamma[j]))))
+        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^8 + max(0, 1 * (m_vec[j] - gamma[j]))^8)
+
+    end
+
+    JD + JC + 1
+end
+
+function J(::HeavyConsistencyMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
+
+    JD = 0
+    JC = 0
+
+    z = domain.sourceVec
+
+    for j in 1:Nx
+        JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
+    end
+
+    for j in 1:Nx+1
+        JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j])))
     end
 
     JD + JC + 1
@@ -317,7 +348,7 @@ function J(::SqrtMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equat
     JD = 0
     JC = 0
 
-    z = zb(equation.source, domain.x)
+    z = domain.sourceVec
 
     for j in 1:Nx
         JD += sqrt(max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j])))
@@ -336,7 +367,7 @@ function J(::AbsMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equati
     JD = 0
     JC = 0
 
-    z = zb(equation.source, domain.x)
+    z = domain.sourceVec
 
     for j in 1:Nx
         JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))
@@ -349,26 +380,66 @@ function J(::AbsMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equati
     JD + JC
 end
 
-function diffusion(u, up, gamma, dx, dt, equation, domain::Domain)
-    z = zb(equation.source, domain.x)
+function J(::WeightedMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
+
+    JD = 0
+    JC = 0
+
+    z = domain.sourceVec
+
+    for j in 1:Nx
+        #JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2 * ((M_vec[j+1] - m_vec[j+1]) >=0)
+        JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j])) * ((M_vec[j+1] - m_vec[j+1]) >=0)
+    end
+
+    for j in 1:Nx+1
+        #@show (M_vec[j] - m_vec[j]) >=0
+        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2) * ((M_vec[j] - m_vec[j]) >=0)
+        JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j]))) * ((M_vec[j] - m_vec[j]) >=0)
+    end
+
+    JD + JC + 1
+end
+
+function diffusion(u, up, gamma, dx::Real, dt::Real, equation::Equation, domain::Domain)
+    z = domain.sourceVec
+    display(plot(z))
     [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
 end
 
-initial_guess(m_vec, M_vec) = 0.5 * (m_vec + M_vec)
+function consistency(::SquareMinFun, gamma, Nx, dx, dt, m_vec, M_vec)
+    consistency_vec = zeros(Nx+1)
+    for j in 1:Nx+1
+        consistency_vec[j] = (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2)
+    end
+    consistency_vec
+end
+function consistency(::WeightedMinFun, gamma, Nx, dx, dt, m_vec, M_vec)
+    consistency_vec = zeros(Nx+1)
+    for j in 1:Nx+1
+        consistency_vec[j] = (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2) * ((M_vec[j] - m_vec[j]) >=0)
+    end
+    consistency_vec
+end
+consistency(::OptimFunctional, gamma, Nx, dx, dt, m_vec, M_vec) = @warn "Missing consistency function"
 
-function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(get_sL(method), get_sR(method)), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), kwargs...)
+initial_guess(::MeanInitGuess, m_vec, M_vec) = 0.5 * (m_vec + M_vec)
+initial_guess(::NullInitGuess, m_vec, M_vec) = zero(m_vec)
+
+function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(get_sL(method), get_sR(method)), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), initGuess::InitGuess=MeanInitGuess(), kwargs...)
 
     Nx, dx = domain.Nx, domain.dx
     FVsol = fv_solve(domain, u_init, equation, method)
     u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 
     m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType, boundsType)
-    gamma_init = initial_guess(m_vec, M_vec)
+    gamma_init = initial_guess(initGuess, m_vec, M_vec)
 
     @show sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
 
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
-    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, m_vec, M_vec,"")
+    Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
+    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec,"")
 
 end

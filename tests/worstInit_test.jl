@@ -1,45 +1,45 @@
 include("../src/include_file.jl")
 
-# # 1 # With Burgers
+# 1 # With Burgers
 
-# #xmin, xmax, Nx, t0, Tf = -2, 2, 5, 0, 0.4
-# CFL_factor = 0.5
-# #omega = createInterval(xmin, xmax, Nx, t0, Tf)
-
-# Nx = 100
-
-# #@time sol = iterate_WID(Nx, burgers(), Rusanov(CFL_factor), nb_it=10, boxBounds=[-3 3;])
-# @time sol = iterate_WID(Nx, burgers(), Roe(CFL_factor), nb_it=10, boxBounds=[-3 3;])
-# plotWorstWD(sol)
-
-# 2 # Saint-Venant
-Nx = 50
+#xmin, xmax, Nx, t0, Tf = -2, 2, 5, 0, 0.4
 CFL_factor = 0.5
-topoHeight = 2.0
-eq = SaintVenant(bump_zb(height=topoHeight), 1e-10)
+#omega = createInterval(xmin, xmax, Nx, t0, Tf)
 
-method = createHydrostatic(CFL_factor, Rusanov)
-#method = Rusanov(CFL_factor)
+Nx = 100
 
-boxBounds=[0.0 3;-1.0 1.0]
-sourceBounds=[-1.0, 1.0]
+@time sol = iterate_WID(Nx, burgers(), Rusanov(CFL_factor), nb_it=2, boxBounds=[-3 3;])
+#@time sol = iterate_WID(Nx, burgers(), Roe(CFL_factor), nb_it=10, boxBounds=[-3 3;])
+plotWorstWD(sol)
 
-sol = iterate_WID(Nx, eq, method; nb_it=1, boxBounds=boxBounds, sourceBounds=sourceBounds)
+# # 2 # Saint-Venant
+# Nx = 50
+# CFL_factor = 0.5
+# topoHeight = 2.0
+# eq = SaintVenant(bump_zb(height=topoHeight), 1e-10)
 
-plotWorstWD(sol, eq)
+# method = createHydrostatic(CFL_factor, Rusanov)
+# #method = Rusanov(CFL_factor)
 
-# # Reconstruction of the initial data from the optimization results
-# u_init, z = extendInitialDataToLinear(sol, Nx, boxBounds=boxBounds, sourceBounds=sourceBounds)
-u_init, z = extendInitialDataToK(sol, Nx)
-#plot(u_init[:,1], label="water height")
-plot(u_init[:,1] .+ z, label="surface")
-plot!(z, label="z")
+# boxBounds=[0.0 3;-1.0 1.0]
+# sourceBounds=[-1.0, 1.0]
 
-# domain = createUnitInterval(Nx, 0.0, 0.1)
-# domain.sourceVec = z
+# sol = iterate_WID(Nx, eq, method; nb_it=1, boxBounds=boxBounds, sourceBounds=sourceBounds)
 
-# fv_sol = fv_solve(domain, u_init, eq, method)
-# display(plot_fv_sol(fv_sol, eq, nb_plots=5))
+# plotWorstWD(sol, eq)
 
-# solEnt = optimize_for_entropy(u_init, domain, eq, method)#, modifiedDataType=maxK())
-# display(plot_solution(solEnt))
+# # # Reconstruction of the initial data from the optimization results
+# # u_init, z = extendInitialDataToLinear(sol, Nx, boxBounds=boxBounds, sourceBounds=sourceBounds)
+# u_init, z = extendInitialDataToK(sol, Nx)
+# #plot(u_init[:,1], label="water height")
+# plot(u_init[:,1] .+ z, label="surface")
+# plot!(z, label="z")
+
+# # domain = createUnitInterval(Nx, 0.0, 0.1)
+# # domain.sourceVec = z
+
+# # fv_sol = fv_solve(domain, u_init, eq, method)
+# # display(plot_fv_sol(fv_sol, eq, nb_plots=5))
+
+# # solEnt = optimize_for_entropy(u_init, domain, eq, method)#, modifiedDataType=maxK())
+# # display(plot_solution(solEnt))

@@ -89,6 +89,7 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
     u_mid = u[j,:]
     dx = domain.dx
     dt = method.CFL_factor * dx / CFL_cond(equation, u) # Timestep given by CFL condition
+    if warningsOn @show dt end
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
 
     # Computing mj-1/2 and Mj-1/2

@@ -9,6 +9,7 @@ mutable struct OptForEntropySol
     Gopt
     Jopt::Float64
     Dopt
+    Copt
     m_vec
     M_vec
     label
