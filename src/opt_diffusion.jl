@@ -307,7 +307,7 @@ function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equ
     JC = 0
 
     #z = zb(equation.source, domain.x)
-    z = domain.sourceVec
+    z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
 
     for j in 1:Nx
         JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2
@@ -385,25 +385,24 @@ function J(::WeightedMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::E
     JD = 0
     JC = 0
 
-    z = domain.sourceVec
+    z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
 
     for j in 1:Nx
-        #JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2 * ((M_vec[j+1] - m_vec[j+1]) >=0)
-        JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j])) * ((M_vec[j+1] - m_vec[j+1]) >=0)
+        JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j]))^2 * ((M_vec[j+1] - m_vec[j+1]) >=0)
+        #JD += max(0, get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (gamma[j+1] - gamma[j])) * ((M_vec[j+1] - m_vec[j+1]) >=0)
     end
 
     for j in 1:Nx+1
         #@show (M_vec[j] - m_vec[j]) >=0
-        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2) * ((M_vec[j] - m_vec[j]) >=0)
-        JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j]))) * ((M_vec[j] - m_vec[j]) >=0)
+        JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2) * ((M_vec[j] - m_vec[j]) >=0)
+        #JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j]))) * ((M_vec[j] - m_vec[j]) >=0)
     end
 
     JD + JC + 1
 end
 
 function diffusion(u, up, gamma, dx::Real, dt::Real, equation::Equation, domain::Domain)
-    z = domain.sourceVec
-    display(plot(z))
+    z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
     [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
 end
 

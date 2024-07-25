@@ -12,8 +12,8 @@ plot(u0)
 # @time sol = fv_solve(domain, u0, burgers(), Rusanov(CFL_number))
 # plot_fv_sol(sol, uexact_burgers_article)
 
-@time sol = optimize_for_entropy(u0, domain, burgers(), Rusanov(CFL_number), modifiedDataType=maxK())
-@time sol = optimize_for_entropy(u0, domain, burgers(), Rusanov(CFL_number), modifiedDataType=maxK())
+#@time sol = optimize_for_entropy(u0, domain, burgers(), Rusanov(CFL_number), modifiedDataType=maxK())
+@time sol = optimize_for_entropy(u0, domain, burgers(), Roe(CFL_number), modifiedDataType=maxK())
 
 display(plot_solution(sol))
 @show sol.Jopt

@@ -126,7 +126,6 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
 end
 
 function find_worst_initial_data(u_init, lower, upper, equation::Equation, method::FVMethod, domain::Domain; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds())
-
     prob = OptimizationProblem((u, p) -> epsilon(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init, p=u_init, lb = lower, ub = upper)
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
     sol.minimizer, sol.minimum
@@ -144,11 +143,14 @@ function initialize_WID(::ZbSource, u_init, u_low, u_up, sL, sR, sourceBounds)
     vcat(u_init, z_init), vcat(u_low, z_low), vcat(u_up, z_up)
 end
 
-function iterate_WID(Nx, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds(), nb_it::Int=10, boxBounds=nothing, sourceBounds=[-1.0 1.0])
+function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds(), nb_it::Int=10, boxBounds=nothing, sourceBounds=[-1.0 1.0])
 
+    dx = (xmax - xmin) / Nx
     p = get_unknowns_number(equation)
     sL, sR = get_sL(method), get_sR(method)
-    domain = createInterval(-1.0/Nx, 1.0/Nx, 2*sL+2*sR+1, 0.0, 1.0)
+    #domain = createInterval(-1.0/Nx, 1.0/Nx, 2*sL+2*sR+1, 0.0, 1.0)
+    #domain = createInterval(xmin, xmax, Nx, 0.0, 1.0)
+    domain = createInterval(0.0, dx*(2*sL+2*sR+1), 2*sL+2*sR+1, 0.0, 1.0)
     initDataMat, worstDataMat, worstLowDiffVec = zeros((nb_it, sL+sR+1, p)), zeros((nb_it, sL+sR+1, p)), zeros(nb_it)
     initSource, worstSource = [], []
 
@@ -179,6 +181,7 @@ function iterate_WID(Nx, equation::Equation, method::FVMethod; modifiedDataType:
         uz_init, uz_low, uz_up = initialize_WID(equation.source, u_init, u_low, u_up, sL, sR, sourceBounds)
         length(uz_init) > (sL+sR+1)*p ? push!(initSource, uz_init[(sL+sR+1)*p+1:end]) : push!(initSource, nothing)
 
+        @show size(uz_init)
         worstData, worstLowDiffVec[k] = find_worst_initial_data(uz_init, uz_low, uz_up, equation, method, domain; modifiedDataType=modifiedDataType, boundsType=boundsType)
         worstDataMat[k,:,:] = reshape(worstData[1:(sL+sR+1)*p], (sL+sR+1, p))
         length(worstData) > (sL+sR+1)*p ? push!(worstSource, worstData[(sL+sR+1)*p+1:end]) : push!(worstSource, nothing)

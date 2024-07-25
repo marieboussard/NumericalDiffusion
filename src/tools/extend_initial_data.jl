@@ -71,17 +71,19 @@ function extendInitialDataToK(wd::WorstData, Nx::Int)
     j = Int(round(Nx/2))
 
     K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
-    Z = computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
+    Z = isnothing(wd.domain.sourceVec) ? zeros(1,p) : computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
 
     for k in 1:Nx
         if j-sL ≤ k ≤ j+sR
             u_init[k,:] = wd.worstDataMat[i,k-j+sL+1,:]
-            z[k,:] .= wd.worstSource[i][k-j+sL+1]
+            z[k,:] .= isnothing(wd.domain.sourceVec) ? 0.0 : wd.worstSource[i][k-j+sL+1]
         else
             u_init[k,:] = K
             z[k,:] = Z 
         end
     end
+
+    z = isnothing(wd.domain.sourceVec) ? nothing : z
 
     u_init, z
 end
