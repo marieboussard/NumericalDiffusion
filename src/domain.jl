@@ -22,6 +22,6 @@ function createInterval(xmin::Real, xmax::Real, Nx::Int, t0::Real, Tf::Real)
 end
 
 createUnitInterval(Nx::Int, t0::Real, Tf::Real) = createInterval(0.0, 1.0, Nx, t0, Tf)
-
+createInterval(interval::Interval) = Interval(interval.xmin, interval.xmax, interval.Nx, interval.t0, interval.Tf, interval.dx, interval.x, interval.interfaces, interval.sourceVec, interval.DSourceVec)
 
 

@@ -35,7 +35,8 @@ function scheme_step(::ZbSource, v, dt, domain::Domain, equation::Equation, meth
     numericalFluxMat = zeros(Nx+1, p)
     #numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
     for i ∈ 2:Nx
-        v[i-1,:], v[i,:]
+        # @show v[i-1,:], v[i,:]
+        # @show domain.sourceVec
         numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:]; zL=domain.sourceVec[i-1], zR=domain.sourceVec[i])
     end
     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
@@ -107,10 +108,10 @@ function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2, plotMode
 
     for k in 0:nb_plots-2
         #plot!(domain.x, [solSV.u_approx[k*p+1][i][1] for i in 1:Nx] .+ zb(Bump_zb(), domain.x), label="t = " * string(round(solSV.t_vec[k*p+1], sigdigits=2)))
-        plot!(sol.domain.x, sol.u_approx[k*p+1][:,1] .+ domain.sourceVec, label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)), lw=2)
+        plot!(sol.domain.x, sol.u_approx[k*p+1][:,1] .+ sol.domain.sourceVec, label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=4)), lw=2)
     end
-    plot!(sol.domain.x, sol.u_approx[end][:,1] .+ domain.sourceVec, label="t = " * string(round(sol.t_vec[end], sigdigits=2)), lw=2)
-    plot!(sol.domain.x, domain.sourceVec, label="zb", lw=2)
+    plot!(sol.domain.x, sol.u_approx[end][:,1] .+ sol.domain.sourceVec, label="t = " * string(round(sol.t_vec[end], sigdigits=4)), lw=3)
+    plot!(sol.domain.x, sol.domain.sourceVec, label="zb", lw=2)
     xlabel!("x")
     title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
     ylabel!("Surface of the lake")

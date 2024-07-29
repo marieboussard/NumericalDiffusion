@@ -47,12 +47,60 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
     xlabel!("x")
     ylabel!("Numerical Diffusion")
     title!("Max Diff : "*string(maximum(sol.Dopt)))
+    #ylims!((-0.001, 0.015))
 
     push!(plt, plt2)
 
     display(assemblePlot(plotMode, plt))
 
     #display(plot(plt..., layout=(2, 1), size=(1500, 1200)))
+    println("Maximal diffusion value : ", maximum(sol.Dopt))
+end
+
+function plot_solution_EntBreak(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode())
+    plt = []
+
+    plt1 = createPlot(plotMode)
+
+    xlabel!("x")
+    ylabel!("Numerical Entropy Flux")
+    title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
+    plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
+    plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
+    plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
+
+    push!(plt, plt1)
+
+    plt2 = createPlot(plotMode)
+
+    plot!(sol.domain.x, sol.Dopt, label="Dopt", lw=2)
+    xlabel!("x")
+    ylabel!("Numerical Diffusion")
+    title!("Max Diff : "*string(maximum(sol.Dopt)))
+
+    push!(plt, plt2)
+
+    plt3 = createPlot(plotMode)
+
+    plot!(sol.domain.x, sol.Dopt, label="Dopt", lw=2)
+    xlabel!("x")
+    ylabel!("Numerical Diffusion")
+    #title!("Max Diff : "*string(maximum(sol.Dopt)))
+    title!("Zoom on positive diffusions")
+    ylims!((-0.005, maximum(sol.Dopt)*1.2))
+
+    push!(plt, plt3)
+
+    plt4 = createPlot(plotMode)
+
+    plot!(sol.domain.interfaces, sol.Copt, label="Copt", lw=2)
+    xlabel!("x")
+    ylabel!("Consistency term at optimality")
+
+    push!(plt, plt4)
+
+    #display(assemblePlot(plotMode, plt))
+    display(plot(plt..., layout=(4, 1), size=(800, 1200)))
     println("Maximal diffusion value : ", maximum(sol.Dopt))
 end
 

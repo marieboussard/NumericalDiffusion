@@ -148,3 +148,10 @@ function v0_lake_at_rest_perturbated(x, zbSource::ZbSource; c=1, xleft=0.1, xrig
 end
 
 ## TO DO ## maybe put Source instead of ZbSource
+
+function v0_discontinuous(x, args...; kwargs...)
+    v0 = zeros(size(x)..., 2)
+    v0[:,1] = (1 .+ 0.5*x) .+ 2*(x.>0.5)
+    v0[:,2] = 2 * x
+    v0
+end

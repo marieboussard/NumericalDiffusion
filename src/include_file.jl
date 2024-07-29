@@ -5,6 +5,7 @@ using LinearAlgebra
 using Optim
 using Optimization
 using OptimizationBBO
+using Debugger
 
 include("tools/plotting_tools.jl")
 include("domain.jl")

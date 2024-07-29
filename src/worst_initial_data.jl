@@ -1,3 +1,8 @@
+struct ReducedWD
+    uz
+    eps_uz
+    domain::Domain
+end
 struct WorstData
     initDataMat
     initSource
@@ -8,6 +13,7 @@ struct WorstData
     method::FVMethod
     domain::Domain
     modifiedDataType::ModifiedDataType
+    reducedWD
 end
 
 function plotWorstWD(wd::WorstData)
@@ -69,34 +75,67 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
     Nx = domain.Nx
     sL, sR = get_sL(method), get_sR(method)
     j = sL + sR + 1
+    #j = Int(round(Nx/2))
+
+    newDomain = createInterval(domain.xmin, domain.xmax, domain.Nx, domain.t0, domain.Tf)
+
     
     # Reconstructing u from the given data
     u = zeros(Nx,p)
     u_unk = reshape(uz_unk[1:p*(sL+sR+1)], (sL+sR+1,p))
-    for k in sR+1:sL+2*sR+1
-        u[k,:] .= u_unk[k-sR,:]
+    # for k in sR+1:sL+2*sR+1
+    #     u[k,:] .= u_unk[k-sR,:]
+    # end
+    K = computeK(modifiedDataType, extractLocalData(u_unk, sL+1, sL, sR))
+    # for k in 1:Nx
+    #     if sR+2 ≤ k ≤ sL+2*sR+2
+    #         u[k,:] .= u_unk[k-sR-1,:]
+    #     else
+    #         u[k,:] = K
+    #     end
+    # end
+    for k in 1:Nx
+        if j-sL ≤ k ≤ j+sR
+            u[k,:] = u_unk[k-j+sL+1,:]
+        else
+            u[k,:] = K
+        end
     end
 
     # Reconstructing the source from the given data
     if length(uz_unk) > p*(sL+sR+1)
         zVec = zeros(Nx,1)
-        for k in sR+1:sL+2*sR+1
-            zVec[k] = uz_unk[p*(sL+sR+1) + k-sR]
+        # for k in sR+1:sL+2*sR+1
+        #     zVec[k] = uz_unk[p*(sL+sR+1) + k-sR]
+        # end
+        Z = computeK(modifiedDataType, extractLocalData(reshape(uz_unk[p*(sL+sR+1)+1:end,:], (sL+sR+1,1)), sL+1, sL, sR))
+        # for k in 1:Nx
+        #     if sR+2 ≤ k ≤ sL+2*sR+2
+        #         zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-sR-1]
+        #     else
+        #         zVec[k,:] = Z
+        #     end
+        # end
+        for k in 1:Nx
+            if j-sL ≤ k ≤ j+sR
+                zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-j+sL+1]
+            else
+                zVec[k,:] = Z
+            end
         end
-        domain.sourceVec = zVec
+        newDomain.sourceVec = zVec
     end
 
     u_mid = u[j,:]
-    dx = domain.dx
+    dx = newDomain.dx
     dt = method.CFL_factor * dx / CFL_cond(equation, u) # Timestep given by CFL condition
-    if warningsOn @show dt end
-    z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
+    z = isnothing(newDomain.sourceVec) ? zeros((Nx, 1)) : reshape(newDomain.sourceVec, (Nx,1))
 
     # Computing mj-1/2 and Mj-1/2
 
     ut = compute_u_tilde(modifiedDataType, u, j-1, sL, sR)
-    zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j-1, domain, equation, method; zt=zt)
+    zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
+    uh = compute_u_hat(equation.source, ut, dx, dt, j-1, newDomain, equation, method; zt=zt)
 
     mminus, Mminus = initBounds(modifiedDataType, equation, u, j-1, sL, sR, z)
     mminus, Mminus = updateBounds!(modifiedDataType, boundsType, equation, mminus, Mminus, ut, uh, j-1, sL, sR, Nx, dx, dt, zt)
@@ -108,10 +147,10 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
     # Computing mj+1/2 and Mj+1/2
 
     ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-    zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
+    zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+    uh = compute_u_hat(equation.source, ut, dx, dt, j, newDomain, equation, method; zt=zt)
 
-    up_mid = scheme_step(equation.source, u, dt, domain, equation, method)[j,:]
+    up_mid = scheme_step(equation.source, u, dt, newDomain, equation, method)[j,:]
 
     mplus, Mplus = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
     mplus, Mplus = updateBounds!(modifiedDataType, boundsType, equation, mplus, Mplus, ut, uh, j, sL, sR, Nx, dx, dt, zt)
@@ -120,15 +159,21 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; m
         @warn "m+1/2 greater than M+1/2 !!!"
         @show Mplus[1] - mplus[1]
     end
+    z_mid = z[j]
+    # @show uz_unk
+    # @show min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
 
-    min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
+    min(get_eta(equation, u_mid; z=z_mid)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z_mid)[1], Mplus[1] - mplus[1])
 
 end
 
 function find_worst_initial_data(u_init, lower, upper, equation::Equation, method::FVMethod, domain::Domain; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds())
     prob = OptimizationProblem((u, p) -> epsilon(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init, p=u_init, lb = lower, ub = upper)
-    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited())
+    sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), abstol=1e-8)
     sol.minimizer, sol.minimum
+
+    # sol = optimize(u -> epsilon(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init)
+    # sol.minimizer, sol.minimum
 end
 
 function initialize_WID(::NullSource, u_init, u_low, u_up, args...)
@@ -149,8 +194,10 @@ function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modif
     p = get_unknowns_number(equation)
     sL, sR = get_sL(method), get_sR(method)
     #domain = createInterval(-1.0/Nx, 1.0/Nx, 2*sL+2*sR+1, 0.0, 1.0)
+    domain = createInterval(xmin, xmax, Nx, 0.0, 1.0)
+    ####domain = createInterval(0.0, dx*(2*sL+2*sR+3), 2*sL+2*sR+3, 0.0, 0.1)
+    #domain = createInterval(0.0, dx*(2*sL+2*sR+3), 2*sL+2*sR+3, 0.0, 0.1)
     #domain = createInterval(xmin, xmax, Nx, 0.0, 1.0)
-    domain = createInterval(0.0, dx*(2*sL+2*sR+1), 2*sL+2*sR+1, 0.0, 1.0)
     initDataMat, worstDataMat, worstLowDiffVec = zeros((nb_it, sL+sR+1, p)), zeros((nb_it, sL+sR+1, p)), zeros(nb_it)
     initSource, worstSource = [], []
 
@@ -158,6 +205,8 @@ function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modif
         boxBounds = zeros((p,2))
         boxBounds[:,2] = 1.0
     end
+
+    rw=nothing
 
     for k in 1:nb_it
 
@@ -181,13 +230,21 @@ function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modif
         uz_init, uz_low, uz_up = initialize_WID(equation.source, u_init, u_low, u_up, sL, sR, sourceBounds)
         length(uz_init) > (sL+sR+1)*p ? push!(initSource, uz_init[(sL+sR+1)*p+1:end]) : push!(initSource, nothing)
 
-        @show size(uz_init)
         worstData, worstLowDiffVec[k] = find_worst_initial_data(uz_init, uz_low, uz_up, equation, method, domain; modifiedDataType=modifiedDataType, boundsType=boundsType)
+        
+        # @show worstData
+        # @show domain
+
+        #@show epsilon(worstData, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType)
+        
         worstDataMat[k,:,:] = reshape(worstData[1:(sL+sR+1)*p], (sL+sR+1, p))
         length(worstData) > (sL+sR+1)*p ? push!(worstSource, worstData[(sL+sR+1)*p+1:end]) : push!(worstSource, nothing)
+    
+        rw = ReducedWD(worstData, worstLowDiffVec, domain)
+    
     end
 
-    WorstData(initDataMat, initSource, worstDataMat, worstLowDiffVec, worstSource, equation, method, domain, modifiedDataType)
+    WorstData(initDataMat, initSource, worstDataMat, worstLowDiffVec, worstSource, equation, method, domain, modifiedDataType, rw)
 
 end
 

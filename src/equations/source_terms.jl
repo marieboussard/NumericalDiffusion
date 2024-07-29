@@ -43,6 +43,11 @@ Dzb(::Flat_zb, x) = zero(x)
 
 zb(::NullSource, x) = zero(x)
 
+# A counter example for the discrete entropy inequality ?
+struct Discontinuous_zb <: ZbSource end
+# zb(::Discontinuous_zb, x) = (0.5*x) .+ (x.>0.5)
+Dzb(::Discontinuous_zb, x) = 0.5 .+ zero(x)
+zb(::Discontinuous_zb, x) = 2.0 .+ (10*x.^2) .*(x.<0.5).*(x.>0.48) .- (10*x.^2)  .*(x.<0.52).*(x.>0.5)
 
 
 # Linear topography

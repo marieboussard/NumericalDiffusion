@@ -220,7 +220,6 @@ function updateBounds!(::SymmetricModifiedData, ::NormalBounds, equation::Equati
 
     for k in j+1:j+sL+sR
         m = m .+ dx / dt .* (get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]))
-        
     end
     
     m, M
@@ -279,15 +278,30 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
 
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
+        # if 4 ≤ j ≤ 5
+        #     @show j, ut
+        # end
         # zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
         # zt = isnothing(zt) ? zero(ut) : zt
         zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+        # if 4 ≤ j ≤ 5
+        #     @show zt
+        # end
         uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
+        # if 4 ≤ j ≤ 5
+        #     @show uh
+        # end
 
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
 
-        m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+        # if 4 ≤ j ≤ 5
+        #     @show m, M
+        # end
 
+        m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+        # if 4 ≤ j ≤ 5
+        #     @show m, M
+        # end
         # if m[1] > M[1]
         #     @warn "m greater than M !!!"
         # end
@@ -299,6 +313,8 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     m_vec[1], M_vec[1] = m_vec[end], M_vec[end]
 
     m_vec, M_vec
+
+    
 end
 
 function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
@@ -434,9 +450,22 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
     m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType, boundsType)
     gamma_init = initial_guess(initGuess, m_vec, M_vec)
 
-    @show sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
+    u, up, dt = u_approx[end-1], u_approx[end], dt_vec[end]
+    # @show z = domain.sourceVec
+    # @show u[j,:], up[j,:]
+    # @show m_vec[j+1], M_vec[j]
+    # @show dt, dx
 
+    #@show get_eta(equation, u[j,:]; z=z[j])[1] - dt/dx *(m_vec[j+1] - M_vec[j]) - get_eta(equation, up[j,:]; z=z[j])[1]
+
+    sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
+
+    #@show size(u), size(up), size(Gopt)
+
+    #@show diffusion(u[j,:], up[j,:], Gopt[j:j+1], dx, dt, equation, domain)
+    #@show get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (Gopt[j+1] - Gopt[j])
+
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
     OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec,"")

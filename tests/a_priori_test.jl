@@ -35,7 +35,10 @@ fv_sol = fv_solve(domain, v0, eq, method)
 plot_fv_sol(fv_sol, eq; nb_plots=5)
 
 solEnt = optimize_for_entropy(v0, domain, eq, method)
-D_low, D_up = diffusion_a_priori(v0, domain, eq, method)
+D_priori = diffusion_a_priori(v0, domain, eq, method)
+
+D_low = D_priori.D_low_norm
+D_up = D_priori.D_up_norm
 
 nb_plots = 5
 pltA = []

@@ -11,8 +11,8 @@ u0 = (res=zeros(omega.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(omega.x
 #plot(u0)
 
 solBurgers = fv_solve(omega, u0, burgers(), Rusanov(CFL_factor))
-plot_fv_sol(solBurgers, uexact_burgers_article)
-#plot_fv_sol(solBurgers, nb_plots=6)
+#plot_fv_sol(solBurgers, uexact_burgers_article)
+plot_fv_sol(solBurgers, nb_plots=6)
 
 
 # # 2 # Solving Saint Venant equation
