@@ -17,7 +17,8 @@ end
 function createInterval(xmin::Real, xmax::Real, Nx::Int, t0::Real, Tf::Real)
     dx = (xmax - xmin) / Nx
     x = LinRange(xmin, xmax, Nx)
-    interfaces = LinRange(xmin - dx / 2, xmax + dx / 2, Nx + 1)
+    #interfaces = LinRange(xmin - dx / 2, xmax + dx / 2, Nx + 1)
+    interfaces = LinRange(xmin - dx, xmax, Nx + 1)
     Interval(xmin, xmax, Nx, t0, Tf, dx, x, interfaces, nothing, nothing)
 end
 

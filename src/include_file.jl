@@ -1,6 +1,7 @@
 """ Including all necessary files """
 
 using Plots
+using LaTeXStrings
 using LinearAlgebra
 using Optim
 using Optimization
