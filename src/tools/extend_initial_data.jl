@@ -164,3 +164,77 @@ function correct_extend_initial_data(wd::WorstData, args...)
     # @show min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
     u, domain
 end
+
+function correct_extend_initial_data_faster(Nx::Int, wd::WorstData, args...)
+    rw = wd.reducedWD
+    #domain = rw.domain
+    domain = createInterval(rw.domain.xmin, rw.domain.xmax, Nx, rw.domain.t0, rw.domain.Tf)
+    uz_unk = rw.uz
+    p = get_unknowns_number(wd.equation)
+    sL, sR = get_sL(wd.method), get_sR(wd.method)
+
+    j = Int(round(Nx/2))
+    u = zeros(Nx,p)
+
+    # Reconstructing u from the given data
+    u_unk = reshape(uz_unk[1:p*(sL+sR+1)], (sL+sR+1,p))
+    K = computeK(wd.modifiedDataType, extractLocalData(u_unk, sL+1, sL, sR))
+    for k in 1:Nx
+        if j-sL ≤ k ≤ j+sR
+            u[k,:] = u_unk[k-j+sL+1,:]
+        else
+            u[k,:] = K
+        end
+    end
+
+    # Reconstructing the source from the given data
+    if length(uz_unk) > p*(sL+sR+1)
+        zVec = zeros(Nx,1)
+        Z = computeK(wd.modifiedDataType, extractLocalData(reshape(uz_unk[p*(sL+sR+1)+1:end,:], (sL+sR+1,1)), sL+1, sL, sR))
+        for k in 1:Nx
+            if j-sL ≤ k ≤ j+sR
+                zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-j+sL+1]
+            else
+                zVec[k,:] = Z
+            end
+        end
+        domain.sourceVec = zVec
+    end
+
+    # u_mid = u[j,:]
+    # dx = domain.dx
+    # dt = method.CFL_factor * dx / CFL_cond(equation, u) # Timestep given by CFL condition
+    # z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
+
+    # # Computing mj-1/2 and Mj-1/2
+
+    # ut = compute_u_tilde(modifiedDataType, u, j-1, sL, sR)
+    # zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
+    # uh = compute_u_hat(equation.source, ut, dx, dt, j-1, domain, equation, method; zt=zt)
+
+    # mminus, Mminus = initBounds(modifiedDataType, equation, u, j-1, sL, sR, z)
+    # mminus, Mminus = updateBounds!(modifiedDataType, boundsType, equation, mminus, Mminus, ut, uh, j-1, sL, sR, Nx, dx, dt, zt)
+
+    # if (mminus[1] > Mminus[1]) && warningsOn
+    #     @warn "m-1/2 greater than M-1/2 !!!"
+    # end
+
+    # # Computing mj+1/2 and Mj+1/2
+
+    # ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
+    # zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+    # uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
+
+    # up_mid = scheme_step(equation.source, u, dt, domain, equation, method)[j,:]
+
+    # mplus, Mplus = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+    # mplus, Mplus = updateBounds!(modifiedDataType, boundsType, equation, mplus, Mplus, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+
+    # if Mplus[1] - mplus[1] < -1e-10 && warningsOn
+    #     @warn "m+1/2 greater than M+1/2 !!!"
+    #     @show Mplus[1] - mplus[1]
+    # end
+
+    # @show min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
+    u, domain
+end
