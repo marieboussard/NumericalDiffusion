@@ -50,21 +50,6 @@ Dzb(::Discontinuous_zb, x) = 0.5 .+ zero(x)
 zb(::Discontinuous_zb, x) = 2.0 .+ (10*x.^2) .*(x.<0.5).*(x.>0.48) .- (10*x.^2)  .*(x.<0.52).*(x.>0.5)
 
 
-# Linear topography
-# zb(bz::Bump_zb, x) = x .* bz.height
-# Dzb(bz::Bump_zb, x) = (ones(size(x))) .* bz.height
-
-# # Constant topography
-# zb(bz::Bump_zb, x) = zero(x) .+ bz.height
-# Dzb(bz::Bump_zb, x) = zero(x)
-
-# # Sinusoidal bump
-# zb(bz::Bump_zb, x) = -0.1 * (cos.(2*pi * x) .- 1)*bz.height
-# Dzb(bz::Bump_zb, x) = 0.1 * pi * sin.(2*pi * x)*bz.height
-
-# zb(::Bump_zb, x) = zero(x)
-# Dzb(::Bump_zb, x) = zero(x)
-
 zb_tilde(::Bump_zb, ut, c) = c - ut[1]
 
 #sourceTerm(::FVMethod, zbSource::ZbSource, domain::Domain, v) = [[0.0, -v[i][1] * g * Dzb(zbSource, domain.x)[i]] for i in eachindex(v)]

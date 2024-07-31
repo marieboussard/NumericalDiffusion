@@ -11,7 +11,7 @@ sourceBounds=[-5.0, 5.0]
 @time sol = iterate_WID(xmin, xmax, Nx, equation, method; nb_it=1, boxBounds=boxBounds, sourceBounds=sourceBounds)
 @show sol.worstLowDiffVec
 #u, domain = correct_extend_initial_data(sol)
-u, domain = correct_extend_initial_data_faster(Nx, sol)
+u, domain = extendInitialDataToK(Nx, sol)
 dx = domain.dx
 dt = method.CFL_factor * dx / CFL_cond(equation, u)
 domain.Tf = dt

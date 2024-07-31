@@ -63,30 +63,30 @@ function extendInitialDataToLinear(wd::WorstData, Nx::Int; boxBounds=nothing, so
     u_init, z
 end
 
-function extendInitialDataToK(wd::WorstData, Nx::Int)
-    i = argmin(wd.worstLowDiffVec)
-    p = get_unknowns_number(wd.equation)
-    sL, sR = get_sL(wd.method), get_sR(wd.method)
-    u_init, z = zeros(Nx, p), zeros(Nx, 1)
-    j = Int(round(Nx/2))
+# function extendInitialDataToK(wd::WorstData, Nx::Int)
+#     i = argmin(wd.worstLowDiffVec)
+#     p = get_unknowns_number(wd.equation)
+#     sL, sR = get_sL(wd.method), get_sR(wd.method)
+#     u_init, z = zeros(Nx, p), zeros(Nx, 1)
+#     j = Int(round(Nx/2))
 
-    K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
-    Z = isnothing(wd.domain.sourceVec) ? zeros(1,p) : computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
+#     K = computeK(wd.modifiedDataType, extractLocalData(wd.worstDataMat[i,:,:], sL+1, sL, sR))
+#     Z = isnothing(wd.domain.sourceVec) ? zeros(1,p) : computeK(wd.modifiedDataType, extractLocalData(reshape(wd.worstSource[i], (sL+sR+1,1)), sL+1, sL, sR))
 
-    for k in 1:Nx
-        if j-sL ≤ k ≤ j+sR
-            u_init[k,:] = wd.worstDataMat[i,k-j+sL+1,:]
-            z[k,:] .= isnothing(wd.domain.sourceVec) ? 0.0 : wd.worstSource[i][k-j+sL+1]
-        else
-            u_init[k,:] = K
-            z[k,:] = Z 
-        end
-    end
+#     for k in 1:Nx
+#         if j-sL ≤ k ≤ j+sR
+#             u_init[k,:] = wd.worstDataMat[i,k-j+sL+1,:]
+#             z[k,:] .= isnothing(wd.domain.sourceVec) ? 0.0 : wd.worstSource[i][k-j+sL+1]
+#         else
+#             u_init[k,:] = K
+#             z[k,:] = Z 
+#         end
+#     end
 
-    z = isnothing(wd.domain.sourceVec) ? nothing : z
+#     z = isnothing(wd.domain.sourceVec) ? nothing : z
 
-    u_init, z
-end
+#     u_init, z
+# end
 
 function correct_extend_initial_data(wd::WorstData, args...)
     rw = wd.reducedWD
@@ -165,7 +165,7 @@ function correct_extend_initial_data(wd::WorstData, args...)
     u, domain
 end
 
-function correct_extend_initial_data_faster(Nx::Int, wd::WorstData, args...)
+function extendInitialDataToK(Nx::Int, wd::WorstData, args...)
     rw = wd.reducedWD
     #domain = rw.domain
     domain = createInterval(rw.domain.xmin, rw.domain.xmax, Nx, rw.domain.t0, rw.domain.Tf)

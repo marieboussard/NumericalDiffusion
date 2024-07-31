@@ -68,106 +68,7 @@ function plotWorstWD(wd::WorstData, ::SaintVenant, plotMode::PlottingMode=Displa
     println("Worst value found for epsilon : "*string(wd.worstLowDiffVec[i]))
 end
 
-
 function epsilon(uz_unk, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType, warningsOn=false)
-
-    p = get_unknowns_number(equation)
-    Nx = domain.Nx
-    sL, sR = get_sL(method), get_sR(method)
-    #j = sL + sR + 1
-    j = Int(round(Nx/2))
-
-    newDomain = createInterval(domain.xmin, domain.xmax, domain.Nx, domain.t0, domain.Tf)
-
-    
-    # Reconstructing u from the given data
-    u = zeros(Nx,p)
-    u_unk = reshape(uz_unk[1:p*(sL+sR+1)], (sL+sR+1,p))
-    # for k in sR+1:sL+2*sR+1
-    #     u[k,:] .= u_unk[k-sR,:]
-    # end
-    K = computeK(modifiedDataType, extractLocalData(u_unk, sL+1, sL, sR))
-    # for k in 1:Nx
-    #     if sR+2 ≤ k ≤ sL+2*sR+2
-    #         u[k,:] .= u_unk[k-sR-1,:]
-    #     else
-    #         u[k,:] = K
-    #     end
-    # end
-    for k in 1:Nx
-        if j-sL ≤ k ≤ j+sR
-            u[k,:] = u_unk[k-j+sL+1,:]
-        else
-            u[k,:] = K
-        end
-    end
-
-    # Reconstructing the source from the given data
-    if length(uz_unk) > p*(sL+sR+1)
-        zVec = zeros(Nx,1)
-        # for k in sR+1:sL+2*sR+1
-        #     zVec[k] = uz_unk[p*(sL+sR+1) + k-sR]
-        # end
-        Z = computeK(modifiedDataType, extractLocalData(reshape(uz_unk[p*(sL+sR+1)+1:end,:], (sL+sR+1,1)), sL+1, sL, sR))
-        # for k in 1:Nx
-        #     if sR+2 ≤ k ≤ sL+2*sR+2
-        #         zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-sR-1]
-        #     else
-        #         zVec[k,:] = Z
-        #     end
-        # end
-        for k in 1:Nx
-            if j-sL ≤ k ≤ j+sR
-                zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-j+sL+1]
-            else
-                zVec[k,:] = Z
-            end
-        end
-        newDomain.sourceVec = zVec
-    end
-
-    u_mid = u[j,:]
-    dx = newDomain.dx
-    dt = method.CFL_factor * dx / CFL_cond(equation, u) # Timestep given by CFL condition
-    z = isnothing(newDomain.sourceVec) ? zeros((Nx, 1)) : reshape(newDomain.sourceVec, (Nx,1))
-
-    # Computing mj-1/2 and Mj-1/2
-
-    ut = compute_u_tilde(modifiedDataType, u, j-1, sL, sR)
-    zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j-1, newDomain, equation, method; zt=zt)
-
-    mminus, Mminus = initBounds(modifiedDataType, equation, u, j-1, sL, sR, z)
-    mminus, Mminus = updateBounds!(modifiedDataType, boundsType, equation, mminus, Mminus, ut, uh, j-1, sL, sR, Nx, dx, dt, zt)
-
-    if (mminus[1] > Mminus[1]) && warningsOn
-        @warn "m-1/2 greater than M-1/2 !!!"
-    end
-
-    # Computing mj+1/2 and Mj+1/2
-
-    ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-    zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j, newDomain, equation, method; zt=zt)
-
-    up_mid = scheme_step(equation.source, u, dt, newDomain, equation, method)[j,:]
-
-    mplus, Mplus = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
-    mplus, Mplus = updateBounds!(modifiedDataType, boundsType, equation, mplus, Mplus, ut, uh, j, sL, sR, Nx, dx, dt, zt)
-
-    if Mplus[1] - mplus[1] < -1e-10 && warningsOn
-        @warn "m+1/2 greater than M+1/2 !!!"
-        @show Mplus[1] - mplus[1]
-    end
-    z_mid = z[j]
-    # @show uz_unk
-    # @show min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
-
-    min(get_eta(equation, u_mid; z=z_mid)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z_mid)[1], Mplus[1] - mplus[1])
-
-end
-
-function epsilon_faster(uz_unk, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType, warningsOn=false)
 
     p = get_unknowns_number(equation)
     Nx = domain.Nx
@@ -180,17 +81,7 @@ function epsilon_faster(uz_unk, domain::Domain, equation::Equation, method::FVMe
     # Reconstructing u from the given data
     u = zeros(Nx,p)
     u_unk = reshape(uz_unk[1:p*(sL+sR+1)], (sL+sR+1,p))
-    # for k in sR+1:sL+2*sR+1
-    #     u[k,:] .= u_unk[k-sR,:]
-    # end
     K = computeK(modifiedDataType, extractLocalData(u_unk, sL+1, sL, sR))
-    # for k in 1:Nx
-    #     if sR+2 ≤ k ≤ sL+2*sR+2
-    #         u[k,:] .= u_unk[k-sR-1,:]
-    #     else
-    #         u[k,:] = K
-    #     end
-    # end
     for k in 1:Nx
         if j-sL ≤ k ≤ j+sR
             u[k,:] = u_unk[k-j+sL+1,:]
@@ -202,17 +93,7 @@ function epsilon_faster(uz_unk, domain::Domain, equation::Equation, method::FVMe
     # Reconstructing the source from the given data
     if length(uz_unk) > p*(sL+sR+1)
         zVec = zeros(Nx,1)
-        # for k in sR+1:sL+2*sR+1
-        #     zVec[k] = uz_unk[p*(sL+sR+1) + k-sR]
-        # end
         Z = computeK(modifiedDataType, extractLocalData(reshape(uz_unk[p*(sL+sR+1)+1:end,:], (sL+sR+1,1)), sL+1, sL, sR))
-        # for k in 1:Nx
-        #     if sR+2 ≤ k ≤ sL+2*sR+2
-        #         zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-sR-1]
-        #     else
-        #         zVec[k,:] = Z
-        #     end
-        # end
         for k in 1:Nx
             if j-sL ≤ k ≤ j+sR
                 zVec[k,:] .= uz_unk[p*(sL+sR+1) + k-j+sL+1]
@@ -257,15 +138,12 @@ function epsilon_faster(uz_unk, domain::Domain, equation::Equation, method::FVMe
         @show Mplus[1] - mplus[1]
     end
     z_mid = z[j]
-    # @show uz_unk
-    # @show min(get_eta(equation, u_mid; z=z)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z)[1], Mplus[1] - mplus[1])
-
     min(get_eta(equation, u_mid; z=z_mid)[1] - dt/dx *(mplus[1] - Mminus[1]) - get_eta(equation, up_mid; z=z_mid)[1], Mplus[1] - mplus[1])
 
 end
 
 function find_worst_initial_data(u_init, lower, upper, equation::Equation, method::FVMethod, domain::Domain; modifiedDataType::ModifiedDataType=meanK(1,1), boundsType::BoundsType=NormalBounds())
-    prob = OptimizationProblem((u, p) -> epsilon_faster(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init, p=u_init, lb = lower, ub = upper)
+    prob = OptimizationProblem((u, p) -> epsilon(u, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType), u_init, p=u_init, lb = lower, ub = upper)
     sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), abstol=1e-8)
     sol.minimizer, sol.minimum
 
@@ -290,11 +168,7 @@ function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modif
     dx = (xmax - xmin) / Nx
     p = get_unknowns_number(equation)
     sL, sR = get_sL(method), get_sR(method)
-    #domain = createInterval(-1.0/Nx, 1.0/Nx, 2*sL+2*sR+1, 0.0, 1.0)
-    #####domain = createInterval(xmin, xmax, Nx, 0.0, 1.0)
-    domain = createInterval(0.0, dx*(2*sL+2*sR+3), 2*sL+2*sR+3, 0.0, 1.0)
-    #domain = createInterval(0.0, dx*(2*sL+2*sR+3), 2*sL+2*sR+3, 0.0, 0.1)
-    #domain = createInterval(xmin, xmax, Nx, 0.0, 1.0)
+    domain = createInterval(0.0, dx*(2*sL+2*sR+3), 2*sL+2*sR+3, 0.0, 1.0) # Keep only necessary points, but with same spacestep
     initDataMat, worstDataMat, worstLowDiffVec = zeros((nb_it, sL+sR+1, p)), zeros((nb_it, sL+sR+1, p)), zeros(nb_it)
     initSource, worstSource = [], []
 
@@ -328,11 +202,6 @@ function iterate_WID(xmin, xmax, Nx, equation::Equation, method::FVMethod; modif
         length(uz_init) > (sL+sR+1)*p ? push!(initSource, uz_init[(sL+sR+1)*p+1:end]) : push!(initSource, nothing)
 
         worstData, worstLowDiffVec[k] = find_worst_initial_data(uz_init, uz_low, uz_up, equation, method, domain; modifiedDataType=modifiedDataType, boundsType=boundsType)
-        
-        # @show worstData
-        # @show domain
-
-        #@show epsilon(worstData, domain, equation, method; modifiedDataType=modifiedDataType, boundsType=boundsType)
         
         worstDataMat[k,:,:] = reshape(worstData[1:(sL+sR+1)*p], (sL+sR+1, p))
         length(worstData) > (sL+sR+1)*p ? push!(worstSource, worstData[(sL+sR+1)*p+1:end]) : push!(worstSource, nothing)

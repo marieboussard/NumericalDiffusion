@@ -5,7 +5,6 @@ struct CLModifiedData <: SymmetricModifiedData
 end
 struct MaxModifiedData <: SymmetricModifiedData end
 struct MinModifiedData <: SymmetricModifiedData end
-#struct MidModifiedData <: SymmetricModifiedData end
 struct AsymmetricModifiedData <: ModifiedDataType end
 
 abstract type OptimFunctional end
@@ -54,14 +53,11 @@ extractExtendedLocalData(u::Nothing, j, sL, sR) = nothing
 
 computeK(clModifiedData::CLModifiedData, u) = sum(clModifiedData.weights .* u) / length(u)
 function computeK(clModifiedData::CLModifiedData, u)
-    #@show clModifiedData.weights
-    #@show u
     Nx, p = size(u)
     K = zeros(p)
     for k in 1:p
         K[k] = sum(clModifiedData.weights .* u[:,k]) / sum(clModifiedData.weights)
     end
-    #@show K
     K
 end
 
@@ -136,10 +132,6 @@ end
 
 compute_z_tilde(::NullSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR) = nothing
 function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR)
-    # z = zeros(domain.Nx,1)
-    # for k in 1:Nx
-    #     z[k] = zb(zbSource, domain.x[k])
-    # end
     z = reshape(domain.sourceVec, (domain.Nx, 1))
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
@@ -185,18 +177,6 @@ function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equa
 
     return uh
 end
-
-# function compute_u_hat(ut, j::Int, domain::Domain, equation::Equation, method::FVMethod, zt=nothing)
-#     uh = copy(ut)
-#     Nx, p = size(ut)
-#     sL, sR = get_sL(method), get_sR(method)
-
-#     uh_short = extractExtendedLocalData(uh, j, sL, sR)
-#     zt_short = extractExtendedLocalData(zt, j, sL, sR)
-
-
-    
-# end
 
 function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
     GK = get_G(equation, computeK(KFun, extractLocalData(u, j, sL, sR)); z=computeZ(KFun, z, j, sL, sR))
@@ -272,39 +252,14 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     sL, sR = get_sL(method), get_sR(method)
 
     # source
-    # z = zeros(domain.Nx,1)
-    # for i in eachindex(domain.x) z[i]=zb(equation.source, domain.x[i]) end
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
 
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-        # if 4 ≤ j ≤ 5
-        #     @show j, ut
-        # end
-        # zt = compute_z_tilde(equation.source, modifiedDataType, domain, j, sL, sR)
-        # zt = isnothing(zt) ? zero(ut) : zt
         zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-        # if 4 ≤ j ≤ 5
-        #     @show zt
-        # end
         uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
-        # if 4 ≤ j ≤ 5
-        #     @show uh
-        # end
-
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
-
-        # if 4 ≤ j ≤ 5
-        #     @show m, M
-        # end
-
         m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
-        # if 4 ≤ j ≤ 5
-        #     @show m, M
-        # end
-        # if m[1] > M[1]
-        #     @warn "m greater than M !!!"
-        # end
 
         m_vec[j+1], M_vec[j+1] = m[1], M[1]
 
@@ -318,11 +273,8 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
 end
 
 function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
-
     JD = 0
     JC = 0
-
-    #z = zb(equation.source, domain.x)
     z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
 
     for j in 1:Nx
@@ -331,11 +283,6 @@ function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equ
 
     for j in 1:Nx+1
         JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^2 + max(0, 1 * (m_vec[j] - gamma[j]))^2)
-        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j])))
-        #JC += (dt / dx) * (max(0, (gamma[j] - M_vec[j])) + max(0, 1 * (m_vec[j] - gamma[j])))
-        #JC += (dt / dx)^2 * (sqrt(max(0, (gamma[j] - M_vec[j]))) + sqrt(max(0, 1 * (m_vec[j] - gamma[j]))))
-        #JC += (dt / dx)^2 * (max(0, (gamma[j] - M_vec[j]))^8 + max(0, 1 * (m_vec[j] - gamma[j]))^8)
-
     end
 
     JD + JC + 1
@@ -451,20 +398,8 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
     gamma_init = initial_guess(initGuess, m_vec, M_vec)
 
     u, up, dt = u_approx[end-1], u_approx[end], dt_vec[end]
-    # @show z = domain.sourceVec
-    # @show u[j,:], up[j,:]
-    # @show m_vec[j+1], M_vec[j]
-    # @show dt, dx
-
-    #@show get_eta(equation, u[j,:]; z=z[j])[1] - dt/dx *(m_vec[j+1] - M_vec[j]) - get_eta(equation, up[j,:]; z=z[j])[1]
-
     sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
-
-    #@show size(u), size(up), size(Gopt)
-
-    #@show diffusion(u[j,:], up[j,:], Gopt[j:j+1], dx, dt, equation, domain)
-    #@show get_eta(equation, up[j,:]; z=z[j])[1] - get_eta(equation, u[j,:]; z=z[j])[1] + dt / dx * (Gopt[j+1] - Gopt[j])
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
