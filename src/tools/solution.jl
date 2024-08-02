@@ -12,6 +12,7 @@ mutable struct OptForEntropySol
     Copt
     m_vec
     M_vec
+    summary
     label
 end
 

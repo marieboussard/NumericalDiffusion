@@ -17,7 +17,8 @@ dt = method.CFL_factor * dx / CFL_cond(equation, u)
 domain.Tf = dt
 
 fv_sol = fv_solve(domain, u, equation, method)
-solEnt = optimize_for_entropy(u, domain, equation, method)
+#solEnt = optimize_for_entropy(u, domain, equation, method)
+solEnt = optimize_for_entropy(u, domain, equation, method; method=LBFGS(), autodiff=:forward)
 
 
 nb_plots = 2

@@ -403,6 +403,6 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
-    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec,"")
+    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
 
 end

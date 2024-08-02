@@ -12,10 +12,15 @@ u_init = v0_lake_at_rest(domain.x, eq.source)
 fv_sol = fv_solve(domain, u_init, eq, method)
 display(plot_fv_sol(fv_sol, eq, nb_plots=5))
 
-solMeanK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, g_tol=1e-8)
-solMaxK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, modifiedDataType=maxK(), g_tol=1e-8)
-solMaxKTol = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, modifiedDataType=maxK(), g_tol=1e-16)
+# solMeanK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, g_tol=1e-8)
+# solMaxK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, modifiedDataType=maxK(), g_tol=1e-8)
+# solMaxKTol = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, modifiedDataType=maxK(), g_tol=1e-16)
 #solRusanov = optimize_for_entropy(u_init, domain, eq, Rusanov(CFL_factor); iterations=10000)
+
+# Now let us try a method which is not gradient free
+solMeanK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, method=LBFGS(), autodiff=:forward, g_tol=1e-8)
+solMaxK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, method=LBFGS(), autodiff=:forward, modifiedDataType=maxK(), g_tol=1e-8)
+solMaxKTol = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, method=LBFGS(), autodiff=:forward, modifiedDataType=maxK(), g_tol=1e-10)
 
 
 pltA = []
