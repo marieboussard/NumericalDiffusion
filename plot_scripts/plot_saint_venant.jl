@@ -10,7 +10,7 @@ u_init = v0_lake_at_rest(domain.x, eq.source)
 
 # Solving Saint-Venant for this data
 fv_sol = fv_solve(domain, u_init, eq, method)
-display(plot_fv_sol(fv_sol, eq, nb_plots=5))
+#display(plot_fv_sol(fv_sol, eq, nb_plots=5))
 
 # solMeanK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, g_tol=1e-8)
 # solMaxK = optimize_for_entropy(u_init, domain, eq, method; iterations=10000, modifiedDataType=maxK(), g_tol=1e-8)

@@ -7,6 +7,7 @@ using Optim
 using Optimization
 using OptimizationBBO
 using Debugger
+using TimerOutputs
 
 include("tools/plotting_tools.jl")
 include("domain.jl")

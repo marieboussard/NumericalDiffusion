@@ -25,24 +25,24 @@ asymGapVec = []
 asymGapRoeVec = []
 
 # Rusanov
-solAsym = optimize_for_entropy(u0, omega, burgers(), method, modifiedDataType=AsymmetricModifiedData())
+solAsym = optimize_for_entropy(u0, omega, burgers(), method, modifiedDataType=AsymmetricModifiedData(), method=LBFGS(), autodiff=:forward)
 solAsym.label = "Asymmetric"
 push!(solEntRusanovVec, solAsym)
 
 # Roe
-solAsymRoe = optimize_for_entropy(u0, omega, burgers(), methodRoe, modifiedDataType=AsymmetricModifiedData())
+solAsymRoe = optimize_for_entropy(u0, omega, burgers(), methodRoe, modifiedDataType=AsymmetricModifiedData(), method=LBFGS(), autodiff=:forward)
 solAsymRoe.label = "Asymmetric"
 push!(solEntRoeVec, solAsymRoe)
 
 for i in eachindex(KVec)
     # Rusanov
-    solEnt = optimize_for_entropy(u0, omega, burgers(), method, modifiedDataType=KVec[i])
+    solEnt = optimize_for_entropy(u0, omega, burgers(), method, modifiedDataType=KVec[i], method=LBFGS(), autodiff=:forward)
     solEnt.label = labelKVec[i]
     push!(solEntRusanovVec, solEnt)
     push!(asymGapVec, abs.((solEnt.Dopt .- solAsym.Dopt)./solAsym.Dopt))
 
     # Roe
-    solEnt = optimize_for_entropy(u0, omega, burgers(), methodRoe, modifiedDataType=KVec[i])
+    solEnt = optimize_for_entropy(u0, omega, burgers(), methodRoe, modifiedDataType=KVec[i], method=LBFGS(), autodiff=:forward)
     solEnt.label = labelKVec[i]
     push!(solEntRoeVec, solEnt)
     push!(asymGapRoeVec, abs.((solEnt.Dopt .- solAsymRoe.Dopt)./solAsymRoe.Dopt))
@@ -124,7 +124,7 @@ ylabel!("Relative Gap in Numerical Diffusion")
 push!(pltA, plt5)
 
 # Roe
-plt6 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:top,
+plt6 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:topleft,
     legendfontsize=15,
     titlefontsize=21,
     guidefontsize=21,
