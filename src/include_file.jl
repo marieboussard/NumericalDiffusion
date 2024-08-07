@@ -17,10 +17,12 @@ include("equations/source_terms.jl")
 
 # Equations
 include("equations/eq_burgers.jl")
+include("equations/eq_advection.jl")
 include("equations/eq_saint_venant.jl")
 
 # Finite Volumes methods
 include("methods/rusanov.jl")
+include("methods/modified_rusanov.jl")
 include("methods/roe.jl")
 include("methods/hydrostatic.jl")
 
