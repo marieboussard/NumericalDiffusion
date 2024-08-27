@@ -1,12 +1,3 @@
-abstract type ModifiedDataType end
-abstract type SymmetricModifiedData <: ModifiedDataType end
-struct CLModifiedData <: SymmetricModifiedData
-    weights
-end
-struct MaxModifiedData <: SymmetricModifiedData end
-struct MinModifiedData <: SymmetricModifiedData end
-struct AsymmetricModifiedData <: ModifiedDataType end
-
 abstract type OptimFunctional end
 struct SquareMinFun <: OptimFunctional end
 struct AbsMinFun <: OptimFunctional end
@@ -17,66 +8,6 @@ struct WeightedMinFun <: OptimFunctional end
 abstract type InitGuess end
 struct MeanInitGuess <: InitGuess end
 struct NullInitGuess <: InitGuess end
-
-function extractLocalData(u, j, sL, sR)
-
-    # To keep only cells that K takes as arguments
-    #Nx = length(u)
-    Nx, p = size(u)
-    u_short = zeros(sL + sR, p)
-    i = 1
-
-    for k in j-sL+1:j+sR
-        u_short[i,:] = u[mod1(k, Nx),:]
-        i += 1
-    end
-
-    return u_short
-end
-
-function extractExtendedLocalData(u, j, sL, sR)
-
-    # To keep only cells for which the modified flux is not G(K)
-    Nx, p = size(u)
-
-    u_short = zeros(2*(sR+sL),p)
-    i=1
-    for k in j-sL-sR+1:j+sR+sL
-        u_short[i,:] = u[mod1(k, Nx), :]
-        i+=1
-    end
-
-    return u_short
-end
-
-extractExtendedLocalData(u::Nothing, j, sL, sR) = nothing
-
-computeK(clModifiedData::CLModifiedData, u) = sum(clModifiedData.weights .* u) / length(u)
-function computeK(clModifiedData::CLModifiedData, u)
-    Nx, p = size(u)
-    K = zeros(p)
-    for k in 1:p
-        K[k] = sum(clModifiedData.weights .* u[:,k]) / sum(clModifiedData.weights)
-    end
-    K
-end
-
-#computeK(::MaxModifiedData, u) = max(u...)
-computeK(::MaxModifiedData, u) = transpose(maximum(u, dims=1))
-computeK(::MinModifiedData, u) = transpose(minimum(u, dims=1))
-
-meanK(sL, sR) = CLModifiedData(ones(sL + sR))
-maxK() = MaxModifiedData()
-minK() = MinModifiedData()
-midLeftK(sL, sR) = CLModifiedData(vcat(zeros(sL-1), 1, zeros(sR)))
-midRightK(sL, sR) = CLModifiedData(vcat(zeros(sL), 1, zeros(sR-1)))
-
-computeZ(KFun::ModifiedDataType, z, j, sL, sR) = computeK(KFun, extractLocalData(z, j, sL, sR))
-computeZ(::ModifiedDataType, ::Nothing, j, sL, sR) = nothing
-
-abstract type BoundsType end
-struct NormalBounds <: BoundsType end
-struct LightBounds <: BoundsType end
 
 function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
     
@@ -403,6 +334,6 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
-    OptForEntropySol(domain, equation, method, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
+    OptForEntropySol(domain, equation, method, modifiedDataType, boundsType, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
 
 end

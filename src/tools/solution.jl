@@ -4,10 +4,12 @@ mutable struct OptForEntropySol
     domain::Domain
     equation::Equation
     method::FVMethod
+    modifiedDataType::ModifiedDataType
+    boundsType::BoundsType
     u_approx
     dt_vec
     Gopt
-    Jopt::Float64
+    Jopt::Real
     Dopt
     Copt
     m_vec

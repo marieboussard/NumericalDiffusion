@@ -30,8 +30,11 @@ include("methods/hydrostatic.jl")
 include("fv_solution.jl")
 
 # Optimization process
+include("tools/modified_data_type.jl")
+include("tools/bounds_type.jl")
 include("tools/solution.jl")
 include("opt_diffusion.jl")
 include("worst_initial_data.jl")
 include("tools/extend_initial_data.jl")
 include("quantification_a_priori.jl")
+include("diffusion_compensation.jl")
