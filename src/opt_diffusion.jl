@@ -94,7 +94,7 @@ function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equa
 
     sL, sR = get_sL(method), get_sR(method)
 
-    sourceVec = sourceTerm(method, domain, ut; z=zt)
+    sourceVec = sourceTerm(equation, method, domain, ut; z=zt)
 
     for k in j-sL-sR+1:j+sR+sL
 

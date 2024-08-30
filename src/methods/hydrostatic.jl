@@ -68,7 +68,7 @@ giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux
 #     result
 # end
 
-function sourceTerm(::Hydrostatic, domain::Domain, v; z=domain.sourceVec)
+function sourceTerm(::SaintVenant, ::Hydrostatic, domain::Domain, v; z=domain.sourceVec)
     dx = domain.dx
     Nx = size(v)[1]
     result = zero(v)

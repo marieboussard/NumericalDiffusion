@@ -6,9 +6,11 @@ Nx, t0, Tf = 100, 0, 0.4
 CFL_factor = 0.5
 height = 1.0
 domain = createUnitInterval(Nx, t0, Tf)
-eq = SaintVenant(Bump_zb(height), 1e-10)
+topography = bump_zb(height=0.5, width = 0.4)
+eq = SaintVenant(topography, 1e-10)
+addSource!(eq.source, domain)
 
-v0 = v0_lake_at_rest(domain.x, Bump_zb(height))
+v0 = v0_lake_at_rest(domain.x, topography)
 
 plot(domain.x, [v[1] for v in v0] .+ zb(eq.source, domain.x))
 plot!(domain.x, zb(eq.source, domain.x))

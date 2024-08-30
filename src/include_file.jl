@@ -6,6 +6,8 @@ using LinearAlgebra
 using Optim
 using Optimization
 using OptimizationBBO
+using OptimizationMOI, Ipopt
+using ForwardDiff, Zygote
 using Debugger
 using TimerOutputs
 

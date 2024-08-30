@@ -41,10 +41,10 @@ function constraint_f_delta(f_delta, sol::OptForEntropySol)
         zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
             
                 ###### This part needs to be completed for equation with source term
-        @show Dzt = isnothing(domain.DSourceVec) ? zero(ut) : domain.DSourceVec
+        Dzt = isnothing(domain.DSourceVec) ? zero(ut) : domain.DSourceVec
         uh = copy(ut)
         #sourceVec = isnothing(sourceTerm(method, domain, ut; z=zt)) ? zero(Nx) : sourceTerm(method, domain, ut; z=zt)
-        sourceVec = sourceTerm(method, domain, ut; z=zt, Dz=Dzt)
+        sourceVec = sourceTerm(equation, method, domain, ut; z=zt, Dz=Dzt)
         for k in j-sL-sR+1:j+sR+sL
             uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- lambd .* (
                 giveNumFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
@@ -66,7 +66,7 @@ function constraint_f_delta(f_delta, sol::OptForEntropySol)
     cons
 end
 
-function f_delta_from_A(A::Real, sol::OptForEntropySol)
+function f_delta_from_A(A, sol::OptForEntropySol)
     u = sol.u_approx[end-1]
     Nx, p = size(u)
     f_delta = zeros(Nx+1, p)
@@ -76,7 +76,7 @@ function f_delta_from_A(A::Real, sol::OptForEntropySol)
     f_delta
 end
 
-function constraint_A(A::Real, sol::OptForEntropySol)
+function constraint_A(A, sol::OptForEntropySol)
     constraint_f_delta(f_delta_from_A(A, sol), sol)
 end
 
@@ -85,7 +85,11 @@ function find_optimal_A(sol::OptForEntropySol)
     cons(res, A, p) = (res .= [constraint_A(A, sol)])
     @show constraint_A(A_init, sol)
 
-    optprob = OptimizationFunction((x,p) -> abs.(x), Optimization.AutoForwardDiff(), cons = cons)
+    #optprob = OptimizationFunction((x,p) -> abs.(x), Optimization.AutoForwardDiff(); cons = cons)
+    #optprob = OptimizationFunction((x,p) -> abs.(x), Optimization.AutoZygote(); cons = cons)
+    optprob = OptimizationFunction((x,p) -> abs.(x); cons = cons)
     prob = OptimizationProblem(optprob, A_init, _p, lcons = [-Inf], ucons = [0.0])
-    solA = solve(prob, IPNewton())
+    #solA = solve(prob, IPNewton())
+    #solA = solve(prob, BFGS())
+    solA = solve(prob, Ipopt.Optimizer())
 end

@@ -63,17 +63,8 @@ zb_tilde(::Bump_zb, ut, c) = c - ut[1]
 #     S
 # end
 
-function sourceTerm(::FVMethod, domain::Domain, v; z=domain.sourceVec, Dz=domain.DSourceVec)
-    S = zero(v)
-    for i in 1:length(v[:,1])
-        S[i,1] = 0.0
-        #S[i,2] = -v[i,1]*g*domain.DSourceVec[i]
-        S[i,2] = -v[i,1]*g*Dz[i]
-    end
-    S
-end
-
-function sourceTerm()
+function sourceTerm(::Equation, ::FVMethod, domain::Domain, v; kwargs...)
+    return zero(v)
 end
 
 

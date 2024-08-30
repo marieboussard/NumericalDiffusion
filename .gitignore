@@ -1,3 +1,4 @@
 commands.ipynb
 *.txt
 command_test.jl
+constrained_opt_test.jl
