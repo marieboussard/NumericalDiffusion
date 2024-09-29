@@ -6,7 +6,7 @@ end
 get_sL(::ModifiedRusanov) = 1
 get_sR(::ModifiedRusanov) = 1
 
-get_name(mr::ModifiedRusanov) = "Modified Rusanov (A="*string(mr.A)*")"
+get_name(mr::ModifiedRusanov) = "Modified Rusanov" # (A="*string(mr.A)*")"
 
 function numFlux(mr::ModifiedRusanov, equation::Equation, uL, uR)
     [uL, uR]

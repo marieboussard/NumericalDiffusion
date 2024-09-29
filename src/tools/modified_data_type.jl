@@ -7,12 +7,12 @@ struct MaxModifiedData <: SymmetricModifiedData end
 struct MinModifiedData <: SymmetricModifiedData end
 struct AsymmetricModifiedData <: ModifiedDataType end
 
-function extractLocalData(u, j, sL, sR)
+function extractLocalData(u::AbstractArray{T}, j, sL, sR) where T
 
     # To keep only cells that K takes as arguments
     #Nx = length(u)
     Nx, p = size(u)
-    u_short = zeros(sL + sR, p)
+    u_short = zeros(T, sL + sR, p)
     i = 1
 
     for k in j-sL+1:j+sR
@@ -41,9 +41,9 @@ end
 extractExtendedLocalData(u::Nothing, j, sL, sR) = nothing
 
 computeK(clModifiedData::CLModifiedData, u) = sum(clModifiedData.weights .* u) / length(u)
-function computeK(clModifiedData::CLModifiedData, u)
+function computeK(clModifiedData::CLModifiedData, u::AbstractArray{T}) where T
     Nx, p = size(u)
-    K = zeros(p)
+    K = zeros(T, p)
     for k in 1:p
         K[k] = sum(clModifiedData.weights .* u[:,k]) / sum(clModifiedData.weights)
     end

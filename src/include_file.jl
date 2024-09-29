@@ -8,6 +8,7 @@ using Optimization
 using OptimizationBBO
 using OptimizationMOI, Ipopt
 using ForwardDiff, Zygote
+using ModelingToolkit
 using Debugger
 using TimerOutputs
 
