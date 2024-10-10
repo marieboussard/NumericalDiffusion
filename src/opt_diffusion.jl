@@ -297,7 +297,9 @@ end
 
 function diffusion(u, up, gamma, dx::Real, dt::Real, equation::Equation, domain::Domain)
     z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
-    [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] + dt / dx * (gamma[2:end] - gamma[1:end-1])
+    # @show typeof([get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])])
+    # @show typeof(dt / dx * (gamma[2:end] - gamma[1:end-1]))
+    [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] .+ dt / dx * (gamma[2:end] - gamma[1:end-1])
 end
 
 function consistency(::SquareMinFun, gamma, Nx, dx, dt, m_vec, M_vec)

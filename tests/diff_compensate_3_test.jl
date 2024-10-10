@@ -1,5 +1,7 @@
 include("../src/include_file.jl")
 
+@show 2-1
+
 # 1 # Solving Burgers equation
 xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.4
 CFL_factor = 0.5
@@ -12,11 +14,11 @@ T_reached = 0.0
 searchWhenAlreadyEntropic = true
 
 u0_temp = u0
-for k in 1:1
+for k in 1:3
     global u0_temp
     global T_reached
     global solEnt
-    global Aopt
+    global muopt
     global solEntRus
 
     dx = domain.dx
@@ -35,27 +37,27 @@ for k in 1:1
     if maximum(solEnt.Dopt) > 1e-8 || searchWhenAlreadyEntropic==true
         println("Modifiying the scheme to compensate positive numerical diffusion")
 
-        solAG = find_optimal_AG(solEnt);
-        Aopt, Gopt_mod = solAG.A, solAG.G
+        solmuG = find_optimal_muG(solEnt);
+        muopt, Gopt_mod = solmuG.mu, solmuG.G
 
-        AG = vcat(Aopt, Gopt_mod)
-        AG = reshape(AG, size(AG)[1])
-        @show constraint_AG(AG[1:end-1], solEnt)
+        muG = vcat(muopt, Gopt_mod)
+        muG = reshape(muG, size(muG)[1])
+        @show constraint_muG(muG[1:end-1], solEnt)
 
-        # First constraint: Negative diffusion
-        f_delta = f_delta_from_A(Aopt, solEnt)
-        up_mod = modified_scheme_step_f_delta(Aopt, solEnt)
-        lambd = dt/dx
-        up = solEnt.u_approx[end]
-        bu_delta = zeros(Nx)
-        bg_delta = zeros(Nx)
-        cons=0.0
-        for j in 1:Nx
-            bu_delta[j] = get_eta(equation, up_mod[j]) - get_eta(equation, up[j])
-            bg_delta[j] = lambd*((Gopt_mod[j+1] - solEnt.Gopt[j+1]) - (Gopt_mod[j] - solEnt.Gopt[j]))
-            cons += min(0, min(0,-solEnt.Dopt[j])-bu_delta[j]-bg_delta[j])^2
-        end
-        @show cons
+        # # First constraint: Negative diffusion
+        # f_delta = f_delta_from_A(Aopt, solEnt)
+        up_mod = modified_scheme_step_mu(muopt, solEnt)
+        # lambd = dt/dx
+        # up = solEnt.u_approx[end]
+        # bu_delta = zeros(Nx)
+        # bg_delta = zeros(Nx)
+        # cons=0.0
+        # for j in 1:Nx
+        #     bu_delta[j] = get_eta(equation, up_mod[j]) - get_eta(equation, up[j])
+        #     bg_delta[j] = lambd*((Gopt_mod[j+1] - solEnt.Gopt[j+1]) - (Gopt_mod[j] - solEnt.Gopt[j]))
+        #     cons += min(0, min(0,-solEnt.Dopt[j])-bu_delta[j]-bg_delta[j])^2
+        # end
+        # @show cons
 
         # z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
         # plot(domain.x, [get_eta(equation, solEnt.u_approx[end-1][i])[1] for i in 1:length(solEnt.u_approx[end-1])])
@@ -67,16 +69,16 @@ for k in 1:1
         #@show typeof([get_eta(equation, up_mod[j])[1].-get_eta(equation, solEnt.u_approx[end-1])[1]  for j in 1:length(up_mod)])
         #@show typeof(dt / dx * (Gopt_mod[2:end] - Gopt_mod[1:end-1]))
 
-        manual_D = [get_eta(equation, up_mod[j])[1]-get_eta(equation, solEnt.u_approx[end-1])[1]  for j in 1:length(up_mod)].+dt / dx * (Gopt_mod[2:end] .- Gopt_mod[1:end-1])
+        # manual_D = [get_eta(equation, up_mod[j])[1]-get_eta(equation, solEnt.u_approx[end-1])[1]  for j in 1:length(up_mod)].+dt / dx * (Gopt_mod[2:end] .- Gopt_mod[1:end-1])
 
 
-        plot(domain.x, bu_delta, label="bu_delta")
-        plot!(domain.x, bg_delta, label="bg_delta")
-        display(plot!(domain.x, solEnt.Dopt, label="Dopt"))
+        # plot(domain.x, bu_delta, label="bu_delta")
+        # plot!(domain.x, bg_delta, label="bg_delta")
+        # display(plot!(domain.x, solEnt.Dopt, label="Dopt"))
 
-        plot(domain.x, bu_delta.+bg_delta, label="B")
-        plot!(domain.x, bu_delta.+bg_delta.+solEnt.Dopt, label="B+Dopt")
-        display(plot!(domain.x, -solEnt.Dopt, label="-Dopt"))
+        # plot(domain.x, bu_delta.+bg_delta, label="B")
+        # plot!(domain.x, bu_delta.+bg_delta.+solEnt.Dopt, label="B+Dopt")
+        # display(plot!(domain.x, -solEnt.Dopt, label="-Dopt"))
 
         u0_temp = up_mod
 
@@ -84,19 +86,19 @@ for k in 1:1
         # plot(domain.x, u0_temp, label="u0_temp")
         # display(plot!(domain.x, up_mod, label="up mod"))
 
-        m_delta, M_delta = compute_modified_bounds_f_delta(f_delta_from_A(Aopt, solEnt), solEnt)
+        # m_delta, M_delta = compute_modified_bounds_f_delta(f_delta_from_A(Aopt, solEnt), solEnt)
 
         # plot(domain.interfaces, m_delta, label="m delta")
         # plot!(domain.interfaces, Gopt_mod, label="Gopt mod")
         # plot!(domain.interfaces, M_delta, label="M delta")
         # display(title!("Bounds at t="*string(round(T_reached, sigdigits=3))))
 
-        plot(domain.interfaces, Gopt_mod, label="Gopt mod")
+        plot(domain.interfaces, Gopt_mod[1:end-1], label="Gopt mod")
         plot!(domain.interfaces, solEnt.Gopt, label="Gopt"*get_name(method))
         plot!(domain.interfaces, solEntRus.Gopt, label="Gopt Rusanov")
         display(title!("Num entropy flux at t="*string(round(T_reached, sigdigits=3))))
 
-        Dopt_mod = diffusion(solEnt.u_approx[end-1], up_mod, Gopt_mod, domain.dx, solEnt.dt_vec[end], equation, domain)
+        Dopt_mod = diffusion(solEnt.u_approx[end-1], up_mod, Gopt_mod[1:end-1], domain.dx, solEnt.dt_vec[end], equation, domain)
         
         # plot(domain.x, manual_D, label="manual D")
         # display(plot!(domain.x, Dopt_mod, label="Dopt mod"))
