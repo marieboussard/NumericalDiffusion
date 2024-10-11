@@ -28,8 +28,10 @@ include("methods/rusanov.jl")
 include("methods/modified_rusanov.jl")
 include("methods/roe.jl")
 include("methods/hydrostatic.jl")
+include("methods/mixed_method.jl")
 
 # Finite Volumes resolution
+include("tools/num_flux_computation.jl")
 include("fv_solution.jl")
 
 # Optimization process
