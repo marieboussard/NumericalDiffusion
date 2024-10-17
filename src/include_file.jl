@@ -9,7 +9,7 @@ using OptimizationBBO
 using OptimizationMOI, Ipopt
 using ForwardDiff, Zygote
 using ModelingToolkit
-using Debugger
+#using Debugger
 using TimerOutputs
 
 include("tools/plotting_tools.jl")
@@ -43,6 +43,6 @@ include("worst_initial_data.jl")
 include("tools/extend_initial_data.jl")
 include("quantification_a_priori.jl")
 include("diffusion_compensation/diffusion_compensation.jl")
-include("diffusion_compensation/diffusion_compensation_v2.jl")
-include("diffusion_compensation/diffusion_compensation_v4.jl")
+# include("diffusion_compensation/diffusion_compensation_v2.jl")
+# include("diffusion_compensation/diffusion_compensation_v4.jl")
 include("diffusion_compensation/diffusion_compensation_v5.jl")

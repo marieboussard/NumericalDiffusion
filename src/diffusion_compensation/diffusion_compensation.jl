@@ -3,6 +3,7 @@ struct ConsistencyMeanShape <: GmidShape end
 struct RusanovLikeShape <: GmidShape end
 
 function compute_modified_bounds_f_delta(f_delta::AbstractArray{T}, sol::OptForEntropySol) where T
+    @show "we compute modified bounds"
     equation, method, domain, modifiedDataType, boundsType = sol.equation, sol.method, sol.domain, sol.modifiedDataType, sol.boundsType
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
     lambd = dt/dx
@@ -23,6 +24,9 @@ function compute_modified_bounds_f_delta(f_delta::AbstractArray{T}, sol::OptForE
         #sourceVec = isnothing(sourceTerm(method, domain, ut; z=zt)) ? zero(Nx) : sourceTerm(method, domain, ut; z=zt)
         sourceVec = sourceTerm(equation, method, domain, ut; z=zt, Dz=Dzt)
         for k in j-sL-sR+1:j+sR+sL
+            @show typeof(uh[mod1(k, Nx), :])
+            @show typeof(f_delta[mod1(k, Nx)])
+            @show typeof(giveNumFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)]))
             uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- lambd .* (
                 giveNumFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
                 .-
@@ -239,6 +243,7 @@ function compute_u_and_Gmid_from_A(A::AbstractArray{T}, sol::OptForEntropySol, :
 end
 
 function constraint_A(A::AbstractArray{T}, sol::OptForEntropySol; gmidShape::GmidShape=ConsistencyMeanShape) where T
+    "Calling the constraint function"
     equation, domain = sol.equation, sol.domain
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
     lambd = dt/dx
@@ -262,6 +267,7 @@ function constraint_A(A::AbstractArray{T}, sol::OptForEntropySol; gmidShape::Gmi
 end
 
 function find_optimal_A(sol::OptForEntropySol; gmidShape::GmidShape=ConsistencyMeanShape())
+    @show "Looking for an optimal A"
     @show A_init, _p = zero(sol.Gopt).-100.0, 0.0
     cons(res, A, p) = (res .= [constraint_A(A, sol; gmidShape=gmidShape)])
     @show constraint_A(A_init, sol; gmidShape=gmidShape)
@@ -275,4 +281,5 @@ function find_optimal_A(sol::OptForEntropySol; gmidShape::GmidShape=ConsistencyM
     #solA = solve(prob, IPNewton())
     #solA = solve(prob, BFGS())
     solA = solve(prob, Ipopt.Optimizer());
+    #nothing
 end

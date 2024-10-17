@@ -14,6 +14,7 @@ struct FVSolution
     t_vec
 end
 
+#=
 function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(Nx+1, p)
@@ -42,6 +43,18 @@ function scheme_step(::ZbSource, v, dt, domain::Domain, equation::Equation, meth
     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
     numericalFluxMat
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, method, domain, v)
+end
+
+=#
+
+function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    numericalFluxMat = giveNumFlux(ns, method, equation, v)
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
+end
+
+function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, method, domain, v)
 end
 

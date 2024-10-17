@@ -67,12 +67,14 @@ function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType,
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
-function compute_u_hat(::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=nothing)
+function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=nothing)
 
     uh = copy(ut)
     Nx, p = size(ut)
 
     sL, sR = get_sL(method), get_sR(method)
+
+    # numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)
 
     for k in j-sL-sR+1:j+sR+sL
 
@@ -83,7 +85,7 @@ function compute_u_hat(::NullSource, ut, dx, dt, j, domain::Domain, equation::Eq
         )
 
     end
-
+    #scheme_step(ns, ut, dt, domain, equation, method)
     return uh
 end
 

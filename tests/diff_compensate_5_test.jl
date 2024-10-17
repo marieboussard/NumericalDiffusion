@@ -34,7 +34,7 @@ for k in 1:1
         solAlphaG = find_optimal_alphaG(solEnt, Rusanov(CFL_factor), Gent);
         alpha_opt, Gopt_mod = solAlphaG.alpha, solAlphaG.G
 
-        u0_temp = solAlphaG.u
+        u0_temp = solAlphaG.up
         #u0_temp = up_mod
 
         #u0_temp = modified_scheme_step(Aopt, solEnt)
@@ -77,4 +77,6 @@ u_exact = [uexact_burgers_article(xi, solEnt.domain.Tf) for xi in domain.x]
 plot(domain.x, u_exact, label="exact")
 plot!(domain.x, up_modified, label="modified "*get_name(method))
 plot!(domain.x, solEnt.u_approx[end], label=get_name(method))
-plot!(domain.x, solRus.u_approx[end], label="Rusanov")
+display(plot!(domain.x, solRus.u_approx[end], label="Rusanov"))
+
+plot(domain.interfaces, alpha_opt, label = "alpha opt")

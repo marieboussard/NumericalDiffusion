@@ -2,7 +2,7 @@ include("../src/include_file.jl")
 
 # 1 # Solving Burgers equation
 
-xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.4
+xmin, xmax, Nx, t0, Tf = -2, 2, 5, 0, 0.4
 CFL_factor = 0.5
 domain = createInterval(xmin, xmax, Nx, t0, Tf)
 #global u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
@@ -15,14 +15,14 @@ method = Roe(CFL_factor)
 u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
 
 T_reached = 0.0
-#gmidShape = ConsistencyMeanShape()
-gmidShape = RusanovLikeShape()
+gmidShape = ConsistencyMeanShape()
+#gmidShape = RusanovLikeShape()
 searchWhenAlreadyEntropic = true
 
 # solBurgers = fv_solve(domain, u0, equation, method)
 # plot_fv_sol(solBurgers, uexact_burgers_article)
 u0_temp = u0
-for k in 1:5
+for k in 1:1
     global u0_temp
     global T_reached
     global solEnt
@@ -49,7 +49,7 @@ end
     if maximum(solEnt.Dopt) > 1e-8 || searchWhenAlreadyEntropic==true
         println("Modifiying the scheme to compensate positive numerical diffusion")
 
-        solA = find_optimal_A(solEnt; gmidShape=gmidShape);
+        @enter solA = find_optimal_A(solEnt; gmidShape=gmidShape)
         Aopt = solA.u
         u0_temp = modified_scheme_step(Aopt, solEnt)
 
