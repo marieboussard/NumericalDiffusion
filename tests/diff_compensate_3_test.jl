@@ -1,7 +1,5 @@
 include("../src/include_file.jl")
 
-@show 2-1
-
 # 1 # Solving Burgers equation
 xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.4
 CFL_factor = 0.5

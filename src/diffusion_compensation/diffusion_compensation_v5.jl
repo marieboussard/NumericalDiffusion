@@ -10,6 +10,10 @@ function divideAlphaG(alphaG::AbstractArray{T}) where T
     vcat(alphaG[1:Int(L/2),:], alphaG[1,]), vcat(alphaG[Int(L/2)+1:end,:], alphaG[Int(L/2)+1,:])
 end
 
+function repasteAlphaG(alpha::AbstractArray{T}, G::AbstractArray{T}) where T
+    vcat(alpha[begin:end-1], G[begin:end-1])
+end
+
 function compute_modified_bounds_alpha(alpha::AbstractArray{T}, sol::OptForEntropySol, alphaMethod::FVMethod) where T
     equation, method, domain, modifiedDataType, boundsType = sol.equation, sol.method, sol.domain, sol.modifiedDataType, sol.boundsType
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
@@ -104,13 +108,14 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     m_delta, M_delta = compute_modified_bounds_alpha(alpha, sol, alphaMethod)
     #m_delta, M_delta = compute_G_bounds(u, Nx, dx, dt, equation, domain, alphaMethod, sol.modifiedDataType, sol.boundsType)
     for j in 1:Nx+1
-        cons += max(0, m_delta[j] - G[j])^2 + max(0, G[j] - M_delta[j])^2
+        cons += (dt/dx)^2*(max(0, m_delta[j] - G[j])^2 + max(0, G[j] - M_delta[j])^2)
     end
     #println("After consistency, cons="*string(cons))
 
 
     # Third constraint: alpha must be between specified bounds
     for a in alpha
+        #cons += max(0, a-10)^2 + max(0, -9-a)^2
         cons += max(0, a-1)^2 + max(0, -a)^2
     end
     #println("After alpha domain, cons="*string(cons))

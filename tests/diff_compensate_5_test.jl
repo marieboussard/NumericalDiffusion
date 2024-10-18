@@ -1,13 +1,19 @@
 include("../src/include_file.jl")
 
 # 1 # Solving Burgers equation
-xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.4
+# xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.4
+xmin, xmax, Nx, t0, Tf = -0.5, 0.5, 5, 0, 0.4
+
 CFL_factor = 0.5
 domain = createInterval(xmin, xmax, Nx, t0, Tf)
-equation = burgers()
-method = Roe(CFL_factor)
+#equation = burgers()
+equation = newEq()
+#method = Roe(CFL_factor)
+method = Centered(CFL_factor)
 #method = Rusanov(CFL_factor)
-u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+# u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_new(domain.x[i])] end; res)
+
 T_reached = 0.0
 searchWhenAlreadyEntropic = true
 
@@ -60,6 +66,11 @@ for k in 1:1
         plot(domain.x, Dopt_mod, label="Dopt mod")
         plot!(domain.x, solEnt.Dopt, label="Dopt")
         display(title!("Num diffusion at t="*string(round(T_reached, sigdigits=3))))
+
+        display(plot(domain.interfaces, alpha_opt, label = "alpha opt"))
+
+        alphaG_opt = repasteAlphaG(alpha_opt, Gopt_mod)
+        @show constraint_alphaG(alphaG_opt, solEnt, Rusanov(CFL_factor))
     else
         u0_temp = solEnt.u_approx[end]
         println("Numerical diffusion negative everywhere")
