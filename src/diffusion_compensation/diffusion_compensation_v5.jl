@@ -69,6 +69,7 @@ function compute_modified_bounds_alpha(alpha::AbstractArray{T}, sol::OptForEntro
 
         m_delta[j+1], M_delta[j+1] = m[1], M[1]
     end
+    m_delta[1], M_delta[1] = m_delta[end], M_delta[end]
     m_delta, M_delta
 end
 
@@ -107,10 +108,14 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     # Second constraint: Consistency of numerical entropy flux
     m_delta, M_delta = compute_modified_bounds_alpha(alpha, sol, alphaMethod)
     #m_delta, M_delta = compute_G_bounds(u, Nx, dx, dt, equation, domain, alphaMethod, sol.modifiedDataType, sol.boundsType)
+    # plot(domain.interfaces, m_delta, label="m")
+    # plot!(domain.interfaces, G, label="G")
+    # plot!(domain.interfaces, M_delta, label="M")
+    # display(title!("bounds of modified scheme"))
     for j in 1:Nx+1
         cons += (dt/dx)^2*(max(0, m_delta[j] - G[j])^2 + max(0, G[j] - M_delta[j])^2)
     end
-    #println("After consistency, cons="*string(cons))
+    # println("After consistency, cons="*string(cons))
 
 
     # Third constraint: alpha must be between specified bounds
@@ -118,7 +123,13 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
         #cons += max(0, a-10)^2 + max(0, -9-a)^2
         cons += max(0, a-1)^2 + max(0, -a)^2
     end
-    #println("After alpha domain, cons="*string(cons))
+    # println("After alpha domain, cons="*string(cons))
+
+    # Fourth constraint: maximum principle
+    min_u, max_u = minimum(u), maximum(u)
+    for j in 1:Nx
+        cons += max(0, min_u-up_mod[j]).^2 + max(0, up_mod[j]-max_u).^2
+    end
 
 
     cons
@@ -153,7 +164,7 @@ function find_optimal_alphaG(sol::OptForEntropySol, entMethod::FVMethod, Gent)
 
     optprob = OptimizationFunction((x,p) -> cost(x), Optimization.AutoForwardDiff(); cons = cons)
     prob = OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
-    solAlphaG = solve(prob, Ipopt.Optimizer())
+    solAlphaG = solve(prob, Ipopt.Optimizer(); max_iter=100, tol=1e-2)
     
     alphaSol, GSol = divideAlphaG(solAlphaG.u)
     equation, domain = sol.equation, sol.domain

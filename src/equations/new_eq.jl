@@ -28,12 +28,26 @@ D_eta(::NewEq, u) = 2.0*u
 #     end
 # end
 
-function u0_new(x::Real)
-    if x <= 0
-        return 1
-    else
-        return -0.75
-    end
+# function u0_con(x::Real)
+#     if x <= 0
+#         return 1
+#     else
+#         return -0.75
+#     end
    
+# end
+u0_concave_convex(x::Real) = x <= 0 ? 1.0 : -0.75
+
+function uexact_concave_convex(x::Real, t::Real)
+    ug, ud = 1, -0.75
+    s = 1 + ud^2 + ug^2 + ud*ug
+    x ≤ t*s ? ug : ud
 end
-u0_new(x::Real) = x <= 0 ? 1.0 : -0.75
+
+# Testcase of a non classical shock by a concave-convex flux
+
+struct ConcaveConvexTestcase <: Testcase
+end
+
+u0_fun(::ConcaveConvexTestcase, x::Real) = u0_concave_convex(x)
+uexact_fun(::ConcaveConvexTestcase, x::Real, t::Real) = uexact_concave_convex(x, t)

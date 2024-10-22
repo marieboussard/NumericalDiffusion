@@ -41,3 +41,11 @@ function u0_burgers_article(x::Real)
    
 end
 u0_burgers_article(x::Real) = x <= 0 ? -2 -x : 3 - 3 / 2 * x
+
+# Testcase for article: A posteriori entropy inequality
+
+struct ArticleTestcase <: Testcase
+end
+
+u0_fun(::ArticleTestcase, x::Real) = u0_burgers_article(x)
+uexact_fun(::ArticleTestcase, x::Real, t::Real) = uexact_burgers_article(x, t)

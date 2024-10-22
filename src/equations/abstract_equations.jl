@@ -19,3 +19,6 @@ get_flux(equation::NoSourceScalarEquation, u; z=nothing) = flux(equation, u)
 get_eta(equation::NoSourceScalarEquation, u; z=nothing) = eta(equation, u)
 get_G(equation::NoSourceScalarEquation, u; z=nothing) = G(equation, u)
 get_D_eta(equation::NoSourceScalarEquation, u; z=nothing) = D_eta(equation, u)
+
+# ========== Testcases ========= #
+abstract type Testcase end

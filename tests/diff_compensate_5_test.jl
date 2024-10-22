@@ -1,8 +1,7 @@
 include("../src/include_file.jl")
 
 # 1 # Solving Burgers equation
-# xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.4
-xmin, xmax, Nx, t0, Tf = -0.5, 0.5, 5, 0, 0.4
+xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.4
 
 CFL_factor = 0.5
 domain = createInterval(xmin, xmax, Nx, t0, Tf)
@@ -11,14 +10,17 @@ equation = newEq()
 #method = Roe(CFL_factor)
 method = Centered(CFL_factor)
 #method = Rusanov(CFL_factor)
-# u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
-u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_new(domain.x[i])] end; res)
+#u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+#u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_new(domain.x[i])] end; res)
+
+testcase = ConcaveConvexTestcase()
+u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_fun(testcase, domain.x[i])] end; res)
 
 T_reached = 0.0
 searchWhenAlreadyEntropic = true
 
 u0_temp = u0
-for k in 1:1
+for k in 1:3
     global u0_temp
     global T_reached
     global solEnt
@@ -31,11 +33,16 @@ for k in 1:1
     T_reached += dt
     solEnt = optimize_for_entropy(u0_temp, domain, equation, method)
     solEntRus = optimize_for_entropy(u0_temp, domain, equation, Rusanov(CFL_factor))
+    # plot_solution(solEntRus)
 
     if maximum(solEnt.Dopt) > 1e-8 || searchWhenAlreadyEntropic==true
         println("Modifiying the scheme to compensate positive numerical diffusion")
 
-        Gent = exactG(Rusanov(CFL_factor), equation, u0_temp)
+        # Gent = exactG(Rusanov(CFL_factor), equation, u0_temp)
+
+        # plot(domain.interfaces, solEntRus.Gopt, label="Gopt")
+        # display(plot!(domain.interfaces, Gent, label="Gent"))
+        Gent = solEntRus.Gopt
 
         solAlphaG = find_optimal_alphaG(solEnt, Rusanov(CFL_factor), Gent);
         alpha_opt, Gopt_mod = solAlphaG.alpha, solAlphaG.G
@@ -83,7 +90,10 @@ up_modified = u0_temp
 domain.Tf = T_reached
 solEnt = optimize_for_entropy(u0, domain, equation, method)
 solRus = fv_solve(domain, u0, equation, Rusanov(CFL_factor))
-u_exact = [uexact_burgers_article(xi, solEnt.domain.Tf) for xi in domain.x]
+# u_exact = [uexact_burgers_article(xi, solEnt.domain.Tf) for xi in domain.x]
+# u_exact = [uexact_newEq(xi, solEnt.domain.Tf) for xi in domain.x]
+u_exact = [uexact_fun(testcase, xi, solEnt.domain.Tf) for xi in domain.x]
+
 
 plot(domain.x, u_exact, label="exact")
 plot!(domain.x, up_modified, label="modified "*get_name(method))
