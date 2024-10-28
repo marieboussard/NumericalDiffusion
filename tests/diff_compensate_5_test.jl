@@ -7,13 +7,14 @@ CFL_factor = 0.5
 domain = createInterval(xmin, xmax, Nx, t0, Tf)
 #equation = burgers()
 equation = newEq()
-#method = Roe(CFL_factor)
+# method = Roe(CFL_factor)
 method = Centered(CFL_factor)
 #method = Rusanov(CFL_factor)
 #u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
 #u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_new(domain.x[i])] end; res)
 
 testcase = ConcaveConvexTestcase()
+#testcase = ArticleTestcase()
 u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_fun(testcase, domain.x[i])] end; res)
 
 T_reached = 0.0
@@ -44,7 +45,9 @@ for k in 1:3
         # display(plot!(domain.interfaces, Gent, label="Gent"))
         Gent = solEntRus.Gopt
 
-        solAlphaG = find_optimal_alphaG(solEnt, Rusanov(CFL_factor), Gent);
+        # solAlphaG = find_optimal_alphaG(solEnt, Rusanov(CFL_factor), Gent);
+        solAlphaG = find_optimal_alphaG_vec_cons(solEnt, Rusanov(CFL_factor), Gent);
+
         alpha_opt, Gopt_mod = solAlphaG.alpha, solAlphaG.G
 
         u0_temp = solAlphaG.up
