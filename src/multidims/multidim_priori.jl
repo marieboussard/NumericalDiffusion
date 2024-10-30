@@ -140,7 +140,7 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     solEnt = optimize_for_entropy(u_init, domain, equation, method)
     plot(domain.x, l_vec[begin+1:end], label="l")
     display(plot!(domain.x, (solEnt.Gopt[begin+1:end].-solEnt.Gopt[begin:end-1])/domain.dx*dt_vec[end], label="dG"))
-    #display(plot!(domain.x, L_vec[begin+1:end], label="L"))
+    display(plot!(domain.x, L_vec[begin+1:end], label="L"))
 
     # D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
     # D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]
@@ -148,8 +148,28 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ l_vec[begin+1:end]
     D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ L_vec[begin+1:end]
 
-    D_low_norm = D_low * sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])]) / sum(D_low)
-    D_up_norm = D_up * sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])]) / sum(D_up)
+
+    # println("Normalisation")
+    # @show sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])])
+    # @show sum(D_low)
+
+    # The normalisation is chosen to keep the same amount of diffusion up to a sign 
+    # We want to keep the same sign as the pre-normalised quantity
+
+    #D_low_norm = D_low * sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])]) / abs(sum(D_low))
+    D_up_norm = D_up * sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])]) / abs(sum(D_up))
+
+    # Test d'une autre normalisation (par fenêtre glissante)
+    J = Int(Nx/10)
+    D_low_norm=zero(D_low)
+    for j in 1:Nx
+        s1, s2 = 0.0, 0.0
+        for k in j-J+1:j+J
+            s1 += (D_low[mod1(k,Nx)]+D_up[mod1(k,Nx)])/2
+            s2 += D_low[mod1(k,Nx)]
+        end
+        D_low_norm[j] = D_low[j]*s1/s2
+    end
 
     PrioriDiffSol(domain, equation, method, modifiedDataType, boundsType, u_approx, dt_vec, l_vec, L_vec, D_low, D_up, D_low_norm, D_up_norm)
 end

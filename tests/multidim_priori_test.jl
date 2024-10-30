@@ -2,12 +2,12 @@ include("../src/include_file.jl")
 
 # # Quantifying numerical diffusion with an a priori method for Burgers
 
-# xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.4
+# xmin, xmax, Nx, t0, Tf = -2, 2, 50, 0, 0.4
 # CFL_factor = 0.5
 # domain = createInterval(xmin, xmax, Nx, t0, Tf)
 # eq = burgers()
-# method = Rusanov(CFL_factor)
-# #method = Roe(CFL_factor)
+# #method = Rusanov(CFL_factor)
+# method = Roe(CFL_factor)
 
 # u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
 
@@ -21,6 +21,7 @@ include("../src/include_file.jl")
 # D_low_multidim = D_priori_multidim.D_low_norm
 
 # plot(domain.x, D_low, label="D priori")
+# plot!(domain.x, D_priori_multidim.D_low, label="D low multidim")
 # plot!(domain.x, D_low_multidim, label="D priori multidim")
 # plot!(domain.x, solEnt.Dopt, label="Dopt")
 # #scatter(domain.x, D_up, label="D up", markersize=20)
@@ -80,9 +81,9 @@ plt2 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottomright,
     guidefontsize=21,
     tickfontsize=18)
 
-plot!(domain.x, D_low, label="D priori")
-plot!(domain.x, D_low_multidim, label="D priori multidim")
-plot!(domain.x, solEnt.Dopt, label="Dopt")
+plot!(domain.x[begin+1:end], D_low[begin+1:end], label="D priori")
+plot!(domain.x[begin+1:end], D_low_multidim[begin+1:end], label="D priori multidim")
+plot!(domain.x[begin+1:end], solEnt.Dopt[begin+1:end], label="Dopt")
 #plot!(domain.x, D_up, label="D priori up")
 xlabel!("x")
 ylabel!("Numerical Diffusion")
