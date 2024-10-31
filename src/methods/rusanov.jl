@@ -1,7 +1,7 @@
 #include("abstract_methods.jl")
 
-struct Rusanov <: FVMethod
-    CFL_factor::Float64
+struct Rusanov{T <: AbstractFloat} <: FVMethod
+    CFL_factor::T
 end
 
 get_sL(::Rusanov) = 1

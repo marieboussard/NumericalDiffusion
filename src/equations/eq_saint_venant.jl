@@ -1,8 +1,8 @@
 g = 9.8
 
-struct SaintVenant <: Equation
+struct SaintVenant{T <: AbstractFloat} <: Equation
     source::Source
-    treshold::Float64
+    treshold::T
 end
 
 get_name(::SaintVenant) = "Saint-Venant"

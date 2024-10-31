@@ -1,5 +1,5 @@
-struct Centered <: FVMethod
-    CFL_factor::Float64
+struct Centered{T <: AbstractFloat} <: FVMethod
+    CFL_factor::T
 end
 
 get_sL(::Centered) = 1

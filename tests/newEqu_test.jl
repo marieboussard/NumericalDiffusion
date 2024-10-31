@@ -2,7 +2,7 @@ include("../src/include_file.jl")
 
 # 1.1 # Solving "newEq" equation with Rusanov
 
-xmin, xmax, Nx, t0, Tf = -2, 2, 60, 0, 0.3
+xmin, xmax, Nx, t0, Tf = -2, 2, 60, 0, 0.2
 CFL_factor = 0.5
 omega = createInterval(xmin, xmax, Nx, t0, Tf)
 testcase = ConcaveConvexTestcase()

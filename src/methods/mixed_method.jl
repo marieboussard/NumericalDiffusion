@@ -1,9 +1,9 @@
-struct MixedMethod <: FVMethod
+struct MixedMethod{T <: AbstractFloat} <: FVMethod
     # (1-alpha)*f(method1) + alpha*f(method2)
-    CFL_factor::Float64
+    CFL_factor::T
     method1::FVMethod
     method2::FVMethod
-    mixingWeights::AbstractArray{T} where T
+    mixingWeights::AbstractArray{U} where U
 end
 get_sL(mm::MixedMethod) = max(get_sL(mm.method1), get_sL(mm.method2))
 get_sR(mm::MixedMethod) = max(get_sR(mm.method1), get_sR(mm.method2))

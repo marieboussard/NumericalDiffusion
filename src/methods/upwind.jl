@@ -1,5 +1,5 @@
-struct Upwind <: FVMethod
-    CFL_factor::Real
+struct Upwind{T <: AbstractFloat} <: FVMethod
+    CFL_factor::T
 end
 
 get_sL(::Upwind) = 1

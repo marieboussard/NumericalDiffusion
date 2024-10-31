@@ -6,9 +6,9 @@ abstract type ZbSource <: Source end
 # Different kinds of source
 
 # Quadratic bump
-struct Bump_zb <: ZbSource
-    height::Real
-    width::Real
+struct Bump_zb{T <: Real} <: ZbSource
+    height::T
+    width::T
 end
 bump_zb(;height::Real=0.5, width::Real=1.0) = Bump_zb(height, width)
 zb(bz::Bump_zb, x) = max.(0, -1/bz.width*(bz.height/0.5^2)*(x .-0.5).^2 .+ bz.height)
@@ -25,17 +25,17 @@ function Dzb(bz::Bump_zb, x)
 end
 
 # Sinusoidal
-struct Sinus_zb <: ZbSource
-    height::Real
-    freq::Real
+struct Sinus_zb{T <: Real} <: ZbSource
+    height::T
+    freq::T
 end
 sinus_zb(;height::Real=0.5, freq::Real=1.0) = Sinus_zb(height, freq)
 zb(sz::Sinus_zb, x) = (-cos.(2*pi*sz.freq * x) .+ 1)*sz.height/2
 Dzb(sz::Sinus_zb, x) = pi*sz.freq*(sin.(2*pi*sz.freq * x))*sz.height
 
 # Flat
-struct Flat_zb <: ZbSource
-    height::Real
+struct Flat_zb{T <: Real} <: ZbSource
+    height::T
 end
 flat_zb(;height::Real=0.5) = Flat_zb(height)
 zb(fz::Flat_zb, x) = zero(x) .+ fz.height

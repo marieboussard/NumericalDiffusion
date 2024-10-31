@@ -1,8 +1,8 @@
 # include("abstract_methods.jl")
 # include("../equations/source_terms.jl")
 
-struct Hydrostatic <: FVMethod
-    CFL_factor::Float64
+struct Hydrostatic{T <: AbstractFloat} <: FVMethod
+    CFL_factor::T
     subMethod::FVMethod
 end
 

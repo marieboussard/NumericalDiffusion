@@ -15,6 +15,9 @@ function repasteAlphaG(alpha::AbstractArray{T}, G::AbstractArray{T}) where T
 end
 
 function compute_modified_bounds_alpha(alpha::AbstractArray{T}, sol::OptForEntropySol, alphaMethod::FVMethod) where T
+    
+    @timeit to "modified bounds computation" begin
+    
     equation, method, domain, modifiedDataType, boundsType = sol.equation, sol.method, sol.domain, sol.modifiedDataType, sol.boundsType
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
     lambd = dt/dx
@@ -72,8 +75,12 @@ function compute_modified_bounds_alpha(alpha::AbstractArray{T}, sol::OptForEntro
     m_delta[1], M_delta[1] = m_delta[end], M_delta[end]
     m_delta, M_delta
 end
+end
 
 function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entMethod::FVMethod) where T
+    
+    @timeit to "constraint function" begin
+
     alpha, G = divideAlphaG(alphaG)
     equation, domain = sol.equation, sol.domain
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
@@ -134,8 +141,12 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
 
     cons
 end
+end
 
 function cost_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entMethod::FVMethod) where T
+    
+    @timeit to "cost function" begin
+
     alpha, G = divideAlphaG(alphaG)
     #sum(alpha[1:end-1].^2)
     alphaMethod = MixedMethod(sol.method.CFL_factor, sol.method, entMethod, alpha)
@@ -146,6 +157,7 @@ function cost_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entMethod:
     D = diffusion(u, up_mod, G, sol.domain.dx, dt, sol.equation, sol.domain)
 
     sum(D.^2)
+    end
 
 end
 
@@ -153,18 +165,21 @@ end
 # Gent is an array, the numerical entropy flux associated with the entropic method
 
 function find_optimal_alphaG(sol::OptForEntropySol, entMethod::FVMethod, Gent)
+
+    @timeit to "find optimal alpha G" begin
+
     alphaG_init, _p = vcat(zeros(Nx).+1, Gent[1:Nx]), 0.0
     # alphaG_init, _p = vcat(zero(sol.Gopt[:end-1]).+1, Gent[:end-1]), 0.0
     alphaG_init = reshape(alphaG_init, size(alphaG_init)[1])
 
     cons(res, alphaG, p) = (res .= [constraint_alphaG(alphaG, sol, entMethod)])
-    @show constraint_alphaG(alphaG_init, sol,  entMethod)
-
+    constraint_alphaG(alphaG_init, sol,  entMethod)
+    #@code_warntype 
     cost(alphaG) = cost_alphaG(alphaG, sol, entMethod)
 
     optprob = OptimizationFunction((x,p) -> cost(x), Optimization.AutoForwardDiff(); cons = cons)
-    prob = OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
-    solAlphaG = solve(prob, Ipopt.Optimizer(); max_iter=100, tol=1e-2)
+    prob = @timeit to "defining" OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
+    solAlphaG = @timeit to "solving" solve(prob, Ipopt.Optimizer(); max_iter=100, tol=1e-2)
     
     alphaSol, GSol = divideAlphaG(solAlphaG.u)
     equation, domain = sol.equation, sol.domain
@@ -174,4 +189,5 @@ function find_optimal_alphaG(sol::OptForEntropySol, entMethod::FVMethod, Gent)
     up_mod = scheme_step(equation.source, u, dt, domain, equation, alphaMethod)
 
     OptAlphaGSol(alphaSol, GSol, entMethod, up_mod)
+    end
 end
