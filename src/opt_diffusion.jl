@@ -206,8 +206,8 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
 end
 
 function J(::SquareMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::Equation, domain::Domain)
-    JD = 0
-    JC = 0
+    JD = zero(eltype(u))
+    JC = zero(eltype(u))
     z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
 
     for j in 1:Nx

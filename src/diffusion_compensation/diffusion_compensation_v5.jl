@@ -1,9 +1,16 @@
-struct OptAlphaGSol
-    alpha
-    G
+struct OptAlphaGSol{T<:AbstractFloat}
+    alpha::Array{T}
+    G::Array{T}
     entMethod::FVMethod
-    up
+    up::Array{T}
+    OptAlphaGSol{T}() where {T<:AbstractFloat} = new()
+    OptAlphaGSol{T}(alpha::Array{T}, G::Array{T}, entMethod::FVMethod, up::Array{T}) where {T<:AbstractFloat} = new(alpha, G, entMethod, up)
 end
+
+OptAlphaGSol(alpha::Array{T}, G::Array{T}, entMethod::FVMethod, up::Array{T}) where {T<:AbstractFloat} = OptAlphaGSol{T}(alpha, G, entMethod, up)
+
+# # Constructeur pour OptAlphaGSol
+# initialize_OptAlphaGSol()
 
 function divideAlphaG(alphaG::AbstractArray{T}) where T
     L = size(alphaG)[1]
@@ -21,7 +28,7 @@ function compute_modified_bounds_alpha(alpha::AbstractArray{T}, sol::OptForEntro
     equation, method, domain, modifiedDataType, boundsType = sol.equation, sol.method, sol.domain, sol.modifiedDataType, sol.boundsType
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
     lambd = dt/dx
-    sL, sR = get_sL(method), get_sR(method)
+    sL::Int, sR::Int = get_sL(method), get_sR(method)
     u, up = sol.u_approx[end-1], sol.u_approx[end]
     # source
     z = isnothing(domain.sourceVec) ? zeros(T, (Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
@@ -114,6 +121,7 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     
     # Second constraint: Consistency of numerical entropy flux
     m_delta, M_delta = compute_modified_bounds_alpha(alpha, sol, alphaMethod)
+    @code_warntype compute_modified_bounds_alpha(alpha, sol, alphaMethod)
     #m_delta, M_delta = compute_G_bounds(u, Nx, dx, dt, equation, domain, alphaMethod, sol.modifiedDataType, sol.boundsType)
     # plot(domain.interfaces, m_delta, label="m")
     # plot!(domain.interfaces, G, label="G")
@@ -173,21 +181,21 @@ function find_optimal_alphaG(sol::OptForEntropySol, entMethod::FVMethod, Gent)
     alphaG_init = reshape(alphaG_init, size(alphaG_init)[1])
 
     cons(res, alphaG, p) = (res .= [constraint_alphaG(alphaG, sol, entMethod)])
+    @show c_init = constraint_alphaG(alphaG_init, sol,  entMethod)
     constraint_alphaG(alphaG_init, sol,  entMethod)
-    #@code_warntype 
     cost(alphaG) = cost_alphaG(alphaG, sol, entMethod)
 
-    optprob = OptimizationFunction((x,p) -> cost(x), Optimization.AutoForwardDiff(); cons = cons)
-    prob = @timeit to "defining" OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
-    solAlphaG = @timeit to "solving" solve(prob, Ipopt.Optimizer(); max_iter=100, tol=1e-2)
+    # optprob = OptimizationFunction((x,p) -> cost(x), Optimization.AutoForwardDiff(); cons = cons)
+    # prob = @timeit to "defining" OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
+    # solAlphaG = @timeit to "solving" solve(prob, Ipopt.Optimizer(); max_iter=100, tol=1e-2)
     
-    alphaSol, GSol = divideAlphaG(solAlphaG.u)
-    equation, domain = sol.equation, sol.domain
-    dt = sol.dt_vec[end]
-    u = sol.u_approx[end-1]
-    alphaMethod = MixedMethod(CFL_factor, sol.method, entMethod, alphaSol)
-    up_mod = scheme_step(equation.source, u, dt, domain, equation, alphaMethod)
+    # alphaSol, GSol = divideAlphaG(solAlphaG.u)
+    # equation, domain = sol.equation, sol.domain
+    # dt = sol.dt_vec[end]
+    # u = sol.u_approx[end-1]
+    # alphaMethod = MixedMethod(CFL_factor, sol.method, entMethod, alphaSol)
+    # up_mod = scheme_step(equation.source, u, dt, domain, equation, alphaMethod)
 
-    OptAlphaGSol(alphaSol, GSol, entMethod, up_mod)
+    # OptAlphaGSol(alphaSol, GSol, entMethod, up_mod)
     end
 end
