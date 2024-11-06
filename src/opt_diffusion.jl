@@ -297,10 +297,10 @@ function J(::WeightedMinFun, gamma, u, up, Nx, dx, dt, m_vec, M_vec, equation::E
     JD + JC + 1
 end
 
-function diffusion(u, up, gamma, dx::Real, dt::Real, equation::Equation, domain::Domain)
-    z = isnothing(domain.sourceVec) ? zeros(Nx,1) : domain.sourceVec
-    # @show typeof([get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])])
-    # @show typeof(dt / dx * (gamma[2:end] - gamma[1:end-1]))
+function diffusion(u, up, gamma, dx::T, dt::T, equation::Equation, domain::Domain{T}) where T<:Real
+    # z = isnothing(domain.sourceVec) ? zeros(T, (Nx,1)) : domain.sourceVec
+    z = manageSource(domain)
+    @code_warntype(manageSource(domain))
     [get_eta(equation, up[i,:]; z=z[i])[1] - get_eta(equation, u[i,:]; z=z[i])[1] for i in 1:length(u[:,1])] .+ dt / dx * (gamma[2:end] - gamma[1:end-1])
 end
 
@@ -338,6 +338,8 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
+    # @show typeof(u_approx)
+    # @show typeof(domain.dx)
     OptForEntropySol(domain, equation, method, modifiedDataType, boundsType, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
 
 end

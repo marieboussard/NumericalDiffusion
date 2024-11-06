@@ -1,13 +1,13 @@
 #using Plots
 
-mutable struct OptForEntropySol
-    domain::Domain
+mutable struct OptForEntropySol{T<:Real, S<:Domain{T}}
+    domain::S
     equation::Equation
     method::FVMethod
     modifiedDataType::ModifiedDataType
     boundsType::BoundsType
-    u_approx
-    dt_vec
+    u_approx::Vector{Matrix{T}}
+    dt_vec::Vector{T}
     Gopt
     Jopt::Real
     Dopt

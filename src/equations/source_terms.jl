@@ -74,3 +74,9 @@ function addSource!(zbSource::ZbSource, domain::Domain)
 end
 
 function addSource!(::NullSource, domain::Domain) end
+
+function manageSource(domain::Domain{T}) where T
+    # @show typeof(zeros(T, (domain.Nx,1)))
+    # @show typeof(domain.sourceVec)
+    isnothing(domain.sourceVec) ? zeros(T, (domain.Nx,1)) : domain.sourceVec
+end

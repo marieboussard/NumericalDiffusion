@@ -1,6 +1,6 @@
-abstract type Domain end
+abstract type Domain{T<:Real} end
 
-mutable struct Interval{T<:Real} <: Domain
+mutable struct Interval{T<:Real} <: Domain{T}
     Nx::Int
     xmin::T
     xmax::T
@@ -9,8 +9,8 @@ mutable struct Interval{T<:Real} <: Domain
     dx::T
     x::Vector{T}
     interfaces::Vector{T}
-    sourceVec
-    DSourceVec
+    sourceVec::Union{Nothing, Matrix{T}}
+    DSourceVec::Union{Nothing, Array{T}}
 end
 
 #Interval(Nx::Int, xmin::Real, xmax::Real, t0::Real, Tf::Real, dx::Real, x, interfaces, sourceVec, DSourceVec) = Interval(Nx, promote(xmin, xmax, t0, Tf, dx)..., x, interfaces, sourceVec, DSourceVec)

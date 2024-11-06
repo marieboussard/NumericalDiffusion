@@ -79,7 +79,7 @@ function iterate_diffusion_compensation(domain::Domain, equation::Equation, meth
             display(plot(domain.interfaces, alpha_opt, label = "alpha opt"))
 
             alphaG_opt = repasteAlphaG(alpha_opt, Gopt_mod)
-            @show constraint_alphaG(alphaG_opt, solEnt, Rusanov(CFL_factor))
+            #@show constraint_alphaG(alphaG_opt, solEnt, Rusanov(CFL_factor))
         else
             u0_temp = solEnt.u_approx[end]
             println("Numerical diffusion negative everywhere")

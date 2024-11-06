@@ -88,6 +88,7 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     
     @timeit to "constraint function" begin
 
+    #@code_warntype(divideAlphaG(alphaG))
     alpha, G = divideAlphaG(alphaG)
     equation, domain = sol.equation, sol.domain
     Nx, dx, dt = domain.Nx, domain.dx, sol.dt_vec[end]
@@ -110,6 +111,7 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     #     bg_delta[j] = lambd*((G[j+1] - sol.Gopt[j+1]) - (G[j] - sol.Gopt[j]))
     #     cons += min(0, min(0,-sol.Dopt[j])-bu_delta[j]-bg_delta[j])^2
     # end
+    @code_warntype diffusion(u, up_mod, G, dx, dt, equation, domain)
     D_mod = diffusion(u, up_mod, G, dx, dt, equation, domain)
     for d in D_mod
         cons += max(0, d)^2
@@ -121,7 +123,9 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
     
     # Second constraint: Consistency of numerical entropy flux
     m_delta, M_delta = compute_modified_bounds_alpha(alpha, sol, alphaMethod)
-    @code_warntype compute_modified_bounds_alpha(alpha, sol, alphaMethod)
+    # @code_warntype compute_modified_bounds_alpha(alpha, sol, alphaMethod)
+    #compute_modified_bounds_alpha(alpha, sol, alphaMethod)
+
     #m_delta, M_delta = compute_G_bounds(u, Nx, dx, dt, equation, domain, alphaMethod, sol.modifiedDataType, sol.boundsType)
     # plot(domain.interfaces, m_delta, label="m")
     # plot!(domain.interfaces, G, label="G")
@@ -182,8 +186,8 @@ function find_optimal_alphaG(sol::OptForEntropySol, entMethod::FVMethod, Gent)
 
     cons(res, alphaG, p) = (res .= [constraint_alphaG(alphaG, sol, entMethod)])
     @show c_init = constraint_alphaG(alphaG_init, sol,  entMethod)
-    constraint_alphaG(alphaG_init, sol,  entMethod)
-    cost(alphaG) = cost_alphaG(alphaG, sol, entMethod)
+    #@code_warntype constraint_alphaG(alphaG_init, sol,  entMethod)
+    # cost(alphaG) = cost_alphaG(alphaG, sol, entMethod)
 
     # optprob = OptimizationFunction((x,p) -> cost(x), Optimization.AutoForwardDiff(); cons = cons)
     # prob = @timeit to "defining" OptimizationProblem(optprob, alphaG_init, _p, lcons = [-1000.0], ucons = [0.0])
