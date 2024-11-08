@@ -49,8 +49,8 @@ function G(equation::SaintVenant, v, z)
         return (v[2]^2/(2*v[1]) .+ g*v[1]^2 .+ v[1]*g.*z)*v[2]/v[1]
     end
 end
-get_eta(equation::SaintVenant, v; z=zero(v)) = eta(equation, v, z)
-get_G(equation::SaintVenant, v; z=zero(v)) = G(equation, v, z)
+get_eta(equation::SaintVenant, v, z=zero(v)) = eta(equation, v, z)
+get_G(equation::SaintVenant, v, z=zero(v)) = G(equation, v, z)
 
 function CFL_cond(equation::SaintVenant, v::Vector)
     n = size(v)[1]

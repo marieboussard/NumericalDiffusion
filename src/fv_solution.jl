@@ -48,7 +48,24 @@ end
 
 =#
 
+function localized_scheme_step(j::Int, ns::NullSource, v, dt, domain::Domain, equation::Equation, method::MixedMethod{T,U}) where T where U
+    #@show T, U
+    sL, sR = get_sL(method), get_sR(method)
+    v_local = extractExtendedLocalData(v, j, sL, sR)
+    numericalFluxMat_local = giveNumFlux(ns, method, equation, v_local)
+    numericalFluxMat = zeros(U, (domain.Nx+1, get_unknowns_number(equation)))
+    for k in j-sL-sR+1:j+sR+sL
+        # @show typeof(numericalFluxMat[mod1(k,Nx),:])
+        # @show typeof(numericalFluxMat_local[k-j+sL+sR,:])
+        numericalFluxMat[mod1(k,Nx),:] =  numericalFluxMat_local[k-j+sL+sR,:]
+        # numericalFluxMat[k,:] = giveNumFlux(method, equation, v_local[k-,:], v[i,:])
+        # numericalFluxMat[k] = giveNumFlux(ns, method, equation, v_local)
+    end
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
+end
+
 function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
+    #@code_warntype giveNumFlux(ns, method, equation, v)
     numericalFluxMat = giveNumFlux(ns, method, equation, v)
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
 end

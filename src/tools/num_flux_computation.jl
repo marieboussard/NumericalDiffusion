@@ -1,4 +1,5 @@
 function giveNumFlux(::NullSource, method::FVMethod, equation::Equation, v; kwargs...)
+    #println("Calling regular giveNumFlux")
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx

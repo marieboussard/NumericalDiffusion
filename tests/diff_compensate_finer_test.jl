@@ -3,25 +3,25 @@ include("../src/include_file.jl")
 # 1 # Solving Burgers equation
 
 # Domain
-xmin, xmax, Nx, t0, Tf = -2, 2, 10, 0, 0.1
+xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.25
 CFL_factor = 0.5
 domain = createInterval(Nx, xmin, xmax, t0, Tf)
 
 # Equation
-#equation = burgers()
-equation = newEq()
+equation = burgers()
+#equation = newEq()
 
 # Finite volume method
-# method = Roe(CFL_factor)
-method = Centered(CFL_factor)
-# method = Rusanov(CFL_factor)
+#method = Roe(CFL_factor)
+#method = Centered(CFL_factor)
+method = Rusanov(CFL_factor)
 
 # Initial conditions
-testcase = ConcaveConvexTestcase()
-#testcase = ArticleTestcase()
+#testcase = ConcaveConvexTestcase()
+testcase = ArticleTestcase()
 
 # Parameters of diffusion compensation
-searchWhenAlreadyEntropic = false
+searchWhenAlreadyEntropic = true
 
 # Profiling time taken by execution
 const to = TimerOutput();
@@ -39,6 +39,8 @@ function iterate_diffusion_compensation(domain::Domain, equation::Equation, meth
     solAlphaG = OptAlphaGSol{eltype(u0)}()
 
     while T_reached < Tf
+
+        @show T_reached
 
         timer += 1
         dx = domain.dx
@@ -63,22 +65,22 @@ function iterate_diffusion_compensation(domain::Domain, equation::Equation, meth
 
             alpha_opt, Gopt_mod = solAlphaG.alpha, solAlphaG.G
 
-            u0_temp = solAlphaG.up
+            #u0_temp = solAlphaG.up
 
-            plot(domain.interfaces, Gopt_mod, label="Gopt mod")
-            plot!(domain.interfaces, solEnt.Gopt, label="Gopt"*get_name(method))
-            plot!(domain.interfaces, solEntRus.Gopt, label="Gopt Rusanov")
-            display(title!("Num entropy flux at t="*string(round(T_reached, sigdigits=3))))
+            # plot(domain.interfaces, Gopt_mod, label="Gopt mod")
+            # plot!(domain.interfaces, solEnt.Gopt, label="Gopt"*get_name(method))
+            # plot!(domain.interfaces, solEntRus.Gopt, label="Gopt Rusanov")
+            # display(title!("Num entropy flux at t="*string(round(T_reached, sigdigits=3))))
 
-            Dopt_mod = diffusion(solEnt.u_approx[end-1], u0_temp, Gopt_mod, domain.dx, solEnt.dt_vec[end], equation, domain)
+            # Dopt_mod = diffusion(solEnt.u_approx[end-1], u0_temp, Gopt_mod, domain.dx, solEnt.dt_vec[end], equation, domain)
             
-            plot(domain.x, Dopt_mod, label="Dopt mod")
-            plot!(domain.x, solEnt.Dopt, label="Dopt")
-            display(title!("Num diffusion at t="*string(round(T_reached, sigdigits=3))))
+            # plot(domain.x, Dopt_mod, label="Dopt mod")
+            # plot!(domain.x, solEnt.Dopt, label="Dopt")
+            # display(title!("Num diffusion at t="*string(round(T_reached, sigdigits=3))))
 
-            display(plot(domain.interfaces, alpha_opt, label = "alpha opt"))
+            # display(plot(domain.interfaces, alpha_opt, label = "alpha opt"))
 
-            alphaG_opt = repasteAlphaG(alpha_opt, Gopt_mod)
+            #alphaG_opt = repasteAlphaG(alpha_opt, Gopt_mod)
             #@show constraint_alphaG(alphaG_opt, solEnt, Rusanov(CFL_factor))
         else
             u0_temp = solEnt.u_approx[end]
@@ -118,5 +120,5 @@ end
 
 #@code_warntype iterate_diffusion_compensation(domain, equation, method, testcase, searchWhenAlreadyEntropic)
 solAlphaG, T_reached = iterate_diffusion_compensation(domain, equation, method, testcase, searchWhenAlreadyEntropic)
-#plot_final_results_diffusion_compensation(domain, equation, method, testcase, solAlphaG, T_reached)
+plot_final_results_diffusion_compensation(domain, equation, method, testcase, solAlphaG, T_reached)
 print_timer(to)

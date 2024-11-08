@@ -75,8 +75,12 @@ end
 
 function addSource!(::NullSource, domain::Domain) end
 
+function giveSource(mSource::Matrix{T}) where T
+    mSource
+end
+
 function manageSource(domain::Domain{T}) where T
     # @show typeof(zeros(T, (domain.Nx,1)))
     # @show typeof(domain.sourceVec)
-    isnothing(domain.sourceVec) ? zeros(T, (domain.Nx,1)) : domain.sourceVec
+    isnothing(domain.sourceVec) ? zeros(T, (domain.Nx,1)) : giveSource(domain.sourceVec)
 end
