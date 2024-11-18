@@ -120,8 +120,8 @@ function initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR, 
     Nx = size(u)[1]
     zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx),:]
     zR = isnothing(z) ? nothing : z[mod1(j - sL + 1, Nx),:]
-    Gm = get_G(equation, u[mod1(j + sR, Nx),:]; z=zR)
-    GM = get_G(equation, u[mod1(j - sL + 1, length(u)),:]; z=zL)
+    Gm = get_G(equation, u[mod1(j + sR, Nx),:], zR)
+    GM = get_G(equation, u[mod1(j - sL + 1, length(u)),:], zL)
     Gm[1], GM[1]
 end
 

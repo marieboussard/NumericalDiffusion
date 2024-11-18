@@ -24,6 +24,6 @@ omega = createInterval(Nx, xmin, xmax, t0, Tf)
 u0 = (res=zeros(omega.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(omega.x[i])] end; res)
 
 solBurgers = fv_solve(omega, u0, burgers(), Roe(CFL_factor))
-#plot_fv_sol(solBurgers, nb_plots=6)
-plot_fv_sol(solBurgers, uexact_burgers_article)
+plot_fv_sol(solBurgers, nb_plots=6)
+#plot_fv_sol(solBurgers, uexact_burgers_article)
 title!("Roe")

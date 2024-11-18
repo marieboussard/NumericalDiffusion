@@ -23,6 +23,22 @@ function extractLocalData(u::AbstractArray{T}, j, sL, sR) where T
     return u_short
 end
 
+function extractLocalData_multidim(u::AbstractArray{T}, j, sL, sR) where T
+
+    # To keep only cells that K takes as arguments
+    #Nx = length(u)
+    Nx, p = size(u)
+    u_short = zeros(T, sL + sR + 1, p)
+    i = 1
+
+    for k in j-sL:j+sR
+        u_short[i,:] = u[mod1(k, Nx),:]
+        i += 1
+    end
+
+    return u_short
+end
+
 function extractExtendedLocalData(u, j, sL, sR)
 
     # To keep only cells for which the modified flux is not G(K)
@@ -59,6 +75,10 @@ maxK() = MaxModifiedData()
 minK() = MinModifiedData()
 midLeftK(sL, sR) = CLModifiedData(vcat(zeros(sL-1), 1, zeros(sR)))
 midRightK(sL, sR) = CLModifiedData(vcat(zeros(sL), 1, zeros(sR-1)))
+
+# Functions for multidimensional constant 
+meanK_multidim(sL, sR) = CLModifiedData(ones(sL + sR + 1))
+midLeftK_multidim(sL, sR) = CLModifiedData(vcat(zeros(sL), 1, zeros(sR)))
 
 computeZ(KFun::ModifiedDataType, z, j, sL, sR) = computeK(KFun, extractLocalData(z, j, sL, sR))
 computeZ(::ModifiedDataType, ::Nothing, j, sL, sR) = nothing

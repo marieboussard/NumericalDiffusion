@@ -3,22 +3,22 @@ include("../src/include_file.jl")
 # 1 # Solving Burgers equation
 
 # Domain
-xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.25
+xmin, xmax, Nx, t0, Tf = -2, 2, 40, 0, 0.25
 CFL_factor = 0.5
 domain = createInterval(Nx, xmin, xmax, t0, Tf)
 
 # Equation
-equation = burgers()
-#equation = newEq()
+#equation = burgers()
+equation = newEq()
 
 # Finite volume method
 #method = Roe(CFL_factor)
-#method = Centered(CFL_factor)
-method = Rusanov(CFL_factor)
+method = Centered(CFL_factor)
+#method = Rusanov(CFL_factor)
 
 # Initial conditions
-#testcase = ConcaveConvexTestcase()
-testcase = ArticleTestcase()
+testcase = ConcaveConvexTestcase()
+#testcase = ArticleTestcase()
 
 # Parameters of diffusion compensation
 searchWhenAlreadyEntropic = true
@@ -65,7 +65,7 @@ function iterate_diffusion_compensation(domain::Domain, equation::Equation, meth
 
             alpha_opt, Gopt_mod = solAlphaG.alpha, solAlphaG.G
 
-            #u0_temp = solAlphaG.up
+            u0_temp = solAlphaG.up
 
             # plot(domain.interfaces, Gopt_mod, label="Gopt mod")
             # plot!(domain.interfaces, solEnt.Gopt, label="Gopt"*get_name(method))
@@ -110,6 +110,7 @@ function plot_final_results_diffusion_compensation(domain::Domain, equation::Equ
 
 
     plot(domain_reached.x, u_exact, label="exact")
+    title!("Nx = "*string(domain.Nx))
     plot!(domain_reached.x, u_modified, label="modified "*get_name(method))
     plot!(domain_reached.x, solEnt.u_approx[end], label=get_name(method))
     display(plot!(domain_reached.x, solRus.u_approx[end], label="Rusanov"))

@@ -11,6 +11,7 @@ using ForwardDiff, Zygote
 using ModelingToolkit
 #using Debugger
 using TimerOutputs
+using Test
 
 include("tools/plotting_tools.jl")
 include("domain.jl")

@@ -140,8 +140,8 @@ function constraint_alphaG(alphaG::AbstractArray{T}, sol::OptForEntropySol, entM
 
     # Third constraint: alpha must be between specified bounds
     for a in alpha
-        #cons += max(0, a-10)^2 + max(0, -9-a)^2
-        cons += max(0, a-1)^2 + max(0, -a)^2
+        cons += max(0, a-10)^2 + max(0, -9-a)^2
+        #cons += max(0, a-1)^2 + max(0, -a)^2
     end
     # println("After alpha domain, cons="*string(cons))
 
