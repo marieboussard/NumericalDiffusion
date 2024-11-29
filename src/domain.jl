@@ -33,4 +33,3 @@ end
 createUnitInterval(Nx::Int, t0::Real, Tf::Real) = createInterval(Nx, 0.0, 1.0, t0, Tf)
 createInterval(interval::Interval) = Interval(interval.Nx, interval.xmin, interval.xmax, interval.t0, interval.Tf, interval.dx, interval.x, interval.interfaces, interval.sourceVec, interval.DSourceVec)
 
-

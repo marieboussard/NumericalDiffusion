@@ -22,3 +22,5 @@ get_D_eta(equation::NoSourceScalarEquation, u, z=nothing) = D_eta(equation, u)
 
 # ========== Testcases ========= #
 abstract type Testcase end
+u0_fun(testcase::Testcase, x) = "Missing function"
+

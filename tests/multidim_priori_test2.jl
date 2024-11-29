@@ -7,7 +7,9 @@ domain = createInterval(Nx, xmin, xmax, t0, Tf)
 equation = burgers()
 method = Roe(CFL_factor)
 #method = Rusanov(CFL_factor)
+
 testcase = ArticleTestcase()
+#testcase = SimpleShock()
 u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_fun(testcase, domain.x[i])] end; res)
 
 FVsol = fv_solve(domain, u0, equation, method)
@@ -15,9 +17,9 @@ u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 dx = domain.dx
 
 #modifiedDataType = midLeftK_multidim(1,1)
-#modifiedDataType = minK()
+modifiedDataType = minK()
 #modifiedDataType = meanK_multidim(1,1)
-modifiedDataType = AsymmetricModifiedData()
+#modifiedDataType = AsymmetricModifiedData()
 
 
 D_priori = diffusion_a_priori(u0, domain, equation, method)
@@ -49,7 +51,13 @@ display(plot!(domain.x, D_CL, label="D CL"))
 plot(domain.x, solEnt.Dopt, label="Dopt")
 plot!(domain.x, D_priori.D_low, label="D low", linestyle=:dash)
 plot!(domain.x, D_priori_multidim.D_low, label="D low multidim")
-plot!(domain.x, D_priori_multidim.D_CL, label="D CL multidim")
+# plot!(domain.x, D_priori_multidim.D_CL, label="D CL multidim")
+plot!(domain.x, D_priori_multidim.D_low_norm, label="D norm multidim")
 plot!(domain.x, D_CL, label="D CL", linestyle=:dash)
 plot!(domain.x, D_priori.D_up, label="D up", linestyle=:dash)
-plot!(domain.x, D_priori_multidim.D_up, label="D up multidim")
+display(plot!(domain.x, D_priori_multidim.D_up, label="D up multidim"))
+
+u_exact = [uexact_fun(testcase, xi, solEnt.domain.Tf) for xi in domain.x]
+plot(domain.x, u0, label="t = "*string(t0))
+plot!(domain.x, u_exact, label = "u exact")
+plot!(domain.x, solEnt.u_approx[end], label="t = "*string(Tf))

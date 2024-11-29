@@ -1,4 +1,11 @@
-apply(f::Base.Callable, X) = [f(x) for x in X]
+initialData(domain::Domain, testcase::Testcase) = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_fun(testcase, domain.x[i])] end; res)
 
-#nmod(k, n) = mod1((k - 1), n) + 1
-nmod(k, n) = mod1(k, n)
+# Creating an interval when one wants exactly one timestep to be performed
+function createOneTimestepInterval(Nx::Int, t0::Real, xmin::Real, xmax::Real, equation::Equation, testcase::Testcase, CFL_factor::Real)
+    # First creating a domain with arbitrary final time
+    domain = createInterval(Nx, xmin, xmax, t0, 1.0)
+    u0 = initialData(domain, testcase)
+    dt = CFL_factor * domain.dx / CFL_cond(equation, u0)
+    domain.Tf = dt
+    domain, u0
+end

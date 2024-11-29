@@ -225,9 +225,9 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
         #     display(plot!(uh[:,1], label="uh"))
         # end
 
-        plot(ut[:,1], label="ut")
-        plot!(uh[:,1], label="uh")
-        display(title!("j = "*string(j)))
+        # plot(ut[:,1], label="ut")
+        # plot!(uh[:,1], label="uh")
+        # display(title!("j = "*string(j)))
 
         # for k in j-sL-sR:j-1
         #     l .+= get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
@@ -276,6 +276,13 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     plot(domain.x, l_vec[begin+1:end], label="l")
     display(plot!(domain.x, (solEnt.Gopt[begin+1:end].-solEnt.Gopt[begin:end-1])/domain.dx*dt_vec[end], label="dG"))
     display(plot!(domain.x, L_vec[begin+1:end], label="L"))
+
+    dlL = L_vec[begin+1:end].-l_vec[begin+1:end]
+    display(plot(domain.x, dlL, label="L-l"))
+    @show min.(dlL,0.0)
+
+    @show sum(L_vec[begin+1:end])
+    @show sum(l_vec[begin+1:end])
 
     # D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
     # D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]

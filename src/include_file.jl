@@ -33,6 +33,9 @@ include("methods/roe.jl")
 include("methods/hydrostatic.jl")
 include("methods/mixed_method.jl")
 
+# Various tools
+include("tools/utils.jl")
+
 # Finite Volumes resolution
 include("tools/num_flux_computation.jl")
 include("fv_solution.jl")

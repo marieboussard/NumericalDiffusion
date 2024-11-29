@@ -32,17 +32,17 @@ function uexact_burgers_article(x::Real, t::Real)
     end
 end
 
-function u0_burgers_article(x::Real)
-    if x <= 0
-        return -2 - x
-    else
-        return 3 - 3 / 2 * x
-    end
+# function u0_burgers_article(x::Real)
+#     if x <= 0
+#         return -2 - x
+#     else
+#         return 3 - 3 / 2 * x
+#     end
    
-end
+# end
 u0_burgers_article(x::Real) = x <= 0 ? -2 -x : 3 - 3 / 2 * x
 
-u0_simple(x::Real) = x<=0 ? -2 : 1
+u0_simple(x::Real) = x<=0 ? -1 : 1
 
 # Testcase for article: A posteriori entropy inequality
 
@@ -55,3 +55,22 @@ uexact_fun(::ArticleTestcase, x::Real, t::Real) = uexact_burgers_article(x, t)
 # A simple testcase to study properties of multidimensionnal a priori estimation of the diffusion
 struct SimpleShock <: Testcase end
 u0_fun(::SimpleShock, x::Real) = u0_simple(x)
+
+# A testcase for a counter example
+struct CounterExample <: Testcase end
+u0_counter(x::Real) = x<=0 ? -2-3*x : 7 - 3/2*x
+function u_exact_counter(x::Real, t::Real)
+    #if t >= 2 / 7
+    if t >= 14/9
+        @warn "Warning: This solution is not valid for t ≥ 2/3"
+    end
+    if x <= -2*t
+        return (3*x+2) / (3*t-1)
+    elseif x >= 7*t
+        return (3*x-14) / (3*t-2)
+    else
+        return x/t
+    end
+end
+u0_fun(::CounterExample, x::Real) = u0_counter(x)
+uexact_fun(::CounterExample, x::Real, t::Real) = u_exact_counter(x,t)
