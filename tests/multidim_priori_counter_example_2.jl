@@ -1,6 +1,6 @@
 include("../src/include_file.jl")
 
-xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 100, 0
+xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 200, 0
 CFL_factor = 0.5
 equation = burgers()
 method = Roe(CFL_factor)
@@ -8,7 +8,9 @@ method = Roe(CFL_factor)
 testcase = CounterExample()
 #testcase = SimpleShock()
 domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
-modifiedDataType = minK()
+#modifiedDataType = minK()
+modifiedDataType = meanK_multidim(1,1)
+#modifiedDataType = AsymmetricModifiedData()
 
 D_priori = diffusion_a_priori(u0, domain, equation, method)
 @show D_priori.alpha
@@ -21,7 +23,12 @@ LL_vec = domain.Tf/domain.dx*(M_vec[begin+1:end] .- m_vec[begin:end-1])
 
 l_vec, L_vec = D_priori_multidim.m_vec, D_priori_multidim.M_vec
 
-solEnt = optimize_for_entropy(u0, domain, equation, method)
+#solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=modifiedDataType)
+solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=meanK(1,1))
+
+plot_solution(solEnt)
+
+display(plot(domain.interfaces, solEnt.M_vec .- solEnt.m_vec, label="M-m"))
 
 # plot(domain.x, ll_vec, label="l article")
 # plot!(domain.x, LL_vec, label="L article")

@@ -12,6 +12,7 @@ using ModelingToolkit
 #using Debugger
 using TimerOutputs
 using Test
+using JuMP, OSQP
 
 include("tools/plotting_tools.jl")
 include("domain.jl")
@@ -32,6 +33,7 @@ include("methods/modified_rusanov.jl")
 include("methods/roe.jl")
 include("methods/hydrostatic.jl")
 include("methods/mixed_method.jl")
+include("methods/numerical_entropy_flux.jl")
 
 # Various tools
 include("tools/utils.jl")
@@ -53,4 +55,7 @@ include("diffusion_compensation/diffusion_compensation.jl")
 include("diffusion_compensation/diffusion_compensation_v4.jl")
 include("diffusion_compensation/diffusion_compensation_v5.jl")
 include("diffusion_compensation/diffusion_compensation_v6.jl")
+
+# Two dimensionnal extensions
 include("multidims/multidim_priori.jl")
+include("least_squares_minimization.jl")

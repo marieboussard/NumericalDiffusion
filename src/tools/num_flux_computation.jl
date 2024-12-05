@@ -1,4 +1,4 @@
-function giveNumFlux(::NullSource, method::FVMethod, equation::Equation, v; kwargs...)
+function giveNumFlux(::NullSource, method::Method, equation::Equation, v; kwargs...)
     #println("Calling regular giveNumFlux")
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
@@ -11,7 +11,7 @@ function giveNumFlux(::NullSource, method::FVMethod, equation::Equation, v; kwar
     numericalFluxMat
 end
 
-function giveNumFlux(::ZbSource, method::FVMethod, equation::Equation, v; domain::Domain)
+function giveNumFlux(::ZbSource, method::Method, equation::Equation, v; domain::Domain)
     #println("Entering giveNumFlux")
     #@show eltype(v)
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
