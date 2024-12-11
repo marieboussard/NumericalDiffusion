@@ -34,6 +34,7 @@ include("methods/roe.jl")
 include("methods/hydrostatic.jl")
 include("methods/mixed_method.jl")
 include("methods/numerical_entropy_flux.jl")
+include("methods/MUSCL.jl")
 
 # Various tools
 include("tools/utils.jl")

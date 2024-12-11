@@ -1,5 +1,3 @@
-#include("abstract_methods.jl")
-
 struct Rusanov{T <: AbstractFloat} <: FVMethod
     CFL_factor::T
 end
@@ -10,7 +8,7 @@ get_sR(::Rusanov) = 1
 get_name(::Rusanov) = "Rusanov"
 
 function numFlux(::Rusanov, equation::Equation, uL, uR)
-    [uL, uR]
+    #@show [uL, uR]
     A = CFL_cond(equation, [uL, uR])
     flux(equation, uL)
     (flux(equation, uL) .+ flux(equation, uR)) / 2 .- A / 2 * (uR .- uL)
