@@ -1,4 +1,4 @@
-struct Upwind{T <: AbstractFloat} <: FVMethod
+struct Upwind{T <: AbstractFloat} <: FVScheme
     CFL_factor::T
 end
 

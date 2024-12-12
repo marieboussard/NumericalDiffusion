@@ -1,4 +1,4 @@
-struct ModifiedRusanov <: FVMethod
+struct ModifiedRusanov <: SpaceScheme
     CFL_factor::Float64
     A::Real
 end

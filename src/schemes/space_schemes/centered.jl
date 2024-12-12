@@ -1,4 +1,4 @@
-struct Centered{T <: AbstractFloat} <: FVMethod
+struct Centered{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
 end
 

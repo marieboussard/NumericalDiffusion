@@ -15,10 +15,11 @@ function checkInequalities(domain::Domain, equation::Equation, u_approx, gamma, 
 
         # TO DO: also compute the modified source term
 
-        @show get_eta(equation, uh_j, z[j])[1]
-        @show get_eta(equation, u[j,:], z[j])[1]
+        # @show get_eta(equation, uh_j, z[j])[1]
+        # @show get_eta(equation, u[j,:], z[j])[1]
 
-        e1[j] = get_eta(equation, uh_j, z[j])[1] - get_eta(equation, u[j,:], z[j])[1] + dt / dx * (gamma[j+1] - get_G(equation, u[j,:], z[j])[1])
+        #e1[j] = get_eta(equation, uh_j, z[j])[1] - get_eta(equation, u[j,:], z[j])[1] + dt / dx * (gamma[j+1] - get_G(equation, u[j,:], z[j])[1])
+        e1[j] = get_eta(equation, uh_j, 0.0)[1] - get_eta(equation, u[j,:], 0.0)[1] + dt / dx * (gamma[j+1] - get_G(equation, u[j,:], 0.0)[1])
 
         e2[j] = get_eta(equation, uh_jp, z[mod1(j+1,Nx)])[1] - get_eta(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1] + dt / dx * (get_G(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1] - gamma[j+1])
 

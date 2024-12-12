@@ -1,12 +1,12 @@
 # include("abstract_methods.jl")
 # include("../equations/source_terms.jl")
 
-struct Hydrostatic{T <: AbstractFloat} <: FVMethod
+struct Hydrostatic{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
-    subMethod::FVMethod
+    subScheme::SpaceScheme
 end
 
-createHydrostatic(CFL_factor::Float64, subMethod::DataType) = Hydrostatic(CFL_factor, subMethod(CFL_factor))
+createHydrostatic(CFL_factor::Float64, subScheme::DataType) = Hydrostatic(CFL_factor, subScheme(CFL_factor))
 
 get_sL(::Hydrostatic) = 1
 get_sR(::Hydrostatic) = 1
@@ -41,7 +41,7 @@ function numFlux(hydro::Hydrostatic, equation::Equation, vL, vR; zL=0, zR=0)
     else
         vplus = [0.0, 0.0]
     end
-    numFlux(hydro.subMethod, equation, vminus, vplus)
+    numFlux(hydro.subScheme, equation, vminus, vplus)
 end
 
 giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)

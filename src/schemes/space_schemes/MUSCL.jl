@@ -1,16 +1,16 @@
 abstract type Limiter end
 struct Minmod<:Limiter end
 
-struct MUSCL{T <: AbstractFloat} <: FVMethod
+struct MUSCL{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
     dx::T
-    subMethod::FVMethod
+    subScheme::SpaceScheme
     limiter::Limiter
 end
 
-MUSCL(CFL_factor::Float64, subMethod::FVMethod, limiter::Limiter, domain::Domain) = MUSCL(CFL_factor, domain.dx, subMethod, limiter)
+MUSCL(CFL_factor::Float64, subScheme::SpaceScheme, limiter::Limiter, domain::Domain) = MUSCL(CFL_factor, domain.dx, subScheme, limiter)
 
-MUSCL(CFL_factor::Float64, subMethod::DataType, limiter::Limiter, domain::Domain) = MUSCL(CFL_factor, domain.dx, subMethod(CFL_factor), limiter)
+MUSCL(CFL_factor::Float64, subScheme::DataType, limiter::Limiter, domain::Domain) = MUSCL(CFL_factor, domain.dx, subScheme(CFL_factor), limiter)
 
 get_sL(::MUSCL) = 2
 get_sR(::MUSCL) = 2
@@ -31,6 +31,6 @@ function numFlux(mu::MUSCL, equation::Equation, uL, uC, uR, uRR)
     u_minus = uC + mu.dx/2 * σC
     u_plus = uR + mu.dx/2 * σR
 
-    numFlux(mu.subMethod, equation, u_minus, u_plus)
+    numFlux(mu.subScheme, equation, u_minus, u_plus)
 
 end

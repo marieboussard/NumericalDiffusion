@@ -4,7 +4,7 @@ include("../../src/include_file.jl")
 
 # 2.1 # Quantifying numerical diffusion for solution of Burgers with Rusanov
 
-Nx = 100
+Nx = 20
 CFL_number = 0.5
 domain = createInterval(Nx, -2, 2, 0, 0.4)
 u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)

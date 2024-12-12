@@ -154,7 +154,7 @@ function v0_discontinuous(x, args...; kwargs...)
 end
 
 
-function sourceTerm(::SaintVenant, ::FVMethod, domain::Domain, v; z=domain.sourceVec, Dz=domain.DSourceVec)
+function sourceTerm(::SaintVenant, ::Scheme, domain::Domain, v; z=domain.sourceVec, Dz=domain.DSourceVec)
     S = zero(v)
     for i in 1:length(v[:,1])
         S[i,1] = 0.0

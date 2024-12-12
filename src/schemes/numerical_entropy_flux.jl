@@ -1,8 +1,8 @@
-abstract type NumEntFlux <: Method end
+abstract type NumEntFlux <: Scheme end
 
 struct CenteredG <: NumEntFlux end
 
-numFlux(::CenteredG, equation::Equation, uL, uR) = (get_G(equation, uL)+get_G(equation, uR))/2
+numFlux(::CenteredG, equation::Equation, uL, uR) = (get_G(equation, uL)+ get_G(equation, uR))/2
 
 
 # function giveAnalyticG(::CenteredG, u)

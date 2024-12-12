@@ -76,12 +76,21 @@ function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::
 
     # numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)
 
+    # for k in j-sL-sR+1:j+sR+sL
+
+    #     uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+    #         numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+    #         .-
+    #         numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
+    #     )
+
+    # end
     for k in j-sL-sR+1:j+sR+sL
 
         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            numFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :])
+            numFlux(method, equation, extract_data_stencil(equation, ut, mod1(k, Nx), sL, sR)...)
             .-
-            numFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :])
+            numFlux(method, equation, extract_data_stencil(equation, ut, mod1(k-1, Nx), sL, sR)...)
         )
 
     end

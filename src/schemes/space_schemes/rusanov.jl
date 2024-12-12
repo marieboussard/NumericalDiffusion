@@ -1,4 +1,4 @@
-struct Rusanov{T <: AbstractFloat} <: FVMethod
+struct Rusanov{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
 end
 
@@ -31,13 +31,13 @@ function exactEntropicNumFlux(::Rusanov, equation::Equation, uL, uR)
     return (G(equation, uL) + G(equation, uR)) / 2 - A / 2 * (eta(equation, uR) - eta(equation, uL))
 end
 
-function exactG(method::Rusanov, equation::Equation, u)
+function exactG(scheme::Rusanov, equation::Equation, u)
     Nx = length(u)
     G = zeros(Nx + 1)
     for i in 1:Nx-1
-        G[i+1] = exactEntropicNumFlux(method, equation, u[i], u[i+1])
+        G[i+1] = exactEntropicNumFlux(scheme, equation, u[i], u[i+1])
     end
-    G[begin] = exactEntropicNumFlux(method, equation, u[end], u[begin])
+    G[begin] = exactEntropicNumFlux(scheme, equation, u[end], u[begin])
     G[end] = G[begin]
     G
 end

@@ -63,7 +63,7 @@ zb_tilde(::Bump_zb, ut, c) = c - ut[1]
 #     S
 # end
 
-function sourceTerm(::Equation, ::FVMethod, domain::Domain, v; kwargs...)
+function sourceTerm(::Equation, ::Method, domain::Domain, v; kwargs...)
     return zero(v)
 end
 

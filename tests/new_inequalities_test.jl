@@ -1,14 +1,20 @@
 include("../src/include_file.jl")
 
-xmin, xmax, Nx, t0 = -2, 2, 20, 0
-CFL_factor = 0.5
+xmin, xmax, Nx, t0 = -2, 2, 100, 0
+CFL_factor = 0.1
 equation = burgers()
 #method = Roe(CFL_factor)
-method = Rusanov(CFL_factor)
+#method = Rusanov(CFL_factor)
+method = MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod(), domain)
+
 testcase = ArticleTestcase()
 #testcase = SimpleShock()
-domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
-modifiedDataType = minK()
+#domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
+Tf = 0.4
+domain = createInterval(Nx, xmin, xmax, t0, Tf)
+u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+#modifiedDataType = minK()
+modifiedDataType = AsymmetricModifiedData()
 
 solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=modifiedDataType)
 
@@ -16,4 +22,9 @@ plot_solution(solEnt)
 e1, e2 = checkInequalities(solEnt)
 
 plot(domain.x, e1, label="e1")
-plot!(domain.x, e2, label="e2")
+display(plot!(domain.x, e2, label="e2"))
+
+display(plot(domain.x, solEnt.u_approx[end]))
+
+@show maximum(e1)
+@show maximum(e2)

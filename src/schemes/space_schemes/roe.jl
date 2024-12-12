@@ -1,6 +1,6 @@
 #include("abstract_methods.jl")
 
-struct Roe{T <: AbstractFloat} <: FVMethod
+struct Roe{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
 end
 get_sL(::Roe) = 1
