@@ -25,12 +25,16 @@ compute_slope(::Minmod, uL, uC, uR) = max(0, min(uC-uL, uR-uC)) + min(0, max(uC-
 
 function numFlux(mu::MUSCL, equation::Equation, uL, uC, uR, uRR)
 
+    #@show uL, uC, uR, uRR
+
     # Piecewise linear reconstruction
     σC = compute_slope(mu.limiter, uL, uC, uR)
     σR = compute_slope(mu.limiter, uC, uR, uRR)
-    u_minus = uC + mu.dx/2 * σC
-    u_plus = uR + mu.dx/2 * σR
+    u_plus = uC + mu.dx/2 * σC
+    u_minus = uR - mu.dx/2 * σR
 
-    numFlux(mu.subScheme, equation, u_minus, u_plus)
+    #@show u_plus, u_minus
+
+    numFlux(mu.subScheme, equation, u_plus, u_minus)
 
 end

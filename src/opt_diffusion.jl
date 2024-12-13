@@ -27,39 +27,73 @@ function compute_u_tilde(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::In
 
 end
 
-
 function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
-
     Nx = size(u)[1]
-    ut = zero(u)
+    u_shift, ut_shift, ut = zero(u), zero(u), zero(u)
 
-    ileft, iright = j - sL + 1, j + sR
-    jleft, jright = j - sL - sR + 2, j + sL + sR - 1
-
+    #@show j-sL-sR+2
+    # First the data is shifted so that the index j-sL-sR+2 is brought to position 1
     for k in 1:Nx
-
-        if (
-            (ileft <= k && iright >= k)
-            || (ileft % Nx <= k && ileft < 1)
-            || (iright % Nx >= k && iright > Nx)
-        )
-            ut[k,:] = u[k,:]
-        elseif (jleft <= k && ileft > k) || (
-            jleft % Nx <= k && jleft < 1 && k < ileft % Nx
-        )
-            ut[k,:] = u[mod1(ileft, Nx),:]
-        elseif (iright < k && jright >= k) || (
-            jright % Nx >= k && jright > Nx && k > iright % Nx
-        )
-            ut[k,:] = u[mod1(iright, Nx),:]
-        elseif jright < k
-            ut[k,:] = u[mod1(iright, Nx),:]
-        elseif jleft > k
-            ut[k,:] = u[mod1(ileft, Nx),:]
-        end
+        u_shift[k] = u[mod1(k+j-2*sL-sR+1, Nx)]
     end
+    #@show u_shift
+
+    # Then, the shifted data is modified
+    for k in 1:sL+sR-1
+        ut_shift[k] = u_shift[sL+sR]
+    end
+    for k in sL+sR:2*sR+2*sL-1
+        ut_shift[k] = u_shift[k]
+    end
+    for k in 2*sR+2*sL:3*sL+3*sR-2
+        ut_shift[k] = u_shift[2*sR+2*sL-1]
+    end
+
+    #@show ut_shift
+
+    # Finally, we apply the inverse shifting
+    for k in 1:Nx
+        ut[k] = ut_shift[mod1(k-j+2*sL+sR-1, Nx)]
+    end
+
+    #@show ut
+
     ut
+
 end
+
+# function compute_u_tilde(::AsymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
+
+#     Nx = size(u)[1]
+#     ut = zero(u)
+
+#     ileft, iright = j - sL + 1, j + sR
+#     jleft, jright = j - sL - sR + 2, j + sL + sR - 1
+
+#     for k in 1:Nx
+
+#         if (
+#             (ileft <= k && iright >= k)
+#             || (ileft % Nx <= k && ileft < 1)
+#             || (iright % Nx >= k && iright > Nx)
+#         )
+#             ut[k,:] = u[k,:]
+#         elseif (jleft <= k && ileft > k) || (
+#             jleft % Nx <= k && jleft < 1 && k < ileft % Nx
+#         )
+#             ut[k,:] = u[mod1(ileft, Nx),:]
+#         elseif (iright < k && jright >= k) || (
+#             jright % Nx >= k && jright > Nx && k > iright % Nx
+#         )
+#             ut[k,:] = u[mod1(iright, Nx),:]
+#         elseif jright < k
+#             ut[k,:] = u[mod1(iright, Nx),:]
+#         elseif jleft > k
+#             ut[k,:] = u[mod1(ileft, Nx),:]
+#         end
+#     end
+#     ut
+# end
 
 compute_z_tilde(::NullSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR) = nothing
 function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType, domain::Domain, j, sL, sR)
@@ -67,12 +101,13 @@ function compute_z_tilde(zbSource::ZbSource, modifiedDataType::ModifiedDataType,
     compute_u_tilde(modifiedDataType, z, j, sL, sR)
 end
 
-function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=nothing)
+function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, scheme::FVScheme; zt=nothing)
 
     uh = copy(ut)
     Nx, p = size(ut)
 
-    sL, sR = get_sL(method), get_sR(method)
+    #println(get_name(scheme))
+    sL, sR = get_sL(scheme), get_sR(scheme)
 
     # numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)
 
@@ -85,34 +120,37 @@ function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::
     #     )
 
     # end
-    for k in j-sL-sR+1:j+sR+sL
 
-        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            numFlux(method, equation, extract_data_stencil(equation, ut, mod1(k, Nx), sL, sR)...)
-            .-
-            numFlux(method, equation, extract_data_stencil(equation, ut, mod1(k-1, Nx), sL, sR)...)
-        )
+    ######### TO DO: CHANGE TO IMPROVE COMPUTATIONNAL TIME ##################################
+    # for k in j-sL-sR+1:j+sR+sL
 
-    end
-    #scheme_step(ns, ut, dt, domain, equation, method)
-    return uh
+    #     uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+    #         numFlux(scheme, equation, extract_data_stencil(equation, ut, mod1(k, Nx), sL, sR)...)
+    #         .-
+    #         numFlux(scheme, equation, extract_data_stencil(equation, ut, mod1(k-1, Nx), sL, sR)...)
+    #     )
+
+    # end
+    # return uh
+    scheme_step(ns, ut, dt, domain, equation, scheme)
+    
 end
 
-function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=zero(ut))
+function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, scheme::FVScheme; zt=zero(ut))
 
     uh = copy(ut)
     Nx, p = size(ut)
 
-    sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(scheme), get_sR(scheme)
 
-    sourceVec = sourceTerm(equation, method, domain, ut; z=zt)
+    sourceVec = sourceTerm(equation, scheme, domain, ut; z=zt)
 
     for k in j-sL-sR+1:j+sR+sL
 
         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            giveNumFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
+            giveNumFlux(scheme, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
             .-
-            giveNumFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
+            giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
         
 
     end
@@ -166,7 +204,7 @@ function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equ
 
     Deta_uj = get_D_eta(equation, u[j,:], zt[j,:])
     eta_uj = get_eta(equation, u[j,:], zt[j,:])
-    fj = giveNumFlux(method, equation, u[j,:], u[mod1(j+1, Nx),:]; zL=zt[j], zR=zt[mod1(j + 1, Nx)])
+    fj = giveNumFlux(scheme, equation, u[j,:], u[mod1(j+1, Nx),:]; zL=zt[j], zR=zt[mod1(j + 1, Nx)])
     K, Z = computeK(KFun, extractLocalData(u, j, sL, sR)), computeZ(KFun, z, j, sL, sR)
 
     M = M .+ Deta_uj * (fj .- get_flux(equation, K, Z))
@@ -188,10 +226,10 @@ function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equ
 
 end
 
-function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, method::FVMethod, modifiedDataType::ModifiedDataType, boundsType::BoundsType=NormalBounds())
+function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, scheme::FVScheme, modifiedDataType::ModifiedDataType, boundsType::BoundsType=NormalBounds())
 
     M_vec, m_vec = zeros(Nx + 1), zeros(Nx + 1)
-    sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(scheme), get_sR(scheme)
 
     # source
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
@@ -199,7 +237,7 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, met
     for j in 1:Nx
         ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
         zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-        uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
+        uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
         m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
         m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
 
@@ -313,6 +351,8 @@ function diffusion(u, up, gamma::AbstractArray{U}, dx::T, dt::T, equation::Equat
     [get_eta(equation, up[i,:], z[i])[1] - get_eta(equation, u[i,:], z[i])[1] for i in 1:length(u[:,1])] .+ dt / dx * (gamma[2:end] - gamma[1:end-1])
 end
 
+diffusion(sol::OptForEntropySol, Gexact) = diffusion(sol.u_approx[end-1], sol.u_approx[end], Gexact, sol.domain.dx, sol.dt_vec[end], sol.equation, sol.domain)
+
 function consistency(::SquareMinFun, gamma, Nx, dx, dt, m_vec, M_vec)
     consistency_vec = zeros(Nx+1)
     for j in 1:Nx+1
@@ -332,23 +372,27 @@ consistency(::OptimFunctional, gamma, Nx, dx, dt, m_vec, M_vec) = @warn "Missing
 initial_guess(::MeanInitGuess, m_vec, M_vec) = 0.5 * (m_vec + M_vec)
 initial_guess(::NullInitGuess, m_vec, M_vec) = zero(m_vec)
 
-function optimize_for_entropy(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK(get_sL(method), get_sR(method)), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), initGuess::InitGuess=MeanInitGuess(), kwargs...)
+function optimize_for_entropy(u_init, domain::Domain, equation::Equation, scheme::FVScheme; modifiedDataType::ModifiedDataType=meanK(get_sL(scheme), get_sR(scheme)), boundsType::BoundsType=NormalBounds(), optimFunctional::OptimFunctional=SquareMinFun(), initGuess::InitGuess=MeanInitGuess(), vectorInitGuess=nothing, kwargs...)
 
     Nx, dx = domain.Nx, domain.dx
-    FVsol = fv_solve(domain, u_init, equation, method)
+    FVsol = fv_solve(domain, u_init, equation, scheme)
     u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 
-    m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType, boundsType)
-    gamma_init = initial_guess(initGuess, m_vec, M_vec)
+    m_vec, M_vec = compute_G_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, scheme, modifiedDataType, boundsType)
+    if !isnothing(vectorInitGuess)
+        gamma_init = vectorInitGuess
+    else
+        gamma_init = initial_guess(initGuess, m_vec, M_vec)
+    end
 
     u, up, dt = u_approx[end-1], u_approx[end], dt_vec[end]
-    sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
+    sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; g_tol=1e-16, iterations=100000, kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)
     Copt = consistency(optimFunctional, Gopt, Nx, dx, dt_vec[end], m_vec, M_vec)
     # @show typeof(u_approx)
     # @show typeof(domain.dx)
-    OptForEntropySol(domain, equation, method, modifiedDataType, boundsType, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
+    OptForEntropySol(domain, equation, scheme, modifiedDataType, boundsType, u_approx, dt_vec, Gopt, Jopt, Dopt, Copt, m_vec, M_vec, sol, "")
 
 end

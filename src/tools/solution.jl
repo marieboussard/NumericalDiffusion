@@ -3,7 +3,7 @@
 mutable struct OptForEntropySol{T<:Real, S<:Domain{T}}
     domain::S
     equation::Equation
-    method::FVMethod
+    scheme::FVScheme
     modifiedDataType::ModifiedDataType
     boundsType::BoundsType
     u_approx::Vector{Matrix{T}}
@@ -31,7 +31,7 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
     # tickfontsize=18)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
+    title!(get_name(sol.scheme)*", Nx = "*string(sol.domain.Nx))
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
@@ -67,7 +67,7 @@ function plot_solution_EntBreak(sol::OptForEntropySol, plotMode::PlottingMode=Di
 
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(sol.method)*", Nx = "*string(sol.domain.Nx))
+    title!(get_name(sol.scheme)*", Nx = "*string(sol.domain.Nx))
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
@@ -115,7 +115,7 @@ function plot_solutions(solVec, plotMode::PlottingMode=DisplayMode())
     plt1 = createPlot(plotMode)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(solVec[1].method)*", Nx = "*string(solVec[1].domain.Nx))
+    title!(get_name(solVec[1].scheme)*", Nx = "*string(solVec[1].domain.Nx))
     for sol in solVec
         plot!(sol.domain.interfaces, sol.Gopt, label=sol.label, lw=2)
     end
@@ -137,7 +137,7 @@ function plot_bounds(sol::OptForEntropySol; exactG_known=false)
 
     if exactG_known
 
-        Gexact = exactG(sol.method, sol.equation, sol.u_approx[end-1])
+        Gexact = exactG(sol.scheme, sol.equation, sol.u_approx[end-1])
 
         Gexact_test = zeros(sol.domain.Nx + 1)
         Gexact_test[2:end] = Gexact[1:end-1]
@@ -166,7 +166,7 @@ function plot_bounds(sol::OptForEntropySol; exactG_known=false)
 end
 
 function compare_exact_flux(sol::OptForEntropySol)
-    Gexact = exactG(sol.method, sol.equation, sol.u_approx[end-1])
+    Gexact = exactG(sol.scheme, sol.equation, sol.u_approx[end-1])
     Dexact = diffusion(sol.u_approx[end-1], sol.u_approx[end], Gexact, sol.domain.dx, sol.dt_vec[end], sol.equation, sol.domain)
 
     plot(sol.domain.interfaces, sol.Gopt, label="Gopt")
