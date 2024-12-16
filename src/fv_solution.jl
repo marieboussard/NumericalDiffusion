@@ -189,3 +189,17 @@ function plot_fv_sol(sol::FVSolution, exact_sol::Base.Callable)
 
 
 end
+
+function plot_fv_sol(sol::FVSolution, testcase::Testcase)
+
+    x = sol.domain.x
+
+    u_exact = exactData(sol.domain, testcase)
+
+    plot(x, sol.u_approx[end], label=get_name(sol.scheme))
+    plot!(x, u_exact, label="Exact")
+    xlabel!("x")
+    ylabel!("u")
+
+
+end

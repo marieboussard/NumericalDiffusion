@@ -74,3 +74,8 @@ function u_exact_counter(x::Real, t::Real)
 end
 u0_fun(::CounterExample, x::Real) = u0_counter(x)
 uexact_fun(::CounterExample, x::Real, t::Real) = u_exact_counter(x,t)
+
+# A smooth testcase
+struct SmoothTestcase<: Testcase end
+u0_fun(::SmoothTestcase, x::Real) = uexact_burgers_article(x, 0.1)
+uexact_fun(::SmoothTestcase, x::Real, t::Real) = uexact_burgers_article(x, t+0.1)
