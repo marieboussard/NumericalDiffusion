@@ -40,6 +40,7 @@ include("schemes/numerical_entropy_flux.jl")
     include("schemes/space_schemes/MUSCL.jl")
 
     # Schemes in time
+    include("schemes/time_schemes/time_step_computation.jl")
     include("schemes/time_schemes/Euler.jl")
     include("schemes/time_schemes/RK2.jl")
 
@@ -69,4 +70,4 @@ include("opt_diffusion.jl")
 # # Two dimensionnal extensions
 # include("multidims/multidim_priori.jl")
 # include("least_squares_minimization.jl")
-# include("new_inequalities.jl")
+include("new_inequalities.jl")

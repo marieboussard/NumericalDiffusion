@@ -3,20 +3,20 @@ include("../src/include_file.jl")
 xmin, xmax, Nx, t0 = -2, 2, 100, 0
 CFL_factor = 0.1
 equation = burgers()
-#method = Roe(CFL_factor)
-#method = Rusanov(CFL_factor)
-method = MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod(), domain)
+scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
+#scheme = FVScheme(RK2(), Rusanov(0.5))
+#scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod(), domain))
 
 testcase = ArticleTestcase()
 #testcase = SimpleShock()
 #domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
 Tf = 0.4
 domain = createInterval(Nx, xmin, xmax, t0, Tf)
-u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+u0 = initialData(domain, testcase)
 #modifiedDataType = minK()
 modifiedDataType = AsymmetricModifiedData()
 
-solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=modifiedDataType)
+solEnt = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType=modifiedDataType)
 
 plot_solution(solEnt)
 e1, e2 = checkInequalities(solEnt)

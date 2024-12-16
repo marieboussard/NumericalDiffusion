@@ -105,8 +105,6 @@ function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::
 
     uh = copy(ut)
     Nx, p = size(ut)
-
-    println(get_name(scheme))
     sL, sR = get_sL(scheme), get_sR(scheme)
 
     # numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)

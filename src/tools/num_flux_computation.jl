@@ -10,6 +10,7 @@ function extract_data_stencil(equation::Equation, u, j, sL, sR)
 end
 
 function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs...)
+    @show v
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
@@ -21,7 +22,7 @@ function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs
         #@show giveNumFlux(method, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
         #@show scheme 
         #@show extract_data_stencil(equation, v, i-1, sL, sR)
-        numericalFluxMat[i,:] .= giveNumFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
+        numericalFluxMat[i,:] .= giveNumFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...; kwargs...)
     end
     # numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
     # numericalFluxMat[end,:] = numericalFluxMat[1,:]
@@ -33,7 +34,7 @@ function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs
 
 end
 
-
+giveNumFlux(scheme::FVScheme, args...; kwargs...) = giveNumFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
 
 
 

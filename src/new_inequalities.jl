@@ -1,10 +1,10 @@
-function checkInequalities(domain::Domain, equation::Equation, u_approx, gamma, dt_vec)
+function checkInequalities(domain::Domain, equation::Equation, scheme::FVScheme, u_approx, gamma, dt_vec)
     Nx = domain.Nx
     z = manageSource(domain)
     u, up = u_approx[end-1], u_approx[end]
     dx, dt = domain.dx, dt_vec[end]
-    sL, sR = get_sL(method), get_sR(method)
-    numericalFluxMat = giveNumFlux(equation.source, method, equation, u)
+    sL, sR = get_sL(scheme), get_sR(scheme)
+    numericalFluxMat = giveNumFlux(equation.source, scheme, equation, u)
 
     e1, e2 = zeros(eltype(gamma), Nx), zeros(eltype(gamma), Nx)
 
@@ -39,4 +39,4 @@ function checkInequalities(domain::Domain, equation::Equation, u_approx, gamma, 
     e1, e2
 end
 
-checkInequalities(solEnt::OptForEntropySol) = checkInequalities(solEnt.domain, solEnt.equation, solEnt.u_approx, solEnt.Gopt, solEnt.dt_vec)
+checkInequalities(solEnt::OptForEntropySol) = checkInequalities(solEnt.domain, solEnt.equation, solEnt.scheme, solEnt.u_approx, solEnt.Gopt, solEnt.dt_vec)

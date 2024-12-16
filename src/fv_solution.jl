@@ -70,7 +70,8 @@ function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, 
     #@code_warntype giveNumFlux(ns, method, equation, v)
     # numericalFluxMat = giveNumFlux(ns, method, equation, v)
     # v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
-    next_timestep(scheme.timeScheme, v, dt, domain, equation, scheme.spaceScheme)
+    #next_timestep(scheme.timeScheme, v, dt, domain, equation, scheme.spaceScheme)
+    next_timestep(scheme, v, dt, domain, equation)
 end
 
 # function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
