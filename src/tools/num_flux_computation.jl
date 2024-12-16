@@ -14,18 +14,23 @@ function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx+1
-        #@show (extract_data_stencil(equation, v, i, sL, sR)...)
+        #@show extract_data_stencil(equation, v, i-1, sL, sR)
         # if i!=1
         #     @show giveNumFlux(method, equation, v[i-1,:], v[i,:])
         # end
         #@show giveNumFlux(method, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
+        #@show scheme 
+        #@show extract_data_stencil(equation, v, i-1, sL, sR)
         numericalFluxMat[i,:] .= giveNumFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
     end
     # numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
     # numericalFluxMat[end,:] = numericalFluxMat[1,:]
     numericalFluxMat[1,:] = numericalFluxMat[end,:]
 
+    #display(plot!(domain.interfaces, numericalFluxMat, label=get_name(scheme)))
+
     numericalFluxMat
+
 end
 
 

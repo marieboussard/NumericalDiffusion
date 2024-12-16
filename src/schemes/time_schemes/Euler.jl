@@ -7,8 +7,15 @@ get_sL(::Euler, sp::SpaceScheme) = get_sL(sp::SpaceScheme)
 get_sR(::Euler, sp::SpaceScheme) = get_sR(sp::SpaceScheme)
 
 function next_timestep(::Euler, v, dt, domain::Domain, equation::Equation, spaceScheme::SpaceScheme)
-    #println("Calling Euler")
+    #println("Calling Euler for scheme"*get_name(spaceScheme))
     numericalFluxMat = giveNumFlux(NullSource(), spaceScheme, equation, v)
+    #display(plot!(domain.interfaces, numericalFluxMat, label=get_name(spaceScheme)))
+
+    vp = v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
+
+    #display(plot!(domain.x, vp, label=get_name(spaceScheme)))
+
+   # @show v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
 end
 

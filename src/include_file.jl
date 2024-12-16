@@ -41,7 +41,7 @@ include("schemes/numerical_entropy_flux.jl")
 
     # Schemes in time
     include("schemes/time_schemes/Euler.jl")
-    include("schemes/time_schemes/RungeKutta.jl")
+    include("schemes/time_schemes/RK2.jl")
 
 
 # Various tools
@@ -50,6 +50,7 @@ include("tools/utils.jl")
 # Finite Volumes resolution
 include("tools/num_flux_computation.jl")
 include("fv_solution.jl")
+include("tools/convergence.jl")
 
 # # Optimization process
 include("tools/modified_data_type.jl")

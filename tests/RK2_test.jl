@@ -10,7 +10,7 @@ u0 = initialData(domain, testcase)
 #domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
 
 equation = burgers()
-scheme = FVScheme(RungeKutta(), Rusanov(CFL_factor))
+scheme = FVScheme(RK2(), Rusanov(CFL_factor))
 #scheme2 = FVScheme(Euler(), Rusanov(CFL_factor))
 
 # A posteriori quantification of numerical diffusion
