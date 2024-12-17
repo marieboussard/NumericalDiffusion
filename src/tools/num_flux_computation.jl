@@ -9,8 +9,7 @@ function extract_data_stencil(equation::Equation, u, j, sL, sR)
     u_short
 end
 
-function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs...)
-    @show v
+function vecNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs...)
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
@@ -22,7 +21,7 @@ function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs
         #@show giveNumFlux(method, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
         #@show scheme 
         #@show extract_data_stencil(equation, v, i-1, sL, sR)
-        numericalFluxMat[i,:] .= giveNumFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...; kwargs...)
+        numericalFluxMat[i,:] .= numFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...; kwargs...)
     end
     # numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
     # numericalFluxMat[end,:] = numericalFluxMat[1,:]
@@ -34,7 +33,7 @@ function giveNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs
 
 end
 
-giveNumFlux(scheme::FVScheme, args...; kwargs...) = giveNumFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
+numFlux(scheme::FVScheme, args...; kwargs...) = numFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
 
 
 
@@ -53,15 +52,15 @@ giveNumFlux(scheme::FVScheme, args...; kwargs...) = giveNumFlux(scheme.timeSchem
 #     numericalFluxMat
 # end
 
-function giveNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain)
+function vecNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain)
     #println("Entering giveNumFlux")
     #@show eltype(v)
     Nx, p = length(v[:,1]), get_unknowns_number(equation)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx
-        numericalFluxMat[i,:] = giveNumFlux(scheme, equation, v[i-1,:], v[i,:]; zL=domain.sourceVec[i-1], zR=domain.sourceVec[i])
+        numericalFluxMat[i,:] = NumFlux(scheme, equation, v[i-1,:], v[i,:]; zL=domain.sourceVec[i-1], zR=domain.sourceVec[i])
     end
-    numericalFluxMat[1,:] = giveNumFlux(scheme, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
+    numericalFluxMat[1,:] = NumFlux(scheme, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
     numericalFluxMat[end,:] = numericalFluxMat[1,:]
     #@show typeof(numericalFluxMat)
     numericalFluxMat

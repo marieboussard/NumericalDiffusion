@@ -24,7 +24,7 @@ compute_slope(::Minmod, uL, uC, uR) = minmod(uC - uL, uR - uC)
 # # Then we define the affine interpolation
 # affine_interp(a, b, x0, x) = a*(x-x0) + b
 
-function numFlux(mu::MUSCL, equation::Equation, uL, uC, uR, uRR)
+function numFlux(mu::MUSCL, equation::Equation, uL, uC, uR, uRR; kwargs...)
     #println("computing muscl flux")
 
     #@show uL, uC, uR, uRR
@@ -44,6 +44,6 @@ function numFlux(mu::MUSCL, equation::Equation, uL, uC, uR, uRR)
     # @show uC_plus, uR_minus
 
     #@show numFlux(mu.subScheme, equation, uC, uR)
-    numFlux(mu.subScheme, equation, uC_plus, uR_minus)
+    numFlux(mu.subScheme, equation, uC_plus, uR_minus; kwargs...)
 
 end

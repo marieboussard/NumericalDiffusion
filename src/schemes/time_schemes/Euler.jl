@@ -6,7 +6,7 @@ get_name(::Euler) = "Euler"
 get_sL(::Euler, sp::SpaceScheme) = get_sL(sp::SpaceScheme)
 get_sR(::Euler, sp::SpaceScheme) = get_sR(sp::SpaceScheme)
 
-giveNumFlux(::Euler, spaceScheme::SpaceScheme, args...; kwargs...) = giveNumFlux(spaceScheme::SpaceScheme, args...; kwargs...)
+numFlux(::Euler, spaceScheme::SpaceScheme, args...; kwargs...) = numFlux(spaceScheme::SpaceScheme, args...; kwargs...)
 
 # function next_timestep(::Euler, v, dt, domain::Domain, equation::Equation, spaceScheme::SpaceScheme)
 #     #println("Calling Euler for scheme"*get_name(spaceScheme))

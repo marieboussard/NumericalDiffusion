@@ -4,7 +4,7 @@ function checkInequalities(domain::Domain, equation::Equation, scheme::FVScheme,
     u, up = u_approx[end-1], u_approx[end]
     dx, dt = domain.dx, dt_vec[end]
     sL, sR = get_sL(scheme), get_sR(scheme)
-    numericalFluxMat = giveNumFlux(equation.source, scheme, equation, u)
+    numericalFluxMat = vecNumFlux(equation.source, scheme, equation, u; dt=dt, domain=domain)
 
     e1, e2 = zeros(eltype(gamma), Nx), zeros(eltype(gamma), Nx)
 

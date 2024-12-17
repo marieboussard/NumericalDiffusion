@@ -15,7 +15,7 @@ u0 = initialData(domain, testcase)
 
 scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 #scheme = FVScheme(RK2(), Rusanov(0.5))
-#scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod(), domain))
+#scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 
 # 1 ## Applying the scheme
 

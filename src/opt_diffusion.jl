@@ -224,6 +224,23 @@ function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equ
 
 end
 
+function compute_local_bounds(boundsType::BoundsType, u, dx, dt, j, sL, sR, z, domain::Domain, equation::Equation, scheme::FVScheme, modifiedDataType::ModifiedDataType)
+    ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
+    zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+    uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
+    m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+    m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+end
+
+function compute_local_bounds(::SimpleBounds, u, dx, dt, j, sL, sR, z, domain::Domain, equation::Equation, scheme::FVScheme, args...)
+    F_j = numFlux(scheme, equation, extract_data_stencil(equation, u, j, sL, sR)...; dt=dt, domain=domain)
+    uh_j = u[j,:] - dt/dx * (F_j - flux(equation, u[j,:]))
+    uh_jp = u[mod1(j+1,Nx),:] - dt/dx * (flux(equation, u[mod1(j+1,Nx),:]) - F_j)
+    m = get_G(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1] + dt/dx * (get_eta(equation, uh_jp, z[mod1(j+1,Nx)])[1] - get_eta(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1])
+    M = get_G(equation, u[j,:], 0.0)[1] + dt/dx * (get_eta(equation, uh_j, 0.0)[1] - get_eta(equation, u[j,:], 0.0)[1])
+    m, M
+end
+
 function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, scheme::FVScheme, modifiedDataType::ModifiedDataType, boundsType::BoundsType=NormalBounds())
 
     M_vec, m_vec = zeros(Nx + 1), zeros(Nx + 1)
@@ -233,11 +250,12 @@ function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, sch
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
 
     for j in 1:Nx
-        ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-        zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-        uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
-        m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
-        m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+        # ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
+        # zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+        # uh = compute_u_hat(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
+        # m, M = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+        # m, M = updateBounds!(modifiedDataType, boundsType, equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+        m, M = compute_local_bounds(boundsType, u, dx, dt, j, sL, sR, z, domain, equation, scheme, modifiedDataType)
 
         m_vec[j+1], M_vec[j+1] = m[1], M[1]
 

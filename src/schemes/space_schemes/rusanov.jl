@@ -7,7 +7,7 @@ get_sR(::Rusanov) = 1
 
 get_name(::Rusanov) = "Rusanov"
 
-function numFlux(::Rusanov, equation::Equation, uL, uR)
+function numFlux(::Rusanov, equation::Equation, uL, uR; kwargs...)
     #@show [uL, uR]
     A = CFL_cond(equation, [uL, uR])
     #@show (flux(equation, uL) .+ flux(equation, uR)) / 2 .- A / 2 * (uR .- uL)
