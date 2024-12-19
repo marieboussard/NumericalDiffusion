@@ -13,6 +13,7 @@ using ModelingToolkit
 using TimerOutputs
 using Test
 using JuMP, OSQP
+using UnPack
 
 include("tools/plotting_tools.jl")
 include("domain.jl")
@@ -60,7 +61,7 @@ include("tools/solution.jl")
 include("opt_diffusion.jl")
 include("worst_initial_data.jl")
 # include("tools/extend_initial_data.jl")
-# include("quantification_a_priori.jl")
+include("quantification_a_priori.jl")
 # include("diffusion_compensation/diffusion_compensation.jl")
 # # include("diffusion_compensation/diffusion_compensation_v2.jl")
 # include("diffusion_compensation/diffusion_compensation_v4.jl")
@@ -68,6 +69,6 @@ include("worst_initial_data.jl")
 # include("diffusion_compensation/diffusion_compensation_v6.jl")
 
 # # Two dimensionnal extensions
-# include("multidims/multidim_priori.jl")
+include("multidims/multidim_priori.jl")
 # include("least_squares_minimization.jl")
 include("new_inequalities.jl")

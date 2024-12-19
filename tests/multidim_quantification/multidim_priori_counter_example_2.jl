@@ -1,6 +1,6 @@
 include("../../src/include_file.jl")
 
-xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 200, 0
+xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 300, 0
 CFL_factor = 0.5
 equation = burgers()
 scheme = FVScheme(Euler(), Roe(CFL_factor))
@@ -12,7 +12,7 @@ domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, C
 modifiedDataType = meanK_multidim(1,1)
 #modifiedDataType = AsymmetricModifiedData()
 
-D_priori = diffusion_a_priori(u0, domain, equation, method)
+D_priori = diffusion_a_priori(u0, domain, equation, scheme)
 @show D_priori.alpha
 D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; modifiedDataType=modifiedDataType)
 @show D_priori_multidim.alpha
@@ -63,9 +63,11 @@ uexact_extended = [uexact_fun(testcase, xi, extended_domain.Tf) for xi in extend
 fv_sol = fv_solve(extended_domain, u0, equation, scheme)
 display(plot_fv_sol(fv_sol, u_exact_counter))
 #@show uL, uN, uP = -solEnt.u_approx[1][9], -solEnt.u_approx[1][10], solEnt.u_approx[1][11]
-uL, uN, uP = 1, 2, 3
+# uL, uN, uP = 1, 2, 3
 
-@show lamb = solEnt.dt_vec[1]/domain.dx
+# @show lamb = solEnt.dt_vec[1]/domain.dx
 
-l10 = lamb^2/2*((uP^2-uN^2)^2 + (uN^2-uL^2)^2) + lamb*(-uP*(uP^2-uN^2) + uL*(uN^2-uL^2) + uN*(uP^2-uN^2) - uN*(uN^2-uL^2))
-@show l10
+# l10 = lamb^2/2*((uP^2-uN^2)^2 + (uN^2-uL^2)^2) + lamb*(-uP*(uP^2-uN^2) + uL*(uN^2-uL^2) + uN*(uP^2-uN^2) - uN*(uN^2-uL^2))
+# @show l10
+
+@show minimum(solEnt.M_vec .- solEnt.m_vec)

@@ -62,7 +62,7 @@ u0_counter(x::Real) = x<=0 ? -2-3*x : 7 - 3/2*x
 function u_exact_counter(x::Real, t::Real)
     #if t >= 2 / 7
     if t >= 14/9
-        @warn "Warning: This solution is not valid for t ≥ 2/3"
+        @warn "Warning: This solution is not valid for t ≥ 14/9"
     end
     if x <= -2*t
         return (3*x+2) / (3*t-1)
@@ -79,3 +79,31 @@ uexact_fun(::CounterExample, x::Real, t::Real) = u_exact_counter(x,t)
 struct SmoothTestcase<: Testcase end
 u0_fun(::SmoothTestcase, x::Real) = uexact_burgers_article(x, 0.1)
 uexact_fun(::SmoothTestcase, x::Real, t::Real) = uexact_burgers_article(x, t+0.1)
+
+# A parametrized piecewise linear testcase.
+struct PiecewiseLinear<: Testcase
+    a1
+    b1 
+    a2 
+    b2
+end
+u0_fun(pl::PiecewiseLinear, x::Real) =(@unpack a1, b1, a2, b2 = pl; x<=0 ? -a1*x-b1 : -a2*x+b2)
+function uexact_fun(pl::PiecewiseLinear, x::Real, t::Real)
+    @unpack a1, b1, a2, b2 = pl
+    if t >= min(1/a1, 1/a2)
+        @warn "Warning: This solution is not valid for t ≥ min(1/a1, 1/a2)"
+    end
+    if x <= -b1*t
+        return (a1*x+b1) / (a1*t-1)
+    elseif x >= b2*t
+        return (a2*x-b2) / (a2*t-1)
+    else
+        return x/t
+    end
+end
+
+spaceBounds(pl::PiecewiseLinear) = (@unpack a1, b1, a2, b2 = pl; (-b1/a1, b2/a2))
+function integerNx(Nx::Int, pl::PiecewiseLinear)
+    @unpack a1, b1, a2, b2 = pl
+    Int((1 + floor(Nx/(a2*b1)))*(a2*b1 + a1*b2))
+end
