@@ -1,9 +1,9 @@
-include("../src/include_file.jl")
+include("../../src/include_file.jl")
 
 xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 200, 0
 CFL_factor = 0.5
 equation = burgers()
-method = Roe(CFL_factor)
+scheme = FVScheme(Euler(), Roe(CFL_factor))
 #method = Rusanov(CFL_factor)
 testcase = CounterExample()
 #testcase = SimpleShock()
@@ -14,7 +14,7 @@ modifiedDataType = meanK_multidim(1,1)
 
 D_priori = diffusion_a_priori(u0, domain, equation, method)
 @show D_priori.alpha
-D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, method; modifiedDataType=modifiedDataType)
+D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; modifiedDataType=modifiedDataType)
 @show D_priori_multidim.alpha
 
 m_vec, M_vec = D_priori.m_vec, D_priori.M_vec
@@ -24,7 +24,7 @@ LL_vec = domain.Tf/domain.dx*(M_vec[begin+1:end] .- m_vec[begin:end-1])
 l_vec, L_vec = D_priori_multidim.m_vec, D_priori_multidim.M_vec
 
 #solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=modifiedDataType)
-solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=meanK(1,1))
+solEnt = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType=meanK(1,1))
 
 plot_solution(solEnt)
 
@@ -60,7 +60,7 @@ display(plot!(domain.x, solEnt.u_approx[end], label="t = "*string(domain.Tf)))
 # Checking the solution is not entropic
 extended_domain = createInterval(Nx, xmin, xmax, t0, 0.1)
 uexact_extended = [uexact_fun(testcase, xi, extended_domain.Tf) for xi in extended_domain.x]
-fv_sol = fv_solve(extended_domain, u0, equation, method)
+fv_sol = fv_solve(extended_domain, u0, equation, scheme)
 display(plot_fv_sol(fv_sol, u_exact_counter))
 #@show uL, uN, uP = -solEnt.u_approx[1][9], -solEnt.u_approx[1][10], solEnt.u_approx[1][11]
 uL, uN, uP = 1, 2, 3

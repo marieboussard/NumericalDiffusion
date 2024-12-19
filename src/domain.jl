@@ -9,7 +9,7 @@ mutable struct Interval{T<:Real} <: Domain{T}
     dx::T
     x::Vector{T}
     interfaces::Vector{T}
-    sourceVec::Union{Nothing, Matrix{T}}
+    sourceVec::Union{Nothing, Matrix{T}, Vector{T}}
     DSourceVec::Union{Nothing, Array{T}}
 end
 

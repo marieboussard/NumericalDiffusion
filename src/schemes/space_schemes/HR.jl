@@ -1,17 +1,17 @@
 # include("abstract_methods.jl")
 # include("../equations/source_terms.jl")
 
-struct Hydrostatic{T <: AbstractFloat} <: SpaceScheme
+struct HR{T <: AbstractFloat} <: SpaceScheme
     CFL_factor::T
     subScheme::SpaceScheme
 end
 
-createHydrostatic(CFL_factor::Float64, subScheme::DataType) = Hydrostatic(CFL_factor, subScheme(CFL_factor))
+HR(CFL_factor::Float64, subScheme::DataType) = HR(CFL_factor, subScheme(CFL_factor))
 
-get_sL(::Hydrostatic) = 1
-get_sR(::Hydrostatic) = 1
+get_sL(::HR) = 1
+get_sR(::HR) = 1
 
-get_name(::Hydrostatic) = "Hydrostatic"
+get_name(::HR) = "Hydrostatic Reconstruction"
 
 # function hMinus(vL, xL, xR, zbSource::ZbSource)
 #     zL, zR = zb(zbSource, xL), zb(zbSource, xR)
@@ -26,7 +26,9 @@ hPlus(vR, zL, zR) = max(0, vR[1] .+ zR .- max(zL, zR))
 #     hplus = max(0, vR[1] + zR - max(zL, zR))
 # end
 
-function numFlux(hydro::Hydrostatic, equation::Equation, vL, vR; zL=0, zR=0)
+function numFlux(hydro::HR, equation::Equation, v; z=[0.0, 0.0], kwargs...)
+    vL, vR = v[1,:], v[2,:]
+    @show zL, zR = z
     if vL[1] > 1e-10
         #hminus = hMinus(vL, xL, xR, equation.source)
         hminus = hMinus(vL, zL, zR)
@@ -41,10 +43,12 @@ function numFlux(hydro::Hydrostatic, equation::Equation, vL, vR; zL=0, zR=0)
     else
         vplus = [0.0, 0.0]
     end
-    numFlux(hydro.subScheme, equation, vminus, vplus)
+    # @show vminus, vplus
+    # @show vcat(vminus', vplus')
+    numFlux(hydro.subScheme, equation, vcat(vminus', vplus'))
 end
 
-giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)
+# giveNumFlux(hydro::HR, equation::Equation, vL, vR; kwargs...) = numFlux(hydro, equation::Equation, vL, vR; kwargs...)
 # function sourceTerm(::Hydrostatic, zbSource::ZbSource, domain::Domain, v)
 #     z, dx = domain.sourceVec, domain.dx
 #     Nx = size(v)[1]
@@ -68,7 +72,7 @@ giveNumFlux(hydro::Hydrostatic, equation::Equation, vL, vR; kwargs...) = numFlux
 #     result
 # end
 
-function sourceTerm(::SaintVenant, ::Hydrostatic, domain::Domain, v; z=domain.sourceVec)
+function sourceTerm(::SaintVenant, ::HR, domain::Domain, v; z=domain.sourceVec)
     dx = domain.dx
     Nx = size(v)[1]
     result = zero(v)

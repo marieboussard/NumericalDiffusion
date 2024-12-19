@@ -135,25 +135,27 @@ function compute_u_hat(ns::NullSource, ut, dx, dt, j, domain::Domain, equation::
 end
 
 function compute_u_hat(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, scheme::FVScheme; zt=zero(ut))
+    @show zt
 
     uh = copy(ut)
     Nx, p = size(ut)
 
     sL, sR = get_sL(scheme), get_sR(scheme)
 
-    sourceVec = sourceTerm(equation, scheme, domain, ut; z=zt)
+    sourceVec = sourceTerm(equation, scheme.spaceScheme, domain, ut; z=zt)
 
-    for k in j-sL-sR+1:j+sR+sL
+    # for k in j-sL-sR+1:j+sR+sL
 
-        uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            giveNumFlux(scheme, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
-            .-
-            giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
+        # uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
+        #     giveNumFlux(scheme, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
+        #     .-
+        #     giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
         
 
-    end
+    # end
 
-    return uh
+    # return uh
+    scheme_step(ut, dt, domain, equation, scheme, z, zt)
 end
 
 function initBounds(KFun::SymmetricModifiedData, equation::Equation, u, j, sL, sR, z=nothing)
@@ -234,12 +236,15 @@ end
 
 function compute_local_bounds(::SimpleBounds, u, dx, dt, j, sL, sR, z, domain::Domain, equation::Equation, scheme::FVScheme, args...)
     F_j = numFlux(scheme, equation, extract_data_stencil(equation, u, j, sL, sR)...; dt=dt, domain=domain)
-    uh_j = u[j,:] - dt/dx * (F_j - flux(equation, u[j,:]))
-    uh_jp = u[mod1(j+1,Nx),:] - dt/dx * (flux(equation, u[mod1(j+1,Nx),:]) - F_j)
-    m = get_G(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1] + dt/dx * (get_eta(equation, uh_jp, z[mod1(j+1,Nx)])[1] - get_eta(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1])
-    M = get_G(equation, u[j,:], 0.0)[1] + dt/dx * (get_eta(equation, uh_j, 0.0)[1] - get_eta(equation, u[j,:], 0.0)[1])
+    uh_j = u[j,:] .- dt/dx * (F_j - flux(equation, u[j,:])[1])
+    uh_jp = u[mod1(j+1,Nx),:] .- dt/dx * (flux(equation, u[mod1(j+1,Nx),:])[1] - F_j)
+    m = get_G(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1] + dx/dt * (get_eta(equation, uh_jp, z[mod1(j+1,Nx)])[1] - get_eta(equation, u[mod1(j+1,Nx),:], z[mod1(j+1,Nx)])[1])
+    M = get_G(equation, u[j,:], 0.0)[1] - dx/dt * (get_eta(equation, uh_j, 0.0)[1] - get_eta(equation, u[j,:], 0.0)[1])
     m, M
 end
+
+# Removing ambiguity
+compute_local_bounds(::SimpleBounds, u, dx, dt, j, sL, sR, z, domain::Domain, equation::Equation, scheme::FVScheme, modifiedDataType::ModifiedDataType) = compute_local_bounds(SimpleBounds(), u, dx, dt, j, sL, sR, z, domain, equation, scheme)
 
 function compute_G_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, scheme::FVScheme, modifiedDataType::ModifiedDataType, boundsType::BoundsType=NormalBounds())
 
@@ -402,7 +407,7 @@ function optimize_for_entropy(u_init, domain::Domain, equation::Equation, scheme
     end
 
     u, up, dt = u_approx[end-1], u_approx[end], dt_vec[end]
-    sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; g_tol=1e-16, iterations=100000, kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
+    sol = optimize(gamma -> J(optimFunctional, gamma, u_approx[end-1], u_approx[end], Nx, dx, dt_vec[end], m_vec, M_vec, equation, domain), gamma_init; g_tol=1e-20, iterations=200000, kwargs...)#g_tol=1e-10, iterations=100000)#; g_tol=1e-10)#; autodiff=:forward)#, kwargs...)
     Gopt, Jopt = Optim.minimizer(sol), Optim.minimum(sol)
 
     Dopt = diffusion(u_approx[end-1], u_approx[end], Gopt, dx, dt_vec[end], equation, domain)

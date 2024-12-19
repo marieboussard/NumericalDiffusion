@@ -1,9 +1,3 @@
-# include("utils.jl")
-# include("domain.jl")
-# include("method.jl")
-# include("source_term.jl")
-
-
 struct FVSolution
     domain::Domain
     equation::Equation
@@ -71,13 +65,16 @@ function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, 
     # numericalFluxMat = giveNumFlux(ns, method, equation, v)
     # v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
     #next_timestep(scheme.timeScheme, v, dt, domain, equation, scheme.spaceScheme)
-    next_timestep(scheme, v, dt, domain, equation)
+    #next_timestep(scheme, v, dt, domain, equation)
+    numericalFluxMat = vecNumFlux(ns, scheme, equation, collect(v); dt=dt, domain=domain)
+    v .- dt / domain.dx * (numericalFluxMat[2:end,:] .- numericalFluxMat[1:end-1,:])
 end
 
-# function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
-#     numericalFluxMat = giveNumFlux(zb, method, equation, v; domain=domain)
-#     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, method, domain, v)
-# end
+function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme)
+    #@show sourceTerm(equation, scheme, domain, v)
+    numericalFluxMat = vecNumFlux(zb, scheme, equation, v; dt=dt, domain=domain)
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, scheme, domain, v)
+end
 
 
 function fv_solve(domain::Domain, u_init, equation::Equation, scheme::FVScheme)
