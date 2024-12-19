@@ -73,7 +73,7 @@ end
 function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme)
     #@show sourceTerm(equation, scheme, domain, v)
     numericalFluxMat = vecNumFlux(zb, scheme, equation, v; dt=dt, domain=domain)
-    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, scheme, domain, v)
+    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, scheme.spaceScheme, domain, v)
 end
 
 

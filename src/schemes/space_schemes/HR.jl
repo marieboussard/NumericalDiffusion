@@ -28,7 +28,7 @@ hPlus(vR, zL, zR) = max(0, vR[1] .+ zR .- max(zL, zR))
 
 function numFlux(hydro::HR, equation::Equation, v; z=[0.0, 0.0], kwargs...)
     vL, vR = v[1,:], v[2,:]
-    @show zL, zR = z
+    zL, zR = z
     if vL[1] > 1e-10
         #hminus = hMinus(vL, xL, xR, equation.source)
         hminus = hMinus(vL, zL, zR)

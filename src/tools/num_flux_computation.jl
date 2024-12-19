@@ -1,5 +1,4 @@
-function extract_data_stencil(equation::Equation, u, j, sL, sR)
-    #Nx, p = length(u[:,1]), get_unknowns_number(equation)
+function extract_data_stencil(u, j, sL, sR)
     Nx = size(u)[1]
     if length(size(u)) > 1
         p = size(u)[2]
@@ -20,53 +19,21 @@ function vecNumFlux(::NullSource, scheme::Scheme, equation::Equation, v; kwargs.
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx+1
-        #@show extract_data_stencil(equation, v, i-1, sL, sR)
-        # if i!=1
-        #     @show giveNumFlux(method, equation, v[i-1,:], v[i,:])
-        # end
-        #@show giveNumFlux(method, equation, extract_data_stencil(equation, v, i-1, sL, sR)...)
-        #@show scheme 
-        #@show extract_data_stencil(equation, v, i-1, sL, sR)
-        numericalFluxMat[i,:] .= numFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR); kwargs...)
+        numericalFluxMat[i,:] .= numFlux(scheme, equation, extract_data_stencil(v, i-1, sL, sR); kwargs...)
     end
-    # numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
-    # numericalFluxMat[end,:] = numericalFluxMat[1,:]
     numericalFluxMat[1,:] = numericalFluxMat[end,:]
-
-    #display(plot!(domain.interfaces, numericalFluxMat, label=get_name(scheme)))
-
     numericalFluxMat
-
 end
 
 numFlux(scheme::FVScheme, args...; kwargs...) = numFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
 
-
-
-
-
-# function giveNumFlux(::NullSource, method::Method, equation::Equation, v; kwargs...)
-#     #println("Calling regular giveNumFlux")
-#     Nx, p = length(v[:,1]), get_unknowns_number(equation)
-#     numericalFluxMat = zeros(eltype(v), Nx+1, p)
-#     for i ∈ 2:Nx
-#         numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:])
-#     end
-#     numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
-#     numericalFluxMat[end,:] = numericalFluxMat[1,:]
-#     #@show typeof(numericalFluxMat)
-#     numericalFluxMat
-# end
-
 function vecNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain, kwargs...)
-    println(get_name(scheme))
     Nx, p = size(v, 1), get_unknowns_number(equation)
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx+1
-        numericalFluxMat[i,:] = numFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR); z = extract_data_stencil(equation, domain.sourceVec, i-1, sL, sR), kwargs...)
+        numericalFluxMat[i,:] = numFlux(scheme, equation, extract_data_stencil(v, i-1, sL, sR); z = extract_data_stencil(domain.sourceVec, i-1, sL, sR), kwargs...)
     end
-    # numericalFluxMat[1,:] = numFlux(scheme, equation, extract_data_stencil(equation, v, i-1, sL, sR)...; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
     numericalFluxMat[1,:] = numericalFluxMat[end,:]
     numericalFluxMat
 end
