@@ -115,7 +115,7 @@ function compute_u_tilde_multidim(::AsymmetricModifiedData, u, j::Int, sL::Int, 
     ut
 end
 
-function compute_u_hat_multidim(::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=nothing)
+function compute_u_hat_multidim(::NullSource, ut, dx, dt, j, domain::Domain, equation::Equation, scheme::FVScheme; zt=nothing)
 
     # uh = copy(ut)
     # Nx, p = size(ut)
@@ -133,25 +133,25 @@ function compute_u_hat_multidim(::NullSource, ut, dx, dt, j, domain::Domain, equ
     #     )
 
     # end
-    uh = scheme_step(equation.source, ut, dt, domain, equation, method)
+    uh = scheme_step(equation.source, ut, dt, domain, equation, scheme)
     return uh
 end
 
-function compute_u_hat_multidim(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, method::FVMethod; zt=zero(ut))
+function compute_u_hat_multidim(::ZbSource, ut, dx, dt, j, domain::Domain, equation::Equation, scheme::FVScheme; zt=zero(ut))
 
     uh = copy(ut)
     Nx, p = size(ut)
 
-    sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(scheme), get_sR(scheme)
 
-    sourceVec = sourceTerm(equation, method, domain, ut; z=zt)
+    sourceVec = sourceTerm(equation, scheme, domain, ut; z=zt)
 
     for k in j-sL-sR:j+sR+sL
 
         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
-            giveNumFlux(method, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
+            giveNumFlux(scheme, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
             .-
-            giveNumFlux(method, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
+            giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
         
 
     end
@@ -194,9 +194,9 @@ function update_l!(::AsymmetricModifiedData, equation::Equation, l, ut, uh, j, s
 end
 
 
-function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, method::FVMethod, modifiedDataType::ModifiedDataType)
+function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Domain, scheme::FVScheme, modifiedDataType::ModifiedDataType)
     l_vec, L_vec = zeros(Nx + 1), zeros(Nx + 1)
-    sL, sR = get_sL(method), get_sR(method)
+    sL, sR = get_sL(scheme), get_sR(scheme)
 
     # source
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
@@ -204,14 +204,14 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
     for j in 1:Nx
         ut = compute_u_tilde_multidim(modifiedDataType, u, j, sL, sR)
         zt = isnothing(domain.sourceVec) ? zero(ut) : compute_u_tilde_multidim(modifiedDataType, z, j, sL, sR)
-        uh = compute_u_hat_multidim(equation.source, ut, dx, dt, j, domain, equation, method; zt=zt)
+        uh = compute_u_hat_multidim(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
 
         # Calculating Lj+1/2
         @test ut[j,:]==u[j,:]
         for k in j-sL:j+sR 
             @test ut[mod1(k,Nx)] == u[mod1(k,Nx)]
         end
-        @test uh[j,:] == scheme_step(equation.source, ut, dt, domain, equation, method)[j,:]
+        @test uh[j,:] == scheme_step(equation.source, ut, dt, domain, equation, scheme)[j,:]
         L = get_eta(equation, ut[j,:], zt[j,:]) .- get_eta(equation, uh[j,:], zt[j,:])
 
         # Calculating lj+1/2
@@ -260,29 +260,29 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
     l_vec, L_vec
 end
 
-function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation, method::FVMethod; modifiedDataType::ModifiedDataType=meanK_multidim(get_sL(method), get_sR(method)), boundsType::BoundsType=NormalBounds())
+function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation, scheme::FVScheme; modifiedDataType::ModifiedDataType=meanK_multidim(get_sL(scheme), get_sR(scheme)), boundsType::BoundsType=NormalBounds())
     
     Nx, dx = domain.Nx, domain.dx
 
-    FVsol = fv_solve(domain, u_init, equation, method)
+    FVsol = fv_solve(domain, u_init, equation, scheme)
     u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 
     # source
     z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
 
-    l_vec, L_vec = compute_multidim_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, method, modifiedDataType)
+    l_vec, L_vec = compute_multidim_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, scheme, modifiedDataType)
 
-    solEnt = optimize_for_entropy(u_init, domain, equation, method)
-    plot(domain.x, l_vec[begin+1:end], label="l")
-    display(plot!(domain.x, (solEnt.Gopt[begin+1:end].-solEnt.Gopt[begin:end-1])/domain.dx*dt_vec[end], label="dG"))
-    display(plot!(domain.x, L_vec[begin+1:end], label="L"))
+    # solEnt = optimize_for_entropy(u_init, domain, equation, scheme)
+    # plot(domain.x, l_vec[begin+1:end], label="l")
+    # display(plot!(domain.x, (solEnt.Gopt[begin+1:end].-solEnt.Gopt[begin:end-1])/domain.dx*dt_vec[end], label="dG"))
+    # display(plot!(domain.x, L_vec[begin+1:end], label="L"))
 
-    dlL = L_vec[begin+1:end].-l_vec[begin+1:end]
-    display(plot(domain.x, dlL, label="L-l"))
-    @show min.(dlL,0.0)
+    #dlL = L_vec[begin+1:end].-l_vec[begin+1:end]
+    #display(plot(domain.x, dlL, label="L-l"))
+    # @show min.(dlL,0.0)
 
-    @show sum(L_vec[begin+1:end])
-    @show sum(l_vec[begin+1:end])
+    # @show sum(L_vec[begin+1:end])
+    # @show sum(l_vec[begin+1:end])
 
     # D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
     # D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]
@@ -318,5 +318,5 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     #     D_low_norm[j] = D_low[j]*s1/s2
     # end
 
-    PrioriDiffSol(domain, equation, method, modifiedDataType, boundsType, u_approx, dt_vec, l_vec, L_vec, D_low, D_up, D_low_norm, D_up_norm, compute_D_CL(D_low, D_up, D_base)...)
+    PrioriDiffSol(domain, equation, scheme, modifiedDataType, boundsType, u_approx, dt_vec, l_vec, L_vec, D_low, D_up, D_low_norm, D_up_norm, compute_D_CL(D_low, D_up, D_base)...)
 end

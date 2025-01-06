@@ -1,4 +1,4 @@
-include("../src/include_file.jl")
+include("../../src/include_file.jl")
 
 # Settings
 
@@ -14,8 +14,8 @@ scheme = FVScheme(RK2(), Rusanov(CFL_factor))
 #scheme2 = FVScheme(Euler(), Rusanov(CFL_factor))
 
 # A posteriori quantification of numerical diffusion
-modifiedDataType = AsymmetricModifiedData()
-#modifiedDataType = meanK(2,2)
+#modifiedDataType = AsymmetricModifiedData()
+modifiedDataType = meanK(2,2)
 solEnt = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType = modifiedDataType)
 # println("Euler")
 # solEnt2 = optimize_for_entropy(u0, domain, equation, scheme2; modifiedDataType = modifiedDataType)

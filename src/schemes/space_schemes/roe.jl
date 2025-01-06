@@ -8,7 +8,8 @@ get_sR(::Roe) = 1
 
 get_name(::Roe) = "Roe"
 
-function numFlux(::Roe, equation::ScalarEquation, uL, uR)
+function numFlux(::Roe, equation::ScalarEquation, u; kwargs...)
+    uL, uR = u[1,:], u[2,:]
     sigma = (flux(equation, uR) .- flux(equation, uL)) ./ (uR .- uL)
     if sigma[1] < 0
         return flux(equation, uR)

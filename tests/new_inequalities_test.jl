@@ -3,9 +3,10 @@ include("../src/include_file.jl")
 xmin, xmax, Nx, t0 = -2, 2, 100, 0
 CFL_factor = 0.1
 equation = burgers()
+#scheme = FVScheme(Euler(), Rusanov(0.5))
 scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 #scheme = FVScheme(RK2(), Rusanov(0.5))
-#scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod(), domain))
+#scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 
 testcase = ArticleTestcase()
 #testcase = SimpleShock()
