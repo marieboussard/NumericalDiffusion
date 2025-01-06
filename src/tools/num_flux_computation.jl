@@ -27,12 +27,12 @@ end
 
 numFlux(scheme::FVScheme, args...; kwargs...) = numFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
 
-function vecNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain, kwargs...)
+function vecNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain, z=domain.sourceVec, kwargs...)
     Nx, p = size(v, 1), get_unknowns_number(equation)
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)
     for i ∈ 2:Nx+1
-        numericalFluxMat[i,:] = numFlux(scheme, equation, extract_data_stencil(v, i-1, sL, sR); z = extract_data_stencil(domain.sourceVec, i-1, sL, sR), kwargs...)
+        numericalFluxMat[i,:] = numFlux(scheme, equation, extract_data_stencil(v, i-1, sL, sR); z = extract_data_stencil(z, i-1, sL, sR), kwargs...)
     end
     numericalFluxMat[1,:] = numericalFluxMat[end,:]
     numericalFluxMat

@@ -24,9 +24,10 @@ createInterval(Nx::Int, xmin::Real, xmax::Real, t0::Real, Tf::Real) = createInte
 
 function createInterval(Nx::Int, xmin::T, xmax::T, t0::T, Tf::T) where {T<:Real}
     dx = (xmax - xmin) / Nx
-    x = collect(LinRange(xmin, xmax, Nx))
+    x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
     #interfaces = LinRange(xmin - dx / 2, xmax + dx / 2, Nx + 1)
-    interfaces = collect(LinRange(xmin - dx, xmax, Nx + 1))
+    #interfaces = collect(LinRange(xmin - dx, xmax, Nx + 1))
+    interfaces = collect(LinRange(xmin, xmax, Nx + 1))
     Interval(Nx, xmin, xmax, t0, Tf, dx, x, interfaces, nothing, nothing)
 end
 

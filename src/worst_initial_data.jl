@@ -111,12 +111,14 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, scheme::FVScheme; m
 
     # Computing mj-1/2 and Mj-1/2
 
-    ut = compute_u_tilde(modifiedDataType, u, j-1, sL, sR)
-    @show zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j-1, newDomain, equation, scheme; zt=zt)
+    # ut = compute_u_tilde(modifiedDataType, u, j-1, sL, sR)
+    # zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j-1, sL, sR)
+    # uh = compute_u_hat(equation.source, ut, dx, dt, j-1, newDomain, equation, scheme; zt=zt)
 
-    mminus, Mminus = initBounds(modifiedDataType, equation, u, j-1, sL, sR, z)
-    mminus, Mminus = updateBounds!(modifiedDataType, boundsType, equation, mminus, Mminus, ut, uh, j-1, sL, sR, Nx, dx, dt, zt)
+    # mminus, Mminus = initBounds(modifiedDataType, equation, u, j-1, sL, sR, z)
+    # mminus, Mminus = updateBounds!(modifiedDataType, boundsType, equation, mminus, Mminus, ut, uh, j-1, sL, sR, Nx, dx, dt, zt)
+
+    mminus, Mminus = compute_local_bounds(boundsType, u, dx, dt, j-1, sL, sR, z, newDomain, equation, scheme, modifiedDataType)
 
     if (mminus[1] > Mminus[1]) && warningsOn
         @warn "m-1/2 greater than M-1/2 !!!"
@@ -124,14 +126,16 @@ function epsilon(uz_unk, domain::Domain, equation::Equation, scheme::FVScheme; m
 
     # Computing mj+1/2 and Mj+1/2
 
-    ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
-    zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
-    uh = compute_u_hat(equation.source, ut, dx, dt, j, newDomain, equation, scheme; zt=zt)
+    # ut = compute_u_tilde(modifiedDataType, u, j, sL, sR)
+    # zt = isnothing(newDomain.sourceVec) ? zero(ut) : compute_u_tilde(modifiedDataType, z, j, sL, sR)
+    # uh = compute_u_hat(equation.source, ut, dx, dt, j, newDomain, equation, scheme; zt=zt)
 
     up_mid = scheme_step(equation.source, u, dt, newDomain, equation, scheme)[j,:]
 
-    mplus, Mplus = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
-    mplus, Mplus = updateBounds!(modifiedDataType, boundsType, equation, mplus, Mplus, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+    # mplus, Mplus = initBounds(modifiedDataType, equation, u, j, sL, sR, z)
+    # mplus, Mplus = updateBounds!(modifiedDataType, boundsType, equation, mplus, Mplus, ut, uh, j, sL, sR, Nx, dx, dt, zt)
+
+    mplus, Mplus = compute_local_bounds(boundsType, u, dx, dt, j, sL, sR, z, newDomain, equation, scheme, modifiedDataType)
 
     if Mplus[1] - mplus[1] < -1e-10 && warningsOn
         @warn "m+1/2 greater than M+1/2 !!!"

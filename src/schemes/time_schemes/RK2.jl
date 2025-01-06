@@ -9,11 +9,10 @@ get_sR(::RK2, sp::SpaceScheme) = 2*get_sR(sp::SpaceScheme)
 
 get_name(::RK2) = "RK2"
 
-function numFlux(::RK2, spaceScheme::SpaceScheme, equation::Equation, v...; dt, domain::Domain)
-    #@show vb
+function numFlux(::RK2, spaceScheme::SpaceScheme, equation::Equation, v; dt, domain::Domain)
     vb = next_timestep(FVScheme(Euler(), spaceScheme), v, dt, domain, equation)
     sL, sR = get_sL(spaceScheme), get_sR(spaceScheme)
-    (numFlux(spaceScheme, equation, v[1+sL:2*sL+sR]...) + numFlux(spaceScheme, equation, vb[1+sL:2*sL+sR]...))*0.5
+    (numFlux(spaceScheme, equation, v[1+sL:2*sL+sR]) + numFlux(spaceScheme, equation, vb[1+sL:2*sL+sR]))*0.5
 end
 
 # function next_timestep(::RK2, v, dt, domain::Domain, equation::Equation, spaceScheme::SpaceScheme)

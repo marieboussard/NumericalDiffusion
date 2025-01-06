@@ -105,5 +105,5 @@ end
 spaceBounds(pl::PiecewiseLinear) = (@unpack a1, b1, a2, b2 = pl; (-b1/a1, b2/a2))
 function integerNx(Nx::Int, pl::PiecewiseLinear)
     @unpack a1, b1, a2, b2 = pl
-    Int((1 + floor(Nx/(a2*b1)))*(a2*b1 + a1*b2))
+    Int((1 + floor(Nx/(a2*b1)))*(a2*b1 + a1*b2)*a2*b1)
 end

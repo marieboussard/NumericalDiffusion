@@ -1,7 +1,7 @@
 function extendInitialDataToConstant(wd::WorstData, Nx::Int)
     i = argmin(wd.worstLowDiffVec)
     p = get_unknowns_number(wd.equation)
-    sL, sR = get_sL(wd.method), get_sR(wd.method)
+    sL, sR = get_sL(wd.scheme), get_sR(wd.scheme)
     u_init, z = zeros(Nx, p), zeros(Nx, 1)
     j = Int(round(Nx/2))
 
@@ -24,7 +24,7 @@ end
 function extendInitialDataToLinear(wd::WorstData, Nx::Int; boxBounds=nothing, sourceBounds=[-1.0 1.0])
     i = argmin(wd.worstLowDiffVec)
     p = get_unknowns_number(wd.equation)
-    sL, sR = get_sL(wd.method), get_sR(wd.method)
+    sL, sR = get_sL(wd.scheme), get_sR(wd.scheme)
     s_init, u_init, z = zeros(Nx, p), zeros(Nx, p), zeros(Nx, 1)
     j = Int(round(Nx/2))
     dx = wd.domain.dx
@@ -97,7 +97,7 @@ function correct_extend_initial_data(wd::WorstData, args...)
     uz_unk = rw.uz
     p = get_unknowns_number(wd.equation)
     Nx = domain.Nx
-    sL, sR = get_sL(wd.method), get_sR(wd.method)
+    sL, sR = get_sL(wd.scheme), get_sR(wd.scheme)
 
     j = Int(round(Nx/2))
     u = zeros(Nx,p)
@@ -168,10 +168,10 @@ end
 function extendInitialDataToK(Nx::Int, wd::WorstData, args...)
     rw = wd.reducedWD
     #domain = rw.domain
-    domain = createInterval(rw.domain.xmin, rw.domain.xmax, Nx, rw.domain.t0, rw.domain.Tf)
+    domain = createInterval(Nx, rw.domain.xmin, rw.domain.xmax, rw.domain.t0, rw.domain.Tf)
     uz_unk = rw.uz
     p = get_unknowns_number(wd.equation)
-    sL, sR = get_sL(wd.method), get_sR(wd.method)
+    sL, sR = get_sL(wd.scheme), get_sR(wd.scheme)
 
     j = Int(round(Nx/2))
     u = zeros(Nx,p)

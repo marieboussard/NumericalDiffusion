@@ -1,6 +1,7 @@
 #using Plots
 
-mutable struct OptForEntropySol{T<:Real, S<:Domain{T}}
+mutable struct OptForEntropySol{T<:Real,S<:Domain{T}}
+    optimResult::Optim.OptimizationResults
     domain::S
     equation::Equation
     scheme::FVScheme
@@ -31,7 +32,7 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
     # tickfontsize=18)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(sol.scheme)*", Nx = "*string(sol.domain.Nx))
+    title!(get_name(sol.scheme) * ", Nx = " * string(sol.domain.Nx))
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
@@ -49,7 +50,7 @@ function plot_solution(sol::OptForEntropySol, plotMode::PlottingMode=DisplayMode
     plot!(sol.domain.x, sol.Dopt, label="Dopt")
     xlabel!("x")
     ylabel!("Numerical Diffusion")
-    title!("Max Diff : "*string(maximum(sol.Dopt)))
+    title!("Max Diff : " * string(maximum(sol.Dopt)))
     #ylims!((-0.001, 0.015))
 
     push!(plt, plt2)
@@ -67,7 +68,7 @@ function plot_solution_EntBreak(sol::OptForEntropySol, plotMode::PlottingMode=Di
 
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(sol.scheme)*", Nx = "*string(sol.domain.Nx))
+    title!(get_name(sol.scheme) * ", Nx = " * string(sol.domain.Nx))
     plot!(sol.domain.interfaces, sol.m_vec, label="m", lw=2)
     plot!(sol.domain.interfaces, sol.Gopt, label="Gopt", lw=2)
     plot!(sol.domain.interfaces, sol.M_vec, label="M", lw=2)
@@ -79,7 +80,7 @@ function plot_solution_EntBreak(sol::OptForEntropySol, plotMode::PlottingMode=Di
     plot!(sol.domain.x, sol.Dopt, label="Dopt", lw=2)
     xlabel!("x")
     ylabel!("Numerical Diffusion")
-    title!("Max Diff : "*string(maximum(sol.Dopt)))
+    title!("Max Diff : " * string(maximum(sol.Dopt)))
 
     push!(plt, plt2)
 
@@ -90,7 +91,7 @@ function plot_solution_EntBreak(sol::OptForEntropySol, plotMode::PlottingMode=Di
     ylabel!("Numerical Diffusion")
     #title!("Max Diff : "*string(maximum(sol.Dopt)))
     title!("Zoom on positive diffusions")
-    ylims!((-0.005, maximum(sol.Dopt)*1.2))
+    ylims!((-0.005, maximum(sol.Dopt) * 1.2))
 
     push!(plt, plt3)
 
@@ -115,7 +116,7 @@ function plot_solutions(solVec, plotMode::PlottingMode=DisplayMode())
     plt1 = createPlot(plotMode)
     xlabel!("x")
     ylabel!("Numerical Entropy Flux")
-    title!(get_name(solVec[1].scheme)*", Nx = "*string(solVec[1].domain.Nx))
+    title!(get_name(solVec[1].scheme) * ", Nx = " * string(solVec[1].domain.Nx))
     for sol in solVec
         plot!(sol.domain.interfaces, sol.Gopt, label=sol.label, lw=2)
     end
@@ -159,7 +160,7 @@ function plot_bounds(sol::OptForEntropySol; exactG_known=false)
     #     print("Gexact", "\n")
     #     print(Gexact, "\n")
     # end
-    
+
     # print("M_vec", "\n")
     # print(sol.M_vec, "\n")
 
