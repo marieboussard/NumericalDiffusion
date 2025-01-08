@@ -1,6 +1,6 @@
 include("../../src/include_file.jl")
 
-xmin, xmax, Nx, t0 = -2.0/3.0, 14.0/3.0, 300, 0
+xmin, xmax, Nx, t0 = -2.0 / 3.0, 14.0 / 3.0, 300, 0
 CFL_factor = 0.5
 equation = burgers()
 scheme = FVScheme(Euler(), Roe(CFL_factor))
@@ -9,7 +9,7 @@ testcase = CounterExample()
 #testcase = SimpleShock()
 domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)
 #modifiedDataType = minK()
-modifiedDataType = meanK_multidim(1,1)
+modifiedDataType = meanK_multidim(1, 1)
 #modifiedDataType = AsymmetricModifiedData()
 
 D_priori = diffusion_a_priori(u0, domain, equation, scheme)
@@ -18,13 +18,14 @@ D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; mo
 @show D_priori_multidim.alpha
 
 m_vec, M_vec = D_priori.m_vec, D_priori.M_vec
-ll_vec = domain.Tf/domain.dx*(m_vec[begin+1:end] .- M_vec[begin:end-1])
-LL_vec = domain.Tf/domain.dx*(M_vec[begin+1:end] .- m_vec[begin:end-1])
+ll_vec = domain.Tf / domain.dx * (m_vec[begin+1:end] .- M_vec[begin:end-1])
+LL_vec = domain.Tf / domain.dx * (M_vec[begin+1:end] .- m_vec[begin:end-1])
 
 l_vec, L_vec = D_priori_multidim.m_vec, D_priori_multidim.M_vec
+println("Maximal value of l: " * string(maximum(l_vec)))
 
 #solEnt = optimize_for_entropy(u0, domain, equation, method; modifiedDataType=modifiedDataType)
-solEnt = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType=meanK(1,1))
+solEnt = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType=meanK(1, 1))
 
 plot_solution(solEnt)
 
@@ -53,9 +54,9 @@ display(plot(domain.interfaces, solEnt.M_vec .- solEnt.m_vec, label="M-m"))
 # display(plot!(domain.x, D_priori_multidim.D_up, label="D up multidim"))
 
 u_exact = [uexact_fun(testcase, xi, solEnt.domain.Tf) for xi in domain.x]
-plot(domain.x, u0, label="t = "*string(t0))
-plot!(domain.x, u_exact, label = "u exact")
-display(plot!(domain.x, solEnt.u_approx[end], label="t = "*string(domain.Tf)))
+plot(domain.x, u0, label="t = " * string(t0))
+plot!(domain.x, u_exact, label="u exact")
+display(plot!(domain.x, solEnt.u_approx[end], label="t = " * string(domain.Tf)))
 
 # Checking the solution is not entropic
 extended_domain = createInterval(Nx, xmin, xmax, t0, 0.1)

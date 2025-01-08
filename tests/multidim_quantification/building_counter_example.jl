@@ -29,7 +29,7 @@ display(plot(domain.interfaces, M_vec .- m_vec))
 
 ## Part Two : We check that it satisfies however the three criteria
 
-modifiedDataType = meanK_multidim(1,1)
+modifiedDataType = meanK_multidim(1, 1)
 
 #D_priori = diffusion_a_priori(u0, domain, equation, scheme)
 D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; modifiedDataType=modifiedDataType)
@@ -41,5 +41,7 @@ D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; mo
 l_vec, L_vec = D_priori_multidim.m_vec, D_priori_multidim.M_vec
 
 @show minimum(L_vec .- l_vec)
+println("Maximal value of D low: " * string(maximum(D_priori_multidim.D_low)))
+println("Maximal value of D low norm: " * string(maximum(D_priori_multidim.D_low_norm)))
 @show sum(L_vec[begin+1:end])
 @show sum(l_vec[begin+1:end]);

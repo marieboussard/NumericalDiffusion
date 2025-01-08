@@ -2,17 +2,19 @@ include("../../src/include_file.jl");
 
 Nx = 51
 xmin, xmax = 0.0, 1.0
-CFL_factor = 0.5
+CFL_factor = 0.2
 equation = burgers()
 #cheme = FVScheme(Euler(), Rusanov(CFL_factor))
 #scheme = FVScheme(Euler(), Roe(CFL_factor))
 scheme = FVScheme(RK2(), Rusanov(CFL_factor))
+#scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 #scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 boxBounds = [-3 3;]
 #sourceBounds=[-5.0, 5.0]
 sL, sR = get_sL(scheme), get_sR(scheme)
 modifiedDataType = meanK(sL, sR)
 boundsType = SimpleBounds()
+#boundsType = NormalBounds()
 
 println("====== LOOKING FOR THE WORST INITIAL DATA ======")
 println("Using scheme " * get_name(scheme))

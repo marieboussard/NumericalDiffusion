@@ -1,15 +1,31 @@
 # A priori quantification of numerical diffusion which could easily be extended to a multidimensional system
 
+struct PrioriDiffSolMultidim
+    domain::Domain
+    equation::Equation
+    scheme::FVScheme
+    modifiedDataType::ModifiedDataType
+    boundsType::BoundsType
+    u_approx
+    dt_vec
+    l_vec
+    L_vec
+    D_low
+    D_up
+    D_priori
+    alpha
+end
+
 function compute_u_tilde_multidim(KFun::SymmetricModifiedData, u, j::Int, sL::Int, sR::Int)
-    
+
     K = computeK(KFun, extractLocalData_multidim(u, j, sL, sR))
-    Nx= size(u)[1]
+    Nx = size(u)[1]
     ut = zero(u)
-    
+
     for i in 1:Nx
         # if (j - sL <= i && i <= j + sR) || (((j - sL) % Nx <= i) && (j - sL < 1)) || ((i <= (j + sR) % Nx) & (j + sR > Nx))
         if (j - sL <= i && i <= j + sR) || ((mod1(j - sL, Nx) <= i) && (j - sL <= 0)) || ((i <= mod1(j + sR, Nx)) & (j + sR > Nx))
-            ut[i,:] = u[i,:]
+            ut[i, :] = u[i, :]
             # if j==1
             #     println(i)
             #     @show (j - sL <= i && i <= j + sR)
@@ -17,7 +33,7 @@ function compute_u_tilde_multidim(KFun::SymmetricModifiedData, u, j::Int, sL::In
             #     @show ((i <= (j + sR) % Nx) & (j + sR > Nx))
             # end
         else
-            ut[i,:] .= K
+            ut[i, :] .= K
         end
     end
 
@@ -28,9 +44,9 @@ end
 function isBetween(a::Int, b::Int, k::Int, N::Int)
     if a ≤ k && k ≤ b
         return true
-    elseif a ≤ k-N ≤ b 
+    elseif a ≤ k - N ≤ b
         return true
-    elseif a ≤ k+N ≤ b
+    elseif a ≤ k + N ≤ b
         return true
     end
     false
@@ -52,19 +68,19 @@ function compute_u_tilde_multidim(::AsymmetricModifiedData, u, j::Int, sL::Int, 
 
         # First, we fill the cells necessary for consistency
         if isBetween(ileft, iright, k, Nx)
-            ut[k,:] = u[k,:]
+            ut[k, :] = u[k, :]
         elseif isBetween(jleft, ileft, k, Nx)
-            ut[k,:] = u[mod1(ileft, Nx),:]
+            ut[k, :] = u[mod1(ileft, Nx), :]
             #println("ok left")
         elseif isBetween(iright, jright, k, Nx)
-            ut[k,:] = u[mod1(iright, Nx),:]
+            ut[k, :] = u[mod1(iright, Nx), :]
             #println("ok right")
-        
-        # Then we extend on both sides if cell value isn't already defined (but in practice, this step could be supressed)
+
+            # Then we extend on both sides if cell value isn't already defined (but in practice, this step could be supressed)
         elseif 1 ≤ k && k ≤ jleft
-            ut[k,:] = u[mod1(ileft, Nx),:]
+            ut[k, :] = u[mod1(ileft, Nx), :]
         elseif jright ≤ k && k ≤ Nx
-            ut[k,:] = u[mod1(iright, Nx),:]
+            ut[k, :] = u[mod1(iright, Nx), :]
         end
     end
 
@@ -151,8 +167,8 @@ function compute_u_hat_multidim(::ZbSource, ut, dx, dt, j, domain::Domain, equat
         uh[mod1(k, Nx), :] = ut[mod1(k, Nx), :] .- dt / dx .* (
             giveNumFlux(scheme, equation, ut[mod1(k, Nx), :], ut[mod1(k + 1, Nx), :]; zL=zt[mod1(k, Nx)], zR=zt[mod1(k + 1, Nx)])
             .-
-            giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx),:]
-        
+            giveNumFlux(scheme, equation, ut[mod1(k - 1, Nx), :], ut[mod1(k, Nx), :]; zL=zt[mod1(k - 1, Nx)], zR=zt[mod1(k, Nx)])) .+ dt * sourceVec[mod1(k, Nx), :]
+
 
     end
 
@@ -165,11 +181,11 @@ end
 
 function update_l!(::SymmetricModifiedData, equation::Equation, l, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
     for k in j-sL-sR:j-1
-        l += get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1] - get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1]
+        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
-        
+
     for k in j+1:j+sL+sR
-        l += get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1] - get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1]
+        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
     l
 end
@@ -177,18 +193,18 @@ end
 function init_l(::AsymmetricModifiedData, u, equation::Equation, j, sL, sR, dx, dt, z=nothing)
     Nx = size(u)[1]
     z = nothing
-    zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx),:]
-    zR = isnothing(z) ? nothing : z[mod1(j - sL, Nx),:]
-    dt/dx * (get_G(equation, u[mod1(j + sR, Nx),:], zR)[1] - get_G(equation, u[mod1(j - sL, length(u)),:], zL)[1])
+    zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx), :]
+    zR = isnothing(z) ? nothing : z[mod1(j - sL, Nx), :]
+    dt / dx * (get_G(equation, u[mod1(j + sR, Nx), :], zR)[1] - get_G(equation, u[mod1(j - sL, length(u)), :], zL)[1])
 end
 
 function update_l!(::AsymmetricModifiedData, equation::Equation, l, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
     for k in j-sL-sR+1:j-1
-        l += get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1] - get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1]
+        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
-        
+
     for k in j+1:j+sL+sR-1
-        l += get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1] - get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])[1]
+        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
     l
 end
@@ -199,7 +215,7 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
     sL, sR = get_sL(scheme), get_sR(scheme)
 
     # source
-    z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
+    z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx, 1))
 
     for j in 1:Nx
         ut = compute_u_tilde_multidim(modifiedDataType, u, j, sL, sR)
@@ -207,12 +223,12 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
         uh = compute_u_hat_multidim(equation.source, ut, dx, dt, j, domain, equation, scheme; zt=zt)
 
         # Calculating Lj+1/2
-        @test ut[j,:]==u[j,:]
-        for k in j-sL:j+sR 
-            @test ut[mod1(k,Nx)] == u[mod1(k,Nx)]
+        @test ut[j, :] == u[j, :]
+        for k in j-sL:j+sR
+            @test ut[mod1(k, Nx)] == u[mod1(k, Nx)]
         end
-        @test uh[j,:] == scheme_step(equation.source, ut, dt, domain, equation, scheme)[j,:]
-        L = get_eta(equation, ut[j,:], zt[j,:]) .- get_eta(equation, uh[j,:], zt[j,:])
+        @test uh[j, :] == scheme_step(equation.source, ut, dt, domain, equation, scheme)[j, :]
+        L = get_eta(equation, ut[j, :], zt[j, :]) .- get_eta(equation, uh[j, :], zt[j, :])
 
         # Calculating lj+1/2
         # p = get_unknowns_number(equation)
@@ -239,7 +255,7 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
         #     #     @show get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
         #     # end
         # end
-            
+
         # for k in j+1:j+sL+sR
         #     l .+= get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
         #     # if j==1 || j==2
@@ -261,14 +277,14 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
 end
 
 function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation, scheme::FVScheme; modifiedDataType::ModifiedDataType=meanK_multidim(get_sL(scheme), get_sR(scheme)), boundsType::BoundsType=NormalBounds())
-    
+
     Nx, dx = domain.Nx, domain.dx
 
     FVsol = fv_solve(domain, u_init, equation, scheme)
     u_approx, dt_vec = FVsol.u_approx, FVsol.dt_vec
 
     # source
-    z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx,1))
+    z = isnothing(domain.sourceVec) ? zeros((Nx, 1)) : reshape(domain.sourceVec, (domain.Nx, 1))
 
     l_vec, L_vec = compute_multidim_bounds(u_approx[end-1], Nx, dx, dt_vec[end], equation, domain, scheme, modifiedDataType)
 
@@ -287,9 +303,9 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     # D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
     # D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]
 
-    
-    D_base = [get_eta(equation, u_approx[end][i,:], z[i])[1] - get_eta(equation, u_approx[end-1][i,:], z[i])[1] for i in 1:length(u_approx[end-1][:,1])]
-    
+
+    D_base = [get_eta(equation, u_approx[end][i, :], z[i])[1] - get_eta(equation, u_approx[end-1][i, :], z[i])[1] for i in 1:length(u_approx[end-1][:, 1])]
+
     @test sum(L_vec[begin+1:end]) == -sum(D_base)
 
     D_low = D_base .+ l_vec[begin+1:end]
@@ -303,8 +319,9 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     # The normalisation is chosen to keep the same amount of diffusion up to a sign 
     # We want to keep the same sign as the pre-normalised quantity
 
-    D_low_norm = D_low * sum(D_base) / sum(D_low)
-    D_up_norm = D_up * sum(D_base) / abs(sum(D_up))
+    alpha = sum(D_base) / sum(D_low)
+    D_priori = D_low * alpha
+    #D_up_norm = D_up * sum(D_base) / abs(sum(D_up))
 
     # # Test d'une autre normalisation (par fenêtre glissante)
     # J = Int(Nx/10)
@@ -318,5 +335,5 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     #     D_low_norm[j] = D_low[j]*s1/s2
     # end
 
-    PrioriDiffSol(domain, equation, scheme, modifiedDataType, boundsType, u_approx, dt_vec, l_vec, L_vec, D_low, D_up, D_low_norm, D_up_norm, compute_D_CL(D_low, D_up, D_base)...)
+    PrioriDiffSolMultidim(domain, equation, scheme, modifiedDataType, boundsType, u_approx, dt_vec, l_vec, L_vec, D_low, D_up, D_priori, alpha)
 end
