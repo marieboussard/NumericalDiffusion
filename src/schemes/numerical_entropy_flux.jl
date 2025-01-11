@@ -2,7 +2,10 @@ abstract type NumEntFlux <: Scheme end
 
 struct CenteredG <: NumEntFlux end
 
-numFlux(::CenteredG, equation::Equation, uL, uR) = (get_G(equation, uL)+ get_G(equation, uR))/2
+get_sL(::CenteredG) = 1
+get_sR(::CenteredG) = 1
+
+numFlux(::CenteredG, equation::Equation, u; kwargs...) = (get_G(equation, u[begin]) + get_G(equation, u[end])) / 2
 
 
 # function giveAnalyticG(::CenteredG, u)

@@ -31,19 +31,19 @@ include("equations/new_eq.jl")
 include("schemes/finite_volume_schemes.jl")
 include("schemes/numerical_entropy_flux.jl")
 
-    # Schemes in space
-    include("schemes/space_schemes/rusanov.jl")
-    include("schemes/space_schemes/roe.jl")
-    include("schemes/space_schemes/centered.jl")
-    include("schemes/space_schemes/modified_rusanov.jl")
-    include("schemes/space_schemes/HR.jl")
-    # include("schemes/space_schemes/mixed_method.jl")
-    include("schemes/space_schemes/MUSCL.jl")
+# Schemes in space
+include("schemes/space_schemes/rusanov.jl")
+include("schemes/space_schemes/roe.jl")
+include("schemes/space_schemes/centered.jl")
+include("schemes/space_schemes/modified_rusanov.jl")
+include("schemes/space_schemes/HR.jl")
+# include("schemes/space_schemes/mixed_method.jl")
+include("schemes/space_schemes/MUSCL.jl")
 
-    # Schemes in time
-    include("schemes/time_schemes/time_step_computation.jl")
-    include("schemes/time_schemes/Euler.jl")
-    include("schemes/time_schemes/RK2.jl")
+# Schemes in time
+include("schemes/time_schemes/time_step_computation.jl")
+include("schemes/time_schemes/Euler.jl")
+include("schemes/time_schemes/RK2.jl")
 
 
 # Various tools
@@ -70,5 +70,5 @@ include("quantification_a_priori.jl")
 
 # # Two dimensionnal extensions
 include("multidims/multidim_priori.jl")
-# include("least_squares_minimization.jl")
+include("least_squares_minimization.jl")
 include("new_inequalities.jl")

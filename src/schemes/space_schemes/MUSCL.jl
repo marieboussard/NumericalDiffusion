@@ -1,5 +1,6 @@
 abstract type Limiter end
 struct Minmod <: Limiter end
+struct Superbee <: Limiter end
 
 struct MUSCL{T<:AbstractFloat} <: SpaceScheme
     CFL_factor::T
