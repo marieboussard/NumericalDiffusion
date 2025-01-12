@@ -1,4 +1,4 @@
-include("../../src/include_file.jl");
+include("../src/include_file.jl");
 
 Nx = 51
 xmin, xmax = 0.0, 1.0

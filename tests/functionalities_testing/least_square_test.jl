@@ -4,8 +4,8 @@ include("../../src/include_file.jl")
 xmin, xmax, Nx, t0, Tf = -2, 2, 20, 0, 0.4
 CFL_factor = 0.5
 equation = burgers()
-scheme = FVScheme(Euler(), Roe(CFL_factor))
-#method = Roe(CFL_factor)
+scheme = FVScheme(Euler(), Rusanov(CFL_factor))
+# scheme = FVScheme(Euler(), Roe(CFL_factor))
 testcase = ArticleTestcase()
 #testcase = SimpleShock()
 domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, equation, testcase, CFL_factor)

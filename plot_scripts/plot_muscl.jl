@@ -1,7 +1,5 @@
 include("../src/include_file.jl")
 
-# 1 # Solving Burgers equation for different choices of K
-
 xmin, xmax, Nx, t0, Tf = -2, 2, 50, 0, 0.4
 CFL_factor = 0.5
 omega = createInterval(Nx, xmin, xmax, t0, Tf)
@@ -14,27 +12,17 @@ scheme = FVScheme(Euler(), Rusanov(CFL_factor))
 schemeEulerMuscl = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 schemeRK2Muscl = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 
-#sL, sR = get_sL(scheme), get_sR(scheme)
-
-#solRusanov = fv_solve(omega, u0, burgers(), scheme)
-#plot_fv_sol(solBurgers, uexact_burgers_article)
-
-#sols = []
-
 # Rusanov
 solRus = optimize_for_entropy(u0, omega, burgers(), scheme, modifiedDataType=AsymmetricModifiedData(), method=LBFGS(), autodiff=:forward)
 solRus.label = "Rusanov"
-#push!(sols, solRus)
 
 # Euler + MUSCL
 solEulerMuscl = optimize_for_entropy(u0, omega, burgers(), schemeEulerMuscl, modifiedDataType=AsymmetricModifiedData(), method=LBFGS(), autodiff=:forward)
 solEulerMuscl.label = "Euler + MUSCL"
-#push!(sols, solEulerMuscl)
 
 # RK2 + MUSCL
 solRK2Muscl = optimize_for_entropy(u0, omega, burgers(), schemeRK2Muscl, modifiedDataType=AsymmetricModifiedData(), method=LBFGS(), autodiff=:forward)
 solRK2Muscl.label = "RK2 + MUSCL"
-#push!(sols, solRK2Muscl)
 
 pltA = []
 
@@ -53,7 +41,6 @@ plot!(x, u_exact, label="Exact", lw=2)
 xlabel!("x")
 ylabel!("u")
 title!("Euler + MUSCL, Nx = " * string(Nx))
-#plot_fv_sol(solRusanov, uexact_burgers_article)
 push!(pltA, plt1)
 
 # RK2 MUSCL
@@ -71,7 +58,6 @@ plot!(x, u_exact, label="Exact", lw=2)
 xlabel!("x")
 ylabel!("u")
 title!("RK2 + MUSCL, Nx = " * string(Nx))
-#plot_fv_sol(solRoe, uexact_burgers_article)
 push!(pltA, plt2)
 
 # Euler MUSCL
@@ -96,7 +82,6 @@ plt4 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:bottom,
 plot!(omega.x, solRus.Dopt, label=solRus.label, lw=2)
 plot!(omega.x, solRK2Muscl.Dopt, label=solRK2Muscl.label, lw=2)
 xlabel!("x")
-#ylabel!("Numerical Diffusion")
 ylims!(-0.013, 0.0015)
 push!(pltA, plt4)
 
