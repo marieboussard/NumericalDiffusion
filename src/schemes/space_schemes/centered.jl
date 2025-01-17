@@ -1,4 +1,4 @@
-struct Centered{T <: AbstractFloat} <: SpaceScheme
+struct Centered{T<:AbstractFloat} <: SpaceScheme
     CFL_factor::T
 end
 
@@ -7,8 +7,8 @@ get_sR(::Centered) = 1
 
 get_name(::Centered) = "Centered"
 
-function numFlux(::Centered, equation::Equation, uL, uR)
-    [uL, uR]
+function numFlux(::Centered, equation::Equation, u; kwargs...)
+    uL, uR = u
     flux(equation, uL)
     (flux(equation, uL) .+ flux(equation, uR)) / 2
 end

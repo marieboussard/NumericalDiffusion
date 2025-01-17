@@ -38,10 +38,10 @@ D_priori_multidim = diffusion_a_priori_multidim(u0, domain, equation, scheme; mo
 # ll_vec = domain.Tf/domain.dx*(m_vec[begin+1:end] .- M_vec[begin:end-1])
 # LL_vec = domain.Tf/domain.dx*(M_vec[begin+1:end] .- m_vec[begin:end-1])
 
-l_vec, L_vec = D_priori_multidim.m_vec, D_priori_multidim.M_vec
+l_vec, L_vec = D_priori_multidim.l_vec, D_priori_multidim.L_vec
 
 @show minimum(L_vec .- l_vec)
 println("Maximal value of D low: " * string(maximum(D_priori_multidim.D_low)))
-println("Maximal value of D low norm: " * string(maximum(D_priori_multidim.D_low_norm)))
+println("Maximal value of D low norm: " * string(maximum(D_priori_multidim.D_priori)))
 @show sum(L_vec[begin+1:end])
 @show sum(l_vec[begin+1:end]);

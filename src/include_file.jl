@@ -37,7 +37,7 @@ include("schemes/space_schemes/roe.jl")
 include("schemes/space_schemes/centered.jl")
 include("schemes/space_schemes/modified_rusanov.jl")
 include("schemes/space_schemes/HR.jl")
-# include("schemes/space_schemes/mixed_method.jl")
+include("schemes/space_schemes/mixed_scheme.jl")
 include("schemes/space_schemes/MUSCL.jl")
 
 # Schemes in time
@@ -65,7 +65,7 @@ include("quantification_a_priori.jl")
 # include("diffusion_compensation/diffusion_compensation.jl")
 # # include("diffusion_compensation/diffusion_compensation_v2.jl")
 # include("diffusion_compensation/diffusion_compensation_v4.jl")
-# include("diffusion_compensation/diffusion_compensation_v5.jl")
+include("diffusion_compensation/diffusion_compensation_v5.jl")
 # include("diffusion_compensation/diffusion_compensation_v6.jl")
 
 # # Two dimensionnal extensions
