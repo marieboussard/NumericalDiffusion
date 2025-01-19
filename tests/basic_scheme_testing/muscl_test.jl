@@ -13,9 +13,10 @@ u0 = initialData(domain, testcase)
 
 #domain, u0 = createOneTimestepInterval(Nx, t0, xmin, xmax, burgers(), testcase, CFL_factor)
 
-scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
+#scheme = FVScheme(Euler(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
 #scheme = FVScheme(RK2(), Rusanov(0.5))
 # scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Minmod()))
+scheme = FVScheme(RK2(), MUSCL(CFL_factor, Rusanov(CFL_factor), Superbee()))
 
 # 1 ## Applying the scheme
 

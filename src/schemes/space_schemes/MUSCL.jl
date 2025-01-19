@@ -19,8 +19,12 @@ get_name(::MUSCL) = "MUSCL"
 
 # First we define different limiters (and associated slope)
 minmod(x, y) = max(0, min(x, y)) + min(0, max(x, y))
+maxmod(x, y) = max(0, max(x, y)) + min(0, min(x, y))
+s1(uL, uC, uR) = minmod(uR - uC, 2 * (uC - uL))
+s2(uL, uC, uR) = minmod(2 * (uR - uC), uC - uL)
 #compute_slope(::Minmod, uL, uC, uR) = max(0, min(uC-uL, uR-uC)) + min(0, max(uC-uL, uR-uC))
 compute_slope(::Minmod, uL, uC, uR) = minmod(uC - uL, uR - uC)
+compute_slope(::Superbee, uL, uC, uR) = maxmod(s1(uL, uC, uR), s2(uL, uC, uR))
 
 # # Then we define the affine interpolation
 # affine_interp(a, b, x0, x) = a*(x-x0) + b
