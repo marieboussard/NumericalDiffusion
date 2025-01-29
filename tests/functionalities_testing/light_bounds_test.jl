@@ -1,16 +1,20 @@
-include("../src/include_file.jl")
+include("../../src/include_file.jl")
 
 # 1 # Solving Burgers equation
 
 xmin, xmax, Nx, t0, Tf = -2, 2, 100, 0, 0.4
 CFL_factor = 0.5
-omega = createInterval(xmin, xmax, Nx, t0, Tf)
-u0 = (res=zeros(omega.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(omega.x[i])] end; res)
-eq = burgers()
-method = Rusanov(CFL_factor)
+domain = createInterval(Nx, xmin, xmax, t0, Tf)
+testcase = ArticleTestcase()
+u0 = initialData(domain, testcase)
+equation = burgers()
+scheme = FVScheme(Euler(), Rusanov(CFL_factor))
 
-solEnt = optimize_for_entropy(u0, domain, eq, method; boundsType=LightBounds())
-plot_solution(solEnt)
+solEnt = optimize_for_entropy(u0, domain, equation, scheme)
+solEnt_light = optimize_for_entropy(u0, domain, equation, scheme; boundsType=LightBounds())
+
+plot(domain.x, solEnt.Dopt, label="Normal Bounds")
+plot!(domain.x, solEnt_light.Dopt, label="Light Bounds")
 
 # # 1 # Hydrostatic scheme for the lake at rest
 
