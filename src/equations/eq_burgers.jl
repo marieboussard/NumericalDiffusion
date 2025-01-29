@@ -6,11 +6,11 @@ get_name(::Burgers) = "Burgers"
 
 burgers() = Burgers(NullSource())
 
-flux(::Burgers, u) = u.^2 ./ 2
-D_flux(::Burgers, u) = u
-eta(::Burgers, u) = u.^2
-G(::Burgers, u) = 2.0 .* u.^3 ./ 3.0
-D_eta(::Burgers, u) = 2.0*u
+flux(::Burgers, u, args...; kwargs...) = u.^2 ./ 2
+D_flux(::Burgers, u, args...; kwargs...) = u
+eta(::Burgers, u, args...; kwargs...) = u.^2
+G(::Burgers, u, args...; kwargs...) = 2.0 .* u.^3 ./ 3.0
+D_eta(::Burgers, u, args...; kwargs...) = 2.0*u
 
 # get_flux(equation::Burgers, u; z=nothing) = flux(equation, u)
 # get_eta(equation::Burgers, u; z=nothing) = eta(equation, u)

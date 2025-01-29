@@ -75,7 +75,7 @@ end
 
 function addSource!(::NullSource, domain::Domain) end
 
-function giveSource(mSource::Matrix{T}) where T
+function giveSource(mSource::AbstractArray{T}) where T
     mSource
 end
 

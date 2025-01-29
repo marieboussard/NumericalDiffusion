@@ -6,14 +6,15 @@ include("../../src/include_file.jl")
 
 xmin, xmax, Nx, t0, Tf = -2, 2, 50, 0, 0.4
 CFL_factor = 0.5
-domain = createInterval(xmin, xmax, Nx, t0, Tf)
-eq = burgers()
-method = Rusanov(CFL_factor)
+domain = createInterval(Nx, xmin, xmax, t0, Tf)
+equation = burgers()
+scheme = FVScheme(Euler(), Rusanov(CFL_factor))
+testcase = ArticleTestcase()
 
-u0 = (res=zeros(domain.Nx, 1); for i in 1:Nx res[i,:]=[u0_burgers_article(domain.x[i])] end; res)
+u0 = initialData(domain, testcase)
 
-solEnt = optimize_for_entropy(u0, domain, eq, method)
-D_priori = diffusion_a_priori(u0, domain, eq, method)
+solEnt = optimize_for_entropy(u0, domain, equation, scheme)
+D_priori = diffusion_a_priori(u0, domain, equation, scheme)
 
 D_low = D_priori.D_low_norm
 D_up = D_priori.D_up_norm
