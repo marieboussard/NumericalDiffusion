@@ -9,9 +9,10 @@ testcase = ArticleTestcase()
 u0 = initialData(domain, testcase)
 equation = burgers()
 scheme = FVScheme(Euler(), Rusanov(CFL_factor))
+modifiedDataType = AsymmetricModifiedData()
 
 solEnt = optimize_for_entropy(u0, domain, equation, scheme)
-solEnt_light = optimize_for_entropy(u0, domain, equation, scheme; boundsType=LightBounds())
+solEnt_light = optimize_for_entropy(u0, domain, equation, scheme; modifiedDataType= modifiedDataType, boundsType=LightBounds())
 
 plot(domain.x, solEnt.Dopt, label="Normal Bounds")
 plot!(domain.x, solEnt_light.Dopt, label="Light Bounds")

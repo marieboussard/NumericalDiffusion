@@ -12,11 +12,6 @@ eta(::Burgers, u, args...; kwargs...) = u.^2
 G(::Burgers, u, args...; kwargs...) = 2.0 .* u.^3 ./ 3.0
 D_eta(::Burgers, u, args...; kwargs...) = 2.0*u
 
-# get_flux(equation::Burgers, u; z=nothing) = flux(equation, u)
-# get_eta(equation::Burgers, u; z=nothing) = eta(equation, u)
-# get_G(equation::Burgers, u; z=nothing) = G(equation, u)
-# get_D_eta(equation::Burgers, u; z=nothing) = D_eta(equation, u)
-
 # Initial conditions
 
 function uexact_burgers_article(x::Real, t::Real)
@@ -105,5 +100,5 @@ end
 spaceBounds(pl::PiecewiseLinear) = (@unpack a1, b1, a2, b2 = pl; (-b1/a1, b2/a2))
 function integerNx(Nx::Int, pl::PiecewiseLinear)
     @unpack a1, b1, a2, b2 = pl
-    Int((1 + floor(Nx/(a2*b1)))*(a2*b1 + a1*b2)*a2*b1)
+    Int(ceil((1 + floor(Nx/(a2*b1)))*(a2*b1 + a1*b2)*a2*b1))
 end

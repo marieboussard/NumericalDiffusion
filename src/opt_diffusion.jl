@@ -167,7 +167,7 @@ function initBounds(::AsymmetricModifiedData, equation::Equation, u, j, sL, sR, 
     zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx), :]
     zR = isnothing(z) ? nothing : z[mod1(j - sL + 1, Nx), :]
     Gm = G(equation, u[mod1(j + sR, Nx), :], zR)
-    GM = G(equation, u[mod1(j - sL + 1, length(u)), :], zL)
+    GM = G(equation, u[mod1(j - sL + 1, Nx), :], zL)
     Gm[1], GM[1]
 end
 
@@ -218,6 +218,35 @@ function updateBounds!(KFun::SymmetricModifiedData, ::LightBounds, equation::Equ
     end
 
     for k in j+1:j+sL+sR
+        m = m .+ dx / dt .* (Deta_uj .* ut[mod1(k, Nx), :] .- eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :]))
+
+    end
+
+    m, M
+
+end
+
+function updateBounds!(::AsymmetricModifiedData, ::LightBounds, equation::Equation, m, M, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
+
+    Deta_uj = D_eta(equation, ut[j, :], zt[j, :])
+    eta_uj = eta(equation, ut[j, :], zt[j, :])
+    #fj = giveNumFlux(scheme, equation, ut[j, :], ut[mod1(j + 1, Nx), :]; zL=zt[j], zR=zt[mod1(j + 1, Nx)])
+    fj = numFlux(scheme, equation, extract_data_stencil(ut, j, sL, sR); z = extract_data_stencil(zt, j, sL, sR), dt=dt, domain=domain)
+    #K, Z = computeK(KFun, extractLocalData(ut, j, sL, sR)), computeZ(KFun, zt, j, sL, sR)
+    zL = isnothing(zt) ? nothing : zt[mod1(j + sR, Nx), :]
+    zR = isnothing(zt) ? nothing : zt[mod1(j - sL + 1, Nx), :]
+
+    M = M .+ Deta_uj .* (fj .- flux(equation, ut[mod1(j - sL + 1, Nx), :], zL))
+    M = M .+ dx / dt .* (j + 1 - (j - sL - sR + 2)) * (Deta_uj .* ut[j, :] .- eta_uj)
+
+    m = m .+ Deta_uj .* (fj .- flux(equation, ut[mod1(j + sR, Nx), :], zR))
+    m = m .+ dx / dt .* ((j + sL + sR) - j - 1) * (eta_uj .- Deta_uj .* ut[j, :])
+
+    for k in j-sL-sR+2:j
+        M = M .+ dx / dt .* (eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :]) .- Deta_uj .* ut[mod1(k, Nx), :])
+    end
+
+    for k in j+1:j+sL+sR-1
         m = m .+ dx / dt .* (Deta_uj .* ut[mod1(k, Nx), :] .- eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :]))
 
     end

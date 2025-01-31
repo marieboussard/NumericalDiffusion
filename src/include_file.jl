@@ -70,5 +70,6 @@ include("diffusion_compensation/diffusion_compensation_v5.jl")
 
 # # Two dimensionnal extensions
 include("multidims/multidim_priori.jl")
+include("multidims/WID_counter_example.jl")
 include("least_squares_minimization.jl")
 include("new_inequalities.jl")

@@ -181,11 +181,11 @@ end
 
 function update_l!(::SymmetricModifiedData, equation::Equation, l, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
     for k in j-sL-sR:j-1
-        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
+        l += eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
 
     for k in j+1:j+sL+sR
-        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
+        l += eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
     l
 end
@@ -195,16 +195,16 @@ function init_l(::AsymmetricModifiedData, u, equation::Equation, j, sL, sR, dx, 
     z = nothing
     zL = isnothing(z) ? nothing : z[mod1(j + sR, Nx), :]
     zR = isnothing(z) ? nothing : z[mod1(j - sL, Nx), :]
-    dt / dx * (get_G(equation, u[mod1(j + sR, Nx), :], zR)[1] - get_G(equation, u[mod1(j - sL, length(u)), :], zL)[1])
+    dt / dx * (G(equation, u[mod1(j + sR, Nx), :], zR)[1] - G(equation, u[mod1(j - sL, length(u)), :], zL)[1])
 end
 
 function update_l!(::AsymmetricModifiedData, equation::Equation, l, ut, uh, j, sL, sR, Nx, dx, dt, zt=zero(ut))
     for k in j-sL-sR+1:j-1
-        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
+        l += eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
 
     for k in j+1:j+sL+sR-1
-        l += get_eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - get_eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
+        l += eta(equation, uh[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1] - eta(equation, ut[mod1(k, Nx), :], zt[mod1(k, Nx), :])[1]
     end
     l
 end
@@ -228,7 +228,7 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
             @test ut[mod1(k, Nx)] == u[mod1(k, Nx)]
         end
         @test uh[j, :] == scheme_step(equation.source, ut, dt, domain, equation, scheme)[j, :]
-        L = get_eta(equation, ut[j, :], zt[j, :]) .- get_eta(equation, uh[j, :], zt[j, :])
+        L = eta(equation, ut[j, :], zt[j, :]) .- eta(equation, uh[j, :], zt[j, :])
 
         # Calculating lj+1/2
         # p = get_unknowns_number(equation)
@@ -246,24 +246,24 @@ function compute_multidim_bounds(u, Nx, dx, dt, equation::Equation, domain::Doma
         # display(title!("j = "*string(j)))
 
         # for k in j-sL-sR:j-1
-        #     l .+= get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
+        #     l .+= eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
         #     # if j==1 || j==2
         #     #     println("New iteration")
         #     #     @show k
         #     #     @show mod1(k, Nx)
         #     #     @show l 
-        #     #     @show get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
+        #     #     @show eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
         #     # end
         # end
 
         # for k in j+1:j+sL+sR
-        #     l .+= get_eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
+        #     l .+= eta(equation, uh[mod1(k, Nx),:], zt[mod1(k, Nx),:]) .- eta(equation, ut[mod1(k, Nx),:], zt[mod1(k, Nx),:])
         #     # if j==1 || j==2
         #     #     println("New iteration")
         #     #     @show k
         #     #     @show mod1(k, Nx)
         #     #     @show l 
-        #     #     @show get_eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- get_eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
+        #     #     @show eta(equation, uh[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:]) .- eta(equation, ut[mod1(k, Nx),:]; z=zt[mod1(k, Nx),:])
         #     # end
         # end
 
@@ -300,11 +300,11 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
     # @show sum(L_vec[begin+1:end])
     # @show sum(l_vec[begin+1:end])
 
-    # D_low = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
-    # D_up = [get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]
+    # D_low = [eta(equation, u_approx[end][i,:]; z=z[i])[1] - eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*l_vec[begin+1:end]
+    # D_up = [eta(equation, u_approx[end][i,:]; z=z[i])[1] - eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])].+ dt_vec[end]/dx*L_vec[begin+1:end]
 
 
-    D_base = [get_eta(equation, u_approx[end][i, :], z[i])[1] - get_eta(equation, u_approx[end-1][i, :], z[i])[1] for i in 1:length(u_approx[end-1][:, 1])]
+    D_base = [eta(equation, u_approx[end][i, :], z[i])[1] - eta(equation, u_approx[end-1][i, :], z[i])[1] for i in 1:length(u_approx[end-1][:, 1])]
 
     @test sum(L_vec[begin+1:end]) == -sum(D_base)
 
@@ -313,7 +313,7 @@ function diffusion_a_priori_multidim(u_init, domain::Domain, equation::Equation,
 
 
     # println("Normalisation")
-    # @show sum([get_eta(equation, u_approx[end][i,:]; z=z[i])[1] - get_eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])])
+    # @show sum([eta(equation, u_approx[end][i,:]; z=z[i])[1] - eta(equation, u_approx[end-1][i,:]; z=z[i])[1] for i in 1:length(u_approx[end-1][:,1])])
     # @show sum(D_low)
 
     # The normalisation is chosen to keep the same amount of diffusion up to a sign 
