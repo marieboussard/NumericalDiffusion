@@ -34,3 +34,30 @@ end
 createUnitInterval(Nx::Int, t0::Real, Tf::Real) = createInterval(Nx, 0.0, 1.0, t0, Tf)
 createInterval(interval::Interval) = Interval(interval.Nx, interval.xmin, interval.xmax, interval.t0, interval.Tf, interval.dx, interval.x, interval.interfaces, interval.sourceVec, interval.DSourceVec)
 
+mutable struct CartesianMesh{T<:Real} <: Domain{T}
+    Nx::Int
+    Ny::Int
+    xmin::T
+    xmax::T
+    ymin::T
+    ymax::T
+    t0::T
+    Tf::T
+    dx::T
+    dy::T
+    x::Vector{T}
+    y::Vector{T}
+    # interfaces::Vector{T}
+    sourceVec::Union{Nothing, Matrix{T}, Vector{T}}
+    DSourceVec::Union{Nothing, Array{T}}
+end
+
+function CartesianMesh(Nx::Int, Ny::Int, xmin::T, xmax::T, ymin::T, ymax::T, t0::T, Tf::T) where {T<:Real}
+    dx = (xmax - xmin) / Nx
+    dy = (ymax - ymin) / Ny 
+    x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
+    y = collect(LinRange(ymin+dy/2, ymax-dy/2, Ny))
+    CartesianMesh(Nx, Ny, xmin, xmax, ymin, ymax, t0, Tf, dx, dy, x, y, nothing, nothing)
+end
+
+CartesianMesh(Nx::Int, Ny::Int, xmin, xmax, ymin, ymax, t0, Tf) = CartesianMesh(Nx::Int, Ny::Int, promote(xmin, xmax, ymin, ymax, t0, Tf)...)
