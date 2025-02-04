@@ -26,6 +26,9 @@ end
 
 # FVSolution(problem, domain, equation, scheme, u_init) = FVSolution(problem, domain, equation, scheme, u_init, copy(u_init), 0, domain.t0, 0.0, false, nothing)
 
+############### TO DO ####################################
+# FIX THE PROBLEM OF TYPE IN FVLOG
+
 function initialize_FV(problem::FVProblem)
     @unpack domain, equation, scheme, saveLog, u_init = problem
     if saveLog
