@@ -21,9 +21,7 @@ end
 
 # end
 
-createInterval(Nx::Int, xmin::Real, xmax::Real, t0::Real, Tf::Real) = createInterval(Nx, promote(xmin, xmax, t0, Tf)...)
-
-function createInterval(Nx::Int, xmin::T, xmax::T, t0::T, Tf::T) where {T<:Real}
+function Interval(Nx::Int, xmin::T, xmax::T, t0::T, Tf::T) where {T<:Real}
     dx = (xmax - xmin) / Nx
     x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
     #interfaces = LinRange(xmin - dx / 2, xmax + dx / 2, Nx + 1)
@@ -32,8 +30,10 @@ function createInterval(Nx::Int, xmin::T, xmax::T, t0::T, Tf::T) where {T<:Real}
     Interval(1, Nx, xmin, xmax, t0, Tf, dx, x, interfaces, nothing, nothing)
 end
 
-createUnitInterval(Nx::Int, t0::Real, Tf::Real) = createInterval(Nx, 0.0, 1.0, t0, Tf)
-createInterval(interval::Interval) = Interval(1, interval.Nx, interval.xmin, interval.xmax, interval.t0, interval.Tf, interval.dx, interval.x, interval.interfaces, interval.sourceVec, interval.DSourceVec)
+Interval(Nx::Int, xmin::Real, xmax::Real, t0::Real, Tf::Real) = Interval(Nx, promote(xmin, xmax, t0, Tf)...)
+
+create_unit_interval(Nx::Int, t0::Real, Tf::Real) = Interval(Nx, 0.0, 1.0, t0, Tf)
+Interval(interval::Interval) = Interval(1, interval.Nx, interval.xmin, interval.xmax, interval.t0, interval.Tf, interval.dx, interval.x, interval.interfaces, interval.sourceVec, interval.DSourceVec)
 
 mutable struct CartesianMesh{T<:Real} <: Domain{T}
     dim::Int

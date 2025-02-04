@@ -27,7 +27,7 @@ end
 
 numFlux(scheme::FVScheme, args...; kwargs...) = numFlux(scheme.timeScheme, scheme.spaceScheme, args...; kwargs...)
 
-function vecNumFlux(::ZbSource, scheme::Scheme, equation::Equation, v; domain::Domain, z=domain.sourceVec, kwargs...)
+function vecNumFlux(::Topography, scheme::Scheme, equation::Equation, v; domain::Domain, z=domain.sourceVec, kwargs...)
     Nx, p = size(v, 1), get_unknowns_number(equation)
     sL, sR = get_sL(scheme), get_sR(scheme)
     numericalFluxMat = zeros(eltype(v), Nx+1, p)

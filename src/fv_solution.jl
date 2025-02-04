@@ -66,7 +66,7 @@ end
 
 function solve(problem::FVProblem)
     fv_sol = initialize_FV(problem)
-    while fv_sol.t < Tf
+    while fv_sol.t <problem.domain.Tf
         performstep!(fv_sol)
         if fv_sol.problem.saveLog
             saveStep!(fv_sol)
@@ -148,8 +148,6 @@ function plot_fv_sol(sol::FVSolution, nb_plots::Int64=2)
     @unpack problem, Nt, log = sol
     @unpack domain = problem
     @unpack x = domain
-
-    @show Nt
 
     if isnothing(log)
         @error "Trying to plot hisory, but it has not been saved during solving. Put saveLog=true to allow saving."

@@ -6,7 +6,7 @@ include("../../src/include_file.jl")
 
 xmin, xmax, Nx, t0, Tf = -2, 2, 100, 0.0, 0.4
 CFL_factor = 0.5
-domain = createInterval(Nx, xmin, xmax, t0, Tf)
+domain = Interval(Nx, xmin, xmax, t0, Tf)
 equation = burgers()
 testcase = ArticleTestcase()
 scheme = FVScheme(Euler(), Rusanov(CFL_factor))
@@ -16,7 +16,7 @@ u_init = initialData(domain, testcase)
 uexact = exactData(domain, testcase)
 
 problem = FVProblem(domain, equation, testcase, scheme, saveLog, u_init)
-fv_sol = solve(problem)
+@time fv_sol = solve(problem)
 plot_fv_sol(fv_sol, 4)
 display(title!("Rusanov"))
 
@@ -30,7 +30,7 @@ display(title!("Rusanov"))
 
 xmin, xmax, Nx, t0, Tf = -2, 2, 100, 0.0, 0.4
 CFL_factor = 0.5
-domain = createInterval(Nx, xmin, xmax, t0, Tf)
+domain = Interval(Nx, xmin, xmax, t0, Tf)
 equation = burgers()
 testcase = ArticleTestcase()
 scheme = FVScheme(Euler(), Roe(CFL_factor))

@@ -1,60 +1,62 @@
 abstract type Source end
 struct NullSource <: Source end
 
-abstract type ZbSource <: Source end
+# Source for Saint-Venant equation
+
+abstract type Topography <: Source end
 
 # Different kinds of source
 
 # Quadratic bump
-struct Bump_zb{T <: Real} <: ZbSource
+struct BumpTopo{T <: Real} <: Topography
     height::T
     width::T
 end
-bump_zb(;height::Real=0.5, width::Real=1.0) = Bump_zb(height, width)
-zb(bz::Bump_zb, x) = max.(0, -1/bz.width*(bz.height/0.5^2)*(x .-0.5).^2 .+ bz.height)
-function Dzb(bz::Bump_zb, x)
+BumpTopo(;height::Real=0.5, width::Real=1.0) = BumpTopo(height, width)
+zb(bt::BumpTopo, x) = max.(0, -1/bt.width*(bt.height/0.5^2)*(x .-0.5).^2 .+ bt.height)
+function Dzb(bt::BumpTopo, x)
     res = zeros(size(x))
     for i in eachindex(x)
-        if -1/bz.width*(bz.height/0.5^2)*(x[i] .-0.5).^2 .+ bz.height < 0
+        if -1/bt.width*(bt.height/0.5^2)*(x[i] .-0.5).^2 .+ bt.height < 0
             res[i] = 0
         else
-            res[i] = -2.0/bz.width*(bz.height/0.5^2)*(x[i] .-0.5)
+            res[i] = -2.0/bt.width*(bt.height/0.5^2)*(x[i] .-0.5)
         end
     end
     res
 end
 
 # Sinusoidal
-struct Sinus_zb{T <: Real} <: ZbSource
+struct SinusTopo{T <: Real} <: Topography
     height::T
     freq::T
 end
-sinus_zb(;height::Real=0.5, freq::Real=1.0) = Sinus_zb(height, freq)
-zb(sz::Sinus_zb, x) = (-cos.(2*pi*sz.freq * x) .+ 1)*sz.height/2
-Dzb(sz::Sinus_zb, x) = pi*sz.freq*(sin.(2*pi*sz.freq * x))*sz.height
+SinusTopo(;height::Real=0.5, freq::Real=1.0) = SinusTopo(height, freq)
+zb(st::SinusTopo, x) = (-cos.(2*pi*st.freq * x) .+ 1)*st.height/2
+Dzb(st::SinusTopo, x) = pi*st.freq*(sin.(2*pi*st.freq * x))*st.height
 
 # Flat
-struct Flat_zb{T <: Real} <: ZbSource
+struct FlatTopo{T <: Real} <: Topography
     height::T
 end
-flat_zb(;height::Real=0.5) = Flat_zb(height)
-zb(fz::Flat_zb, x) = zero(x) .+ fz.height
-Dzb(::Flat_zb, x) = zero(x)
+FlatTopo(;height::Real=0.5) = FlatTopo(height)
+zb(ft::FlatTopo, x) = zero(x) .+ ft.height
+Dzb(::FlatTopo, x) = zero(x)
 
 zb(::NullSource, x) = zero(x)
 
 # A counter example for the discrete entropy inequality ?
-struct Discontinuous_zb <: ZbSource end
-# zb(::Discontinuous_zb, x) = (0.5*x) .+ (x.>0.5)
-Dzb(::Discontinuous_zb, x) = 0.5 .+ zero(x)
-zb(::Discontinuous_zb, x) = 2.0 .+ (10*x.^2) .*(x.<0.5).*(x.>0.48) .- (10*x.^2)  .*(x.<0.52).*(x.>0.5)
+struct DiscontinuousTopo <: Topography end
+# zb(::DiscontinuousTopo, x) = (0.5*x) .+ (x.>0.5)
+Dzb(::DiscontinuousTopo, x) = 0.5 .+ zero(x)
+zb(::DiscontinuousTopo, x) = 2.0 .+ (10*x.^2) .*(x.<0.5).*(x.>0.48) .- (10*x.^2)  .*(x.<0.52).*(x.>0.5)
 
 
-zb_tilde(::Bump_zb, ut, c) = c - ut[1]
+zb_tilde(::BumpTopo, ut, c) = c - ut[1]
 
-#sourceTerm(::FVMethod, zbSource::ZbSource, domain::Domain, v) = [[0.0, -v[i][1] * g * Dzb(zbSource, domain.x)[i]] for i in eachindex(v)]
+#sourceTerm(::FVMethod, zbSource::Topography, domain::Domain, v) = [[0.0, -v[i][1] * g * Dzb(zbSource, domain.x)[i]] for i in eachindex(v)]
 
-# function sourceTerm(::FVMethod, zbSource::ZbSource, domain::Domain, v)
+# function sourceTerm(::FVMethod, zbSource::Topography, domain::Domain, v)
 #     S = zero(v)
 #     for i in 1:length(v[:,1])
 #         S[i,1] = 0.0
@@ -63,24 +65,24 @@ zb_tilde(::Bump_zb, ut, c) = c - ut[1]
 #     S
 # end
 
-function sourceTerm(::Equation, ::Method, domain::Domain, v; kwargs...)
+function source_term(::Equation, ::Method, domain::Domain, v; kwargs...)
     return zero(v)
 end
 
 
-function addSource!(zbSource::ZbSource, domain::Domain)
+function add_source!(zbSource::Topography, domain::Domain)
     domain.sourceVec = zb(zbSource, domain.x)
     domain.DSourceVec = Dzb(zbSource, domain.x)
 end
 
-function addSource!(::NullSource, domain::Domain) end
+function add_source!(::NullSource, domain::Domain) end
 
-function giveSource(mSource::AbstractArray{T}) where T
+function give_source(mSource::AbstractArray{T}) where T
     mSource
 end
 
-function manageSource(domain::Domain{T}) where T
+function manage_source(domain::Domain{T}) where T
     # @show typeof(zeros(T, (domain.Nx,1)))
     # @show typeof(domain.sourceVec)
-    isnothing(domain.sourceVec) ? zeros(T, (domain.Nx,1)) : giveSource(domain.sourceVec)
+    isnothing(domain.sourceVec) ? zeros(T, (domain.Nx,1)) : give_source(domain.sourceVec)
 end

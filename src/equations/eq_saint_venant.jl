@@ -88,7 +88,7 @@ get_unknowns_number(::SaintVenant) = 2
 
 # 1 # Lake at rest 
 
-#v0_lake_at_rest(x, zbSource::ZbSource; c=1) = [[max(0, c - zb(zbSource, xi)), 0] for xi in x]
+#v0_lake_at_rest(x, zbSource::Topography; c=1) = [[max(0, c - zb(zbSource, xi)), 0] for xi in x]
 function v0_lake_at_rest(x, source::Source; c=1)
     v0 = zeros(size(x)..., 2)
     for I in CartesianIndices(x)
@@ -103,7 +103,7 @@ end
 perturb(x, xleft, xright) = 1
 #perturb(x, xleft, xright) = sin(pi * (x - xleft) / (xright - xleft))
 
-# function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.1)
+# function h_perturbated(x, zbSource::Topography; c=1, xleft=0.2, xright=0.3, height=0.1)
 #     if x < xleft
 #         return [max(0, c - zb(zbSource, x)), 0]
 #     elseif x <= xright
@@ -113,7 +113,7 @@ perturb(x, xleft, xright) = 1
 #     end
 # end
 
-function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.1)
+function h_perturbated(x, zbSource::Topography; c=1, xleft=0.2, xright=0.3, height=0.1)
 
     #@show c - zb(zbSource,x)
     if x < xleft
@@ -131,20 +131,22 @@ function h_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height
 end
 
 
-# function v0_lake_at_rest_perturbated(x, zbSource::ZbSource; c=1, xleft=0.2, xright=0.3, height=0.4)
+# function v0_lake_at_rest_perturbated(x, zbSource::Topography; c=1, xleft=0.2, xright=0.3, height=0.4)
 #     return [h_perturbated(xi, zbSource; c=c, xleft=xleft, xright=xright, height=height) for xi in x]
 # end
 
-function v0_lake_at_rest_perturbated(x, zbSource::ZbSource; c=1, xleft=0.1, xright=0.2, height=0.4)
-    v0 = zeros(size(x)..., 2)
-    for I in CartesianIndices(x)
-        v0[I,1] = h_perturbated(x[I], zbSource; c=c, xleft=xleft, xright=xright, height=height)
-        v0[I,2] = 0
-    end
-    v0
-end
+# function v0_lake_at_rest_perturbated(x, zbSource::Topography; c=1, xleft=0.1, xright=0.2, height=0.4)
+#     v0 = zeros(size(x)..., 2)
+#     for I in CartesianIndices(x)
+#         v0[I,1] = h_perturbated(x[I], zbSource; c=c, xleft=xleft, xright=xright, height=height)
+#         v0[I,2] = 0
+#     end
+#     v0
+# end
 
-## TO DO ## maybe put Source instead of ZbSource
+
+
+## TO DO ## maybe put Source instead of Topography
 
 function v0_discontinuous(x, args...; kwargs...)
     v0 = zeros(size(x)..., 2)
@@ -163,3 +165,12 @@ function sourceTerm(::SaintVenant, ::Scheme, domain::Domain, v; z=domain.sourceV
     end
     S
 end
+
+
+# Testcases for Saint-Venant
+
+struct LakeAtRest <: Testcase
+    source::Source
+end
+
+u0_fun(testcase::LakeAtRest, x) = v0_lake_at_rest(x, testcase.source)
