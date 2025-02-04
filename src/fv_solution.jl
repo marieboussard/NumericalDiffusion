@@ -3,8 +3,11 @@ struct FVProblem
     equation::Equation
     testcase::Testcase
     scheme::FVScheme
+    saveLog::Bool
     u_init
 end
+
+FVProblem(domain::Domain, equation::Equation, testcase::Testcase, scheme::FVScheme, u_init) = FVProblem(domain, equation, testcase, scheme, false, u_init)
 
 mutable struct FVLog
     u_log
@@ -18,15 +21,18 @@ mutable struct FVSolution
     Nt::Int
     t
     dt
-    saveLog::Bool
     log::Union{Nothing, FVLog}
 end
 
 # FVSolution(problem, domain, equation, scheme, u_init) = FVSolution(problem, domain, equation, scheme, u_init, copy(u_init), 0, domain.t0, 0.0, false, nothing)
 
 function initialize_FV(problem::FVProblem)
-    @unpack domain, equation, scheme, u_init = problem 
-    FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, false, nothing)
+    @unpack domain, equation, scheme, saveLog, u_init = problem
+    if saveLog
+        FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, FVLog([copy(u_init)], typeof(t0)[], [t0]))
+    else
+        FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, nothing)
+    end
 end
 
 function performstep!(fv_sol::FVSolution)
@@ -43,10 +49,25 @@ function performstep!(fv_sol::FVSolution)
     fv_sol.Nt += 1
 end
 
+function saveStep!(fv_sol::FVSolution)
+    @unpack log = fv_sol
+    if isnothing(log)
+        @error "Trying to update log, but it has not been initialized."
+    end
+    @unpack u_log, dt_log, t_log = log
+    @unpack u_approx, dt, t = fv_sol
+    push!(u_log, copy(u_approx))
+    push!(dt_log, dt)
+    push!(t_log, t)
+end
+
 function solve(problem::FVProblem)
     fv_sol = initialize_FV(problem)
     while fv_sol.t < Tf
         performstep!(fv_sol)
+        if fv_sol.problem.saveLog
+            saveStep!(fv_sol)
+        end
     end
     fv_sol
 end
@@ -121,17 +142,25 @@ end
 
 function plot_fv_sol(sol::FVSolution, nb_plots::Int64=2)
 
-    @unpack problem, u_approx, Nt, log = sol
+    @unpack problem, Nt, log = sol
     @unpack domain = problem
+    @unpack x = domain
 
+    @show Nt
+
+    if isnothing(log)
+        @error "Trying to plot hisory, but it has not been saved during solving. Put saveLog=true to allow saving."
+    end
+
+    @unpack u_log, dt_log, t_log = log
     p = div(Nt, nb_plots)
 
     plt = plot()
 
     for k in 0:nb_plots-2
-        plot!(sol.domain.x, sol.u_approx[k*p+1], label="t = " * string(round(sol.t_vec[k*p+1], sigdigits=2)))
+        plot!(x, u_log[k*p+1], label="t = " * string(round(t_log[k*p+1], sigdigits=2)))
     end
-    plot!(sol.domain.x, sol.u_approx[end], label="t = " * string(round(sol.t_vec[end], sigdigits=2)))
+    plot!(x, u_log[end], label="t = " * string(round(t_log[end], sigdigits=2)))
     xlabel!("x")
     ylabel!("u")
 

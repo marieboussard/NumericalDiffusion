@@ -14,6 +14,7 @@ using TimerOutputs
 using Test
 using JuMP, OSQP
 using UnPack
+using BenchmarkTools
 
 include("tools/plotting_tools.jl")
 include("domain.jl")
