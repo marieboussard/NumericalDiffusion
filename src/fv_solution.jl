@@ -1,46 +1,57 @@
-struct FVSolution
+struct FVProblem
     domain::Domain
     equation::Equation
+    testcase::Testcase
     scheme::FVScheme
+    u_init
+end
+
+mutable struct FVLog
+    u_log
+    dt_log
+    t_log
+end
+
+mutable struct FVSolution
+    problem::FVProblem
     u_approx
     Nt::Int
-    dt_vec
-    t_vec
+    t
+    dt
+    saveLog::Bool
+    log::Union{Nothing, FVLog}
 end
 
-#=
-function scheme_step(::NullSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
-    Nx, p = length(v[:,1]), get_unknowns_number(equation)
-    numericalFluxMat = zeros(Nx+1, p)
-    #Nx = length(v)
-    #numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)#zeros(eltype(v), Nx + 1)
-    #vcat(numFlux(method, equation, v[end], v[1]), [numFlux(method, equation, v[j], v[j+1]) for j in 1:Nx-1], numFlux(method, equation, v[end], v[1]))
-    for i ∈ 2:Nx
-        numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:])
+# FVSolution(problem, domain, equation, scheme, u_init) = FVSolution(problem, domain, equation, scheme, u_init, copy(u_init), 0, domain.t0, 0.0, false, nothing)
+
+function initialize_FV(problem::FVProblem)
+    @unpack domain, equation, scheme, u_init = problem 
+    FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, false, nothing)
+end
+
+function performstep!(fv_sol::FVSolution)
+    @unpack problem, u_approx, Nt, t = fv_sol
+    @unpack domain, equation, scheme = problem
+    @unpack dx, Tf = domain
+    # Find the next time step with a CFL condition
+    dt = min(compute_dt_with_CFL(scheme, equation, u_approx, dx), Tf - t)
+    numericalFluxMat = vecNumFlux(equation.source, scheme, equation, collect(u_approx); dt=dt, domain=domain)
+    u_approx .= u_approx .- dt / domain.dx * (numericalFluxMat[2:end,:] .- numericalFluxMat[1:end-1,:])
+    fv_sol.u_approx = u_approx
+    fv_sol.dt = dt
+    fv_sol.t += dt
+    fv_sol.Nt += 1
+end
+
+function solve(problem::FVProblem)
+    fv_sol = initialize_FV(problem)
+    while fv_sol.t < Tf
+        performstep!(fv_sol)
     end
-    numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:])
-    numericalFluxMat[end,:] = numericalFluxMat[1,:]
-    
-    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
+    fv_sol
 end
 
-function scheme_step(::ZbSource, v, dt, domain::Domain, equation::Equation, method::FVMethod)
-    
-    Nx, p = length(v[:,1]), get_unknowns_number(equation)
-    numericalFluxMat = zeros(Nx+1, p)
-    #numericalFluxVec = Vector{eltype(v)}(undef, Nx + 1)
-    for i ∈ 2:Nx
-        # @show v[i-1,:], v[i,:]
-        # @show domain.sourceVec
-        numericalFluxMat[i,:] = giveNumFlux(method, equation, v[i-1,:], v[i,:]; zL=domain.sourceVec[i-1], zR=domain.sourceVec[i])
-    end
-    numericalFluxMat[1,:] = giveNumFlux(method, equation, v[end,:], v[1,:]; zL=domain.sourceVec[end], zR=domain.sourceVec[1])
-    numericalFluxMat[end,:] = numericalFluxMat[1,:]
-    numericalFluxMat
-    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, method, domain, v)
-end
 
-=#
 
 ########## TO DO : MODIFY IN ORDER TO UNCOMMENT ##########################################################""
 
@@ -60,57 +71,60 @@ end
 #     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
 # end
 
-function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme)
-    #@code_warntype giveNumFlux(ns, method, equation, v)
-    # numericalFluxMat = giveNumFlux(ns, method, equation, v)
-    # v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
-    #next_timestep(scheme.timeScheme, v, dt, domain, equation, scheme.spaceScheme)
-    #next_timestep(scheme, v, dt, domain, equation)
-    numericalFluxMat = vecNumFlux(ns, scheme, equation, collect(v); dt=dt, domain=domain)
-    v .- dt / domain.dx * (numericalFluxMat[2:end,:] .- numericalFluxMat[1:end-1,:])
-end
+# function scheme_step(ns::NullSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme)
+#     #@code_warntype giveNumFlux(ns, method, equation, v)
+#     # numericalFluxMat = giveNumFlux(ns, method, equation, v)
+#     # v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:])
+#     #next_timestep(scheme.timeScheme, v, dt, domain, equation, scheme.spaceScheme)
+#     #next_timestep(scheme, v, dt, domain, equation)
+#     numericalFluxMat = vecNumFlux(ns, scheme, equation, collect(v); dt=dt, domain=domain)
+#     v .- dt / domain.dx * (numericalFluxMat[2:end,:] .- numericalFluxMat[1:end-1,:])
+# end
 
-function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme;kwargs...)
-    #@show sourceTerm(equation, scheme, domain, v)
-    numericalFluxMat = vecNumFlux(zb, scheme, equation, v; dt=dt, domain=domain, kwargs...)
-    v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, scheme.spaceScheme, domain, v; kwargs...)
-end
+# function scheme_step(zb::ZbSource, v, dt, domain::Domain, equation::Equation, scheme::FVScheme;kwargs...)
+#     #@show sourceTerm(equation, scheme, domain, v)
+#     numericalFluxMat = vecNumFlux(zb, scheme, equation, v; dt=dt, domain=domain, kwargs...)
+#     v - dt / domain.dx * (numericalFluxMat[2:end,:] - numericalFluxMat[1:end-1,:]) + dt * sourceTerm(equation, scheme.spaceScheme, domain, v; kwargs...)
+# end
 
 
-function fv_solve(domain::Domain, u_init, equation::Equation, scheme::FVScheme)
+# function fv_solve(domain::Domain, u_init, equation::Equation, scheme::FVScheme)
 
-    t0, Tf, dx = domain.t0, domain.Tf, domain.dx
-    t = t0
-    Nt = 0
+#     t0, Tf, dx = domain.t0, domain.Tf, domain.dx
+#     t = t0
+#     Nt = 0
 
-    u_approx = [u_init]
-    dt_vec = Float64[]
-    t_vec = Float64[0.0]
+#     u_approx = [u_init]
+#     dt_vec = Float64[]
+#     t_vec = Float64[0.0]
 
-    while t < Tf
+#     while t < Tf
 
-        # Find the next time step with a CFL condition
-        dt = min(scheme.spaceScheme.CFL_factor * dx / CFL_cond(equation, u_approx[end]), Tf - t)
+#         # Find the next time step with a CFL condition
+#         dt = min(scheme.spaceScheme.CFL_factor * dx / CFL_cond(equation, u_approx[end]), Tf - t)
 
-        push!(dt_vec, dt)
-        push!(t_vec, t + dt)
+#         push!(dt_vec, dt)
+#         push!(t_vec, t + dt)
         
-        #@show size(scheme_step(equation.source, u_approx[end], dt, domain, equation, method))
-        push!(u_approx, scheme_step(equation.source, u_approx[end], dt, domain, equation, scheme))
+#         #@show size(scheme_step(equation.source, u_approx[end], dt, domain, equation, method))
+#         push!(u_approx, scheme_step(equation.source, u_approx[end], dt, domain, equation, scheme))
 
-        t += dt
-        Nt += 1
+#         t += dt
+#         Nt += 1
 
-    end
+#     end
 
-    FVSolution(domain, equation, scheme, u_approx, Nt, dt_vec, t_vec)
+#     FVSolution(domain, equation, scheme, u_approx, Nt, dt_vec, t_vec)
 
-end
+# end
 
 
-function plot_fv_sol(sol::FVSolution; nb_plots::Int64=2)
+function plot_fv_sol(sol::FVSolution, nb_plots::Int64=2)
 
-    p = div(sol.Nt, nb_plots)
+    @unpack problem, u_approx, Nt, log = sol
+    @unpack domain = problem
+
+    p = div(Nt, nb_plots)
 
     plt = plot()
 
@@ -174,30 +188,31 @@ function plot_fv_sol(sol::FVSolution, ::SaintVenant; nb_plots::Int64=2, plotMode
 
 end
 
-function plot_fv_sol(sol::FVSolution, exact_sol::Base.Callable)
+# function plot_fv_sol(sol::FVSolution, exact_sol::Base.Callable)
 
-    x = sol.domain.x
+#     x = sol.domain.x
 
-    u_exact = [exact_sol(xi, sol.domain.Tf) for xi in x]
+#     u_exact = [exact_sol(xi, sol.domain.Tf) for xi in x]
 
-    plot(x, sol.u_approx[end], label=get_name(sol.scheme))
+#     plot(x, sol.u_approx[end], label=get_name(sol.scheme))
+#     plot!(x, u_exact, label="Exact")
+#     xlabel!("x")
+#     ylabel!("u")
+
+
+# end
+
+function plot_fv_sol(sol::FVSolution)
+
+    @unpack u_approx = sol
+    @unpack domain, testcase, scheme = sol.problem
+    @unpack x = domain
+
+    u_exact = exactData(domain, testcase)
+
+    plot(x, u_approx, label=get_name(scheme))
     plot!(x, u_exact, label="Exact")
     xlabel!("x")
     ylabel!("u")
-
-
-end
-
-function plot_fv_sol(sol::FVSolution, testcase::Testcase)
-
-    x = sol.domain.x
-
-    u_exact = exactData(sol.domain, testcase)
-
-    plot(x, sol.u_approx[end], label=get_name(sol.scheme))
-    plot!(x, u_exact, label="Exact")
-    xlabel!("x")
-    ylabel!("u")
-
 
 end

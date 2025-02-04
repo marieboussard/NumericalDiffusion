@@ -11,3 +11,7 @@ function createOneTimestepInterval(Nx::Int, t0::Real, xmin::Real, xmax::Real, eq
     domain.Tf = dt
     domain, u0
 end
+
+function compute_dt_with_CFL(scheme, equation, u, dx)
+    scheme.spaceScheme.CFL_factor * dx / CFL_cond(equation, u)
+end
