@@ -15,13 +15,20 @@ end
 
 solve(equation, params, timeScheme, spaceScheme; kwargs...) = solve(Problem(equation, params, timeScheme, spaceScheme); kwargs...)
 
-function performstep!(fv_sol::FVSolution)
+function performstep!(integrator::Integrator)
     @unpack dx = integrator.problem.params.mesh
     
     integrator.flux = vec_num_flux(integrator)
     integrator.u .= u .- integrator.dt / dx * (integrator.flux[2:end,:] .- integrator.flux[1:end-1,:])
     
 end
+
+
+function performstep_2D!(integrator::Integrator)
+
+end
+
+
 
 function loopheader!(integrator::Integrator)
     @unpack problem = integrator
