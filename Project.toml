@@ -1,0 +1,5 @@
+name = "FiniteVolumes"
+uuid = "81a9071b-ecac-4065-85aa-914c1970b9f5"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
