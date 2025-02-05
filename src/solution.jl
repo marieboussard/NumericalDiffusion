@@ -1,8 +1,7 @@
 struct Solution
     problem::Problem
-    parameters::Parameters
 
-    status::string      # SUCCESS or IN PROGRESS or MAXITERS
+    status::string      # SUCCESS or MAXITERS
     niter::Int          # Final number of iterations
 
     u

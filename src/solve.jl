@@ -1,58 +1,54 @@
-function solve(equation, params, timeScheme, spaceScheme; NiterMax=100, kwargs...)
-    integrator = Integrator()
-    while integrator.sol.t < problem.params.tf && integrator.sol < NiterMax
+function solve(problem; maxiter=100, name="", log_config=DefaultLogConfig, kwargs...)
+
+    opts = IntegratorOptions(maxiter)
+    integrator = Integrator(problem, opts, log_config)
+
+    @unpack tf = problem.params
+     
+    while integrator.t < tf && integrator.t < maxiter
         loopheader!(integrator)
         performstep!(integrator)
         loopfooter!(integrator)
     end
-    integrator.sol
+    Solution(problem, status, integrator.niter, integrator.u, integrator.dt, integrator.t, integrator.log_book, name)
 end
 
-solve(problem) = solve(problem.equation, problem.params, problem.timeScheme, problem.spaceScheme)
-
-function initialize_FV(problem::FVProblem)
-    @unpack domain, equation, scheme, saveLog, u_init = problem
-    if saveLog
-        FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, FVLog([copy(u_init)], typeof(t0)[], [t0]))
-    else
-        FVSolution(problem, copy(u_init), 0, domain.t0, 0.0, nothing)
-    end
-end
+solve(equation, params, timeScheme, spaceScheme; kwargs...) = solve(Problem(equation, params, timeScheme, spaceScheme); kwargs...)
 
 function performstep!(fv_sol::FVSolution)
-    @unpack problem, u_approx, Nt, t = fv_sol
-    @unpack domain, equation, scheme = problem
-    @unpack dx, Tf = domain
-    # Find the next time step with a CFL condition
+    @unpack dx = integrator.problem.params.mesh
     
-    numericalFluxMat = vecNumFlux(equation.source, scheme, equation, collect(u_approx); dt=dt, domain=domain)
-    u_approx .= u_approx .- dt / domain.dx * (numericalFluxMat[2:end,:] .- numericalFluxMat[1:end-1,:])
+    integrator.flux = vec_num_flux(integrator)
+    integrator.u .= u .- integrator.dt / dx * (integrator.flux[2:end,:] .- integrator.flux[1:end-1,:])
     
 end
 
 function loopheader!(integrator::Integrator)
-    @unpack u = integrator
-    dt = min(compute_dt_with_CFL(scheme, equation, u, dx), Tf - t)
+    @unpack problem = integrator
+    @unpack params = problem
+    integrator.dt = min(compute_dt_with_CFL(problem.scheme, problem.equation, integrator.u_prev, params.mesh.dx), params.Tf - integrator.t)
 end
 
 function loopfooter!(integrator::Integrator)
-    fv_sol.u_approx = u_approx
-    fv_sol.dt = dt
-    fv_sol.t += dt
-    fv_sol.Nt += 1
+    integrator.t += dt
+    integrator.niter += 1
+    integrator.u_prev .= integrator.u
 
-    save_step!(integrator)
+    update_log!(integrator)
 end
 
-function save_step!(integrator::Integrator)
-    @unpack log = fv_sol
-    if isnothing(log)
-        @error "Trying to update log, but it has not been initialized."
-    end
-    @unpack u_log, dt_log, t_log = log
-    @unpack u_approx, dt, t = fv_sol
-    push!(u_log, copy(u_approx))
-    push!(dt_log, dt)
-    push!(t_log, t)
+function update_log!(integrator::Integrator)
+    @unpack log_config, log_book = integrator
+    @unpack u, t, dt = log_config
+    
+    # STORE INTERMEDIATE STATES OF THE SOLUTION 
+    u ? push!(log_book.u_log, copy(integrator.u)) : nothing
+
+    # STORE INTERMEDIATE TIMES OF THE SIMULATION
+    t ? push!(log_book.t_log, integrator.t) : nothing 
+
+    # STORE INTERMEDIATE TIMESTEPS OF THE SIMULATION
+    dt ? push!(log_book.dt_log, integrator.dt) : nothing
+
 end
 
