@@ -1,6 +1,6 @@
 struct Problem
     equation::Equation
     params::Parameters
-    timeScheme::SpaceScheme
-    spaceScheme::TimeScheme
+    time_scheme::TimeScheme
+    space_scheme::SpaceScheme
 end

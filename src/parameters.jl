@@ -1,35 +1,42 @@
-abstract type Mesh{T<:Real} end
+abstract type Mesh end
 
-struct OneDMesh{T<:Real} <: Mesh{T}
+struct OneDMesh <: Mesh
     Nx::Int
-    xmin::T
-    xmax::T 
-    dx::T
-    x::Vector{T}
-    interfaces::Vector{T}
+    xmin::Float64
+    xmax::Float64 
+    dx::Float64
+    x::Vector{Float64}
+    interfaces::Vector{Float64}
+
+    function OneDMesh(Nx::Int, xmin::Float64, xmax::Float64)
+        dx = (xmax - xmin) / Nx
+        x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
+        interfaces = collect(LinRange(xmin, xmax, Nx + 1))
+        new(Nx, xmin, xmax, dx, x, interfaces)
+    end
 end
 
-abstract type TwoDMesh{T<:Real} <: Mesh{T} end
+abstract type TwoDMesh <: Mesh end
 
-struct TwoDCartesian{T<:Real} <: TwoDMesh{T}
+struct TwoDCartesian <: TwoDMesh
     Nx::Int
     Ny::Int
-    xmin::T
-    xmax::T 
-    ymin::T
-    ymax::T 
-    dx::T 
-    dy::T 
-    x::Vector{T} 
-    y::Vector{T}
+    xmin::Float64
+    xmax::Float64 
+    ymin::Float64
+    ymax::Float64 
+    dx::Float64 
+    dy::Float64 
+    x::Vector{Float64} 
+    y::Vector{Float64}
 end
 
 
-struct Parameters{T<:Real, MeshType<:Mesh{T}}
+struct Parameters{MeshType<:Mesh}
     mesh::MeshType
-    t0::T
-    tf::T
-    CFL_factor::T
+    t0::Float64
+    tf::Float64
+    CFL_factor::Float64
 end
 
 dimension(::OneDMesh) = 1
