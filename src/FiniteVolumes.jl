@@ -35,6 +35,12 @@ module FiniteVolumes
     export Euler
     export Rusanov
 
+    export CFL_cond
+    export CFL_cond!
+    export CFL_local!
+
+    export Integrator
+    export numflux!
     export solve
 
 end
