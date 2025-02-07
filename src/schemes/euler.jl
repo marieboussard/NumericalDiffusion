@@ -3,10 +3,10 @@ struct Euler <: TimeScheme end
 struct EulerCache <: Cache
 end
 
-compute_sL(::Euler, scheme::space_scheme) = compute_sL(scheme)
-compute_sR(::Euler, scheme::space_scheme) = compute_sR(scheme)
+compute_sL(::Euler, scheme::SpaceScheme) = compute_sL(scheme)
+compute_sR(::Euler, scheme::SpaceScheme) = compute_sR(scheme)
 
 
-numflux(::Euler, integrator::Integrator, args...) = numflux(integrator.space_scheme, integrator, args...)
+numflux(::Euler, space_scheme::SpaceScheme, args...) = numflux(space_scheme, args...)
 
-num_flux
+numflux!(::Euler, integrator::Integrator, args...) = numflux!(integrator.space_scheme, integrator, args...)

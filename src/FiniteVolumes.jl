@@ -1,20 +1,24 @@
 module FiniteVolumes
 
-
     using LinearAlgebra
-    using Plots
     using UnPack
 
     include("parameters.jl")
-    include("abstract_cache.jl")
+
+    abstract type Cache end
+
+
     include("schemes/abstract_schemes.jl")
     include("equation.jl")
 
+    export DefaultLogConfig
     include("log.jl")
 
     include("integrator.jl")
     include("problem.jl")
     include("solution.jl")
+
+    include("CFL.jl")
 
     include("schemes/Euler.jl")
     include("schemes/Rusanov.jl")
@@ -23,6 +27,13 @@ module FiniteVolumes
 
     include("solve.jl")
 
+    export OneDMesh
+    export Parameters
+
+    export Equation
+
+    export Euler
+    export Rusanov
 
     export solve
 

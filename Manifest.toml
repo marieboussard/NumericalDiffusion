@@ -2,7 +2,7 @@
 
 julia_version = "1.10.4"
 manifest_format = "2.0"
-project_hash = "ac1187e548c6ab173ac57d4e72da1620216bce54"
+project_hash = "31b09baea4aa439a173ea4b79b5f5f6592eeb56e"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -23,6 +23,11 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 version = "0.3.23+4"
+
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
 
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]

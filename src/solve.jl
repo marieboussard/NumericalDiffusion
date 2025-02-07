@@ -1,4 +1,4 @@
-function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_config = DefaultLogConfig, kwargs...)
+function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_config = DefaultLogConfig, name="", kwargs...)
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
 
@@ -7,37 +7,38 @@ function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_c
         performstep!(integrator)
         loopfooter!(integrator)
     end
-    Solution(integrator)
+    Solution(integrator, name)
 end
 
 function performstep!(integrator::Integrator)
     @unpack dx = integrator.params.mesh
     @unpack u, uprev, dt, flux = integrator
     numflux!(integrator)
-    @. u = uprev - dt / dx * (flux[2:end,:] .- flux[1:end-1,:])
+    @views fluxforward = flux[2:end,:]
+    @views fluxbackward = flux[1:end-1,:]
+    @. u = uprev - dt / dx * (fluxforward .- fluxbackward)
 end
 
 function loopheader!(integrator::Integrator)
-    @unpack problem = integrator
-    @unpack params, scheme, equation = problem
-    integrator.dt = min(compute_dt_with_CFL(integrator), params.Tf - integrator.t)
+    @unpack params = integrator
+    dt_CFL!(integrator)
 end
 
 function loopfooter!(integrator::Integrator)
-    integrator.t += dt
+    integrator.t += integrator.dt
     integrator.niter += 1
     integrator.uprev .= integrator.u
     update_log!(integrator)
 end
 
 function update_log!(integrator::Integrator)
-    @unpack log_book = integrator
-    @unpack ulog, tlog, dtlog = log_book.config
+    @unpack log = integrator
+    @unpack ulog, tlog, dtlog = log.config
     # STORE INTERMEDIATE STATES OF THE SOLUTION 
-    ulog ? push!(log_book.u_log, copy(integrator.u)) : nothing
+    ulog ? push!(log.u_log, copy(integrator.u)) : nothing
     # STORE INTERMEDIATE TIMES OF THE SIMULATION
-    tlog ? push!(log_book.t_log, integrator.t) : nothing 
+    tlog ? push!(log.t_log, integrator.t) : nothing 
     # STORE INTERMEDIATE TIMESTEPS OF THE SIMULATION
-    dtlog ? push!(log_book.dt_log, integrator.dt) : nothing
+    dtlog ? push!(log.dt_log, integrator.dt) : nothing
 end
 

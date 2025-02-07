@@ -1,14 +1,30 @@
 struct Solution
-    problem::Problem
+    # PROBLEM COMPONENTS
+    equation::Equation
+    params::Parameters
+    time_scheme::TimeScheme 
+    space_scheme::SpaceScheme
 
-    status::string      # SUCCESS or MAXITERS
+    status::String      # SUCCESS or MAXITERS
     niter::Int          # Final number of iterations
 
     u
-    dt                  # Final timestep
-    t                   # Time reached
+    uinit
+    dt::Float64                  # Final timestep
+    t::Float64                   # Time reached
 
     log::LogBook
-    name::string
+    name::String
+
+    function Solution(integrator::Integrator, name::String)
+        if integrator.t == integrator.params.tf
+            status = "SUCCES"
+        elseif integrator.niter == integrator.opts.maxiter 
+            status = "MAXITER"
+        else
+            status = "FAILED"
+        end
+        new(integrator.equation, integrator.params, integrator.time_scheme, integrator.space_scheme, status, integrator.niter, integrator.u, integrator.uinit, integrator.dt, integrator.t, integrator.log, name)
+    end
 
 end

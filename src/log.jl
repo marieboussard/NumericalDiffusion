@@ -4,7 +4,7 @@ struct LogConfig
     dtlog::Bool
 end
 
-DefaultLogConfig = LogConfig(false, false, false)
+const DefaultLogConfig = LogConfig(false, false, false)
 
 struct LogBook
     config::LogConfig

@@ -1,8 +1,8 @@
 struct IntegratorOptions
-
     maxiter::Int
-
 end
+
+struct IntegratorCache <: Cache end
 
 mutable struct Integrator
 
@@ -18,8 +18,8 @@ mutable struct Integrator
     flux
 
     niter::Int
-    dt
-    t
+    dt::Float64
+    t::Float64
 
     opts::IntegratorOptions
     
@@ -28,16 +28,18 @@ mutable struct Integrator
     integrator_cache::Cache
 
     log::LogBook
+
+    cfl::Float64
     
 
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config)
         uinit = equation.initcond.(params.mesh.x)
-        u_prev = copy(uinit)
-        u = zero(u_prev)
+        uprev = copy(uinit)
+        u = zero(uprev)
 
-        flux = zeros(params.mesh.Nx, equation.p)
+        flux = zeros(params.mesh.Nx+1, equation.p)
 
-        new(equation, params, time_scheme, space_scheme, u, uprev, uinit, flux, 0, 0.0, params.t0, IntegratorOptions(maxiter), initialize_cache(space_scheme), init_cache(time_scheme), init_cache(integrator), LogBook(log_config))
+        new(equation, params, time_scheme, space_scheme, u, uprev, uinit, flux, 0, 0.0, params.t0, IntegratorOptions(maxiter), init_cache(space_scheme), init_cache(time_scheme), init_cache(), LogBook(log_config), zero(Float64))
     end
 
 end

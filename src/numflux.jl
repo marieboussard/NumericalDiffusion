@@ -7,12 +7,11 @@ function view_stencil(u, j, sL, sR)
     end
 end
 
-view_stencil(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, integrator.time_cache.sL, integrator.time_cache.sR)
+view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, compute_sL(integrator.time_scheme, integrator.space_scheme), compute_sR(integrator.time_scheme, integrator.space_scheme))
 
-view_stencil(integrator::Integrator, j::Int, scheme::Scheme) = view_stencil(integrator.uprev, j, scheme.cache.sL, scheme.cache.sR)
-
-function numflux(integrator::Integrator)
-    for i ∈ 2:Nx+1
-        integrator.flux[i,:] .= numflux(time_scheme, integrator, view_stencil(integrator, i-1))
+function numflux!(integrator::Integrator)
+    for i ∈ 2:integrator.params.mesh.Nx+1
+        numflux!(integrator.time_scheme, integrator, view_stencil!(integrator, i-1), i)
     end
+    integrator.flux[1,:] .= integrator.flux[end,:]
 end

@@ -8,7 +8,7 @@ struct OneDMesh <: Mesh
     x::Vector{Float64}
     interfaces::Vector{Float64}
 
-    function OneDMesh(Nx::Int, xmin::Float64, xmax::Float64)
+    function OneDMesh(Nx::Int, xmin::Real, xmax::Real)
         dx = (xmax - xmin) / Nx
         x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
         interfaces = collect(LinRange(xmin, xmax, Nx + 1))
