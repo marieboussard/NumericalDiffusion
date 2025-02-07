@@ -27,5 +27,6 @@ function numflux!(::Rusanov, integrator::Integrator, u, i, args...)
     @views uL = u[1,:]
     @views uR = u[2,:]
     @views intflux = integrator.flux[i,:]
-    intflux .= (flux(uL) .+ flux(uR)) ./ 2 - CFL_cond(u, integrator.equation)./ 2 * (uR .- uL)
+    CFL_local!(integrator, u)
+    intflux .= (flux(uL) .+ flux(uR)) ./ 2 - integrator.cache.cfl_loc./ 2 * (uR .- uL)
 end

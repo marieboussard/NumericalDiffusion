@@ -1,5 +1,6 @@
 using FiniteVolumes
 using Plots
+using BenchmarkTools
 
 # Domain definition
 Nx = 100

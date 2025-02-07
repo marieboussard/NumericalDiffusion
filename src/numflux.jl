@@ -7,7 +7,19 @@ function view_stencil(u, j, sL, sR)
     end
 end
 
-view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, compute_sL(integrator.time_scheme, integrator.space_scheme), compute_sR(integrator.time_scheme, integrator.space_scheme))
+function view_stencil!(integrator::Integrator, j::Int)
+    @unpack cache, uprev = integrator
+    @unpack sL, sR, stencil = cache
+
+    stencil .= mod1.(j - sL + 1 : j + sR, size(uprev, 1)) 
+    if ndims(uprev) == 1 
+        return view(uprev,stencil)
+    else
+        return view(uprev,stencil, :)
+    end
+end
+
+#view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, compute_sL(integrator.time_scheme, integrator.space_scheme), compute_sR(integrator.time_scheme, integrator.space_scheme))
 
 function numflux!(integrator::Integrator)
     for i ∈ 2:integrator.params.mesh.Nx+1

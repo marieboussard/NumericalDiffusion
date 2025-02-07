@@ -2,7 +2,15 @@ struct IntegratorOptions
     maxiter::Int
 end
 
-struct IntegratorCache <: Cache end
+mutable struct IntegratorCache <: Cache 
+    cfl_loc::Float64
+
+    sL::Int
+    sR::Int
+    stencil
+
+    IntegratorCache(sL, sR) = new(zero(Float64), sL, sR, zeros(Int, sL + sR))
+end
 
 mutable struct Integrator
 
@@ -25,7 +33,7 @@ mutable struct Integrator
     
     space_cache::Cache
     time_cache::Cache
-    integrator_cache::Cache
+    cache::Cache
 
     log::LogBook
 
@@ -37,9 +45,10 @@ mutable struct Integrator
         uprev = copy(uinit)
         u = zero(uprev)
 
-        flux = zeros(params.mesh.Nx+1, equation.p)
+        flux = zeros(Float64, (params.mesh.Nx+1, equation.p))
+        sL, sR = compute_sL(time_scheme, space_scheme), compute_sR(time_scheme, space_scheme)
 
-        new(equation, params, time_scheme, space_scheme, u, uprev, uinit, flux, 0, 0.0, params.t0, IntegratorOptions(maxiter), init_cache(space_scheme), init_cache(time_scheme), init_cache(), LogBook(log_config), zero(Float64))
+        new(equation, params, time_scheme, space_scheme, u, uprev, uinit, flux, 0, 0.0, params.t0, IntegratorOptions(maxiter), init_cache(space_scheme), init_cache(time_scheme), init_cache(sL, sR), LogBook(log_config), zero(Float64))
     end
 
 end

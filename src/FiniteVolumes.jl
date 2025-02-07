@@ -20,8 +20,8 @@ module FiniteVolumes
 
     include("CFL.jl")
 
-    include("schemes/Euler.jl")
-    include("schemes/Rusanov.jl")
+    include("schemes/euler.jl")
+    include("schemes/rusanov.jl")
     include("numflux.jl")
     include("cache.jl")
 

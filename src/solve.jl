@@ -20,7 +20,6 @@ function performstep!(integrator::Integrator)
 end
 
 function loopheader!(integrator::Integrator)
-    @unpack params = integrator
     dt_CFL!(integrator)
 end
 
