@@ -27,35 +27,6 @@ integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogCon
 
 #u, fu = FiniteVolumes.view_stencil!(integrator, 3)
 
-function numflux2!(::Rusanov, integrator::Integrator, u, i, args...)
-    @unpack equation, cache, fnum = integrator
-    @unpack flux = equation
-
-    uL = view(u, 1, :)
-    uR = view(u, 2, :)
-
-    cache.cfl_loc = maximum(abs, u)
-    
-    fnum_i = view(fnum, i, :)
-
-    @show @allocated @. fnum_i = (flux(uL) + flux(uR)) / 2 
-    
-    @show @allocated @. fnum_i -= cache.cfl_loc/ 2 * (uR - uL)
-end
-
-function numflux3!(::Rusanov, integrator::Integrator, u, i, args...)
-    @unpack equation, cache, fnum = integrator
-    @unpack flux = equation
-
-    uL = view(u, 1, :)
-    uR = view(u, 2, :)
-
-    cache.cfl_loc = maximum(abs, u)
-    
-    @show @allocated fnum[i,:] .= (flux(uL) .+ flux(uR)) ./ 2 
-    
-    @show @allocated @. fnum[i,:] .-= cache.cfl_loc./ 2 * (uR .- uL)
-end
 
 using FiniteVolumes: view_stencil!
 function numflux4!(::Rusanov, integrator::Integrator, i)
@@ -71,3 +42,41 @@ function numflux4!(::Rusanov, integrator::Integrator, i)
     nothing
 end
 
+function numflux5!(::Rusanov, integrator::Integrator, i, args...)
+    @show @allocated view_stencil!(integrator, i-1)
+    @unpack equation, cache, fnum, fcont, uprev = integrator
+    @unpack stencil = integrator.cache
+    # @show @allocated uL   = view(uprev, stencil[1], :)
+    # @show @allocated uR   = view(uprev, stencil[2], :)
+
+    # @show @allocated @views fL = fcont[stencil[1], :]
+    # @show @allocated @inbounds fL   = view(fcont, stencil[1], :)
+    # @show typeof(fL)
+    # @show @allocated fR   = view(fcont, stencil[2], :)
+    
+    # @show @allocated fnum_i = view(fnum, i, :)
+    # @show @allocated fnum_i .= (fL .+ fR) ./ 2 - cache.cfl_loc./ 2 * (uR .- uL)
+    @show @allocated fnum[i] = (fcont[stencil[1]] + fcont[stencil[2]]) *0.5
+
+    for j in 1:equation.p
+        @show @allocated fnum[i,j] = (fcont[stencil[1], j] + fcont[stencil[2],j]) *0.5
+        @show @allocated fnum[i,j] -= cache.cfl_loc.*0.5 * (uprev[stencil[2],j] - uprev[stencil[1],j])
+    end
+
+    @inbounds for j in 1:equation.p
+        @show @allocated uL   = view(uprev, stencil[1], j)
+        @show @allocated uR   = view(uprev, stencil[2], j)
+
+        @show @allocated @views fL = fcont[stencil[1], j]
+        @show @allocated @inbounds fL   = view(fcont, stencil[1], j)
+        @show typeof(fL)
+        @show @allocated fR   = view(fcont, stencil[2], j)
+        
+
+        @show @allocated fnum_ij = view(fnum, i, j)
+        @show typeof(fnum_ij)
+        @show @allocated @. fnum_ij = (fL + fR) *0.5
+        @show @allocated @. fnum_ij -= cache.cfl_loc*0.5 * (uR - uL)
+    end
+
+end

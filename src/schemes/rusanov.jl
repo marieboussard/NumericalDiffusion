@@ -20,25 +20,7 @@ end
 function numflux!(::Rusanov, integrator::Integrator, i, args...)
     @unpack equation, cache, fnum, fcont, uprev = integrator
     @unpack stencil = integrator.cache
-
-    #=
-    I = stencil[1]
-    J = stencil[2]
-
-    uL   = view(uprev, stencil[1])
-    uR   = view(uprev, stencil[2])
-
-    
-    fL   = view(fcont, stencil[1])
-    fR   = view(fcont, stencil[2])
-    #fnum_i = view(fnum, i, :)
-    =#
-    cache.cfl_loc = maximum([abs.(uprev[stencil[1]]), abs.(uprev[stencil[2]])])
-    fnum[i] = 0.5 * (fcont[stencil[1]] + fcont[stencil[2]]) - 0.5 * cache.cfl_loc * (uprev[stencil[2]] - uprev[stencil[1]])
-    #fnum_i .= (fL .+ fR) ./ 2 - cache.cfl_loc./ 2 * (uR .- uL)
-    #=
-    @inbounds @simd for j in eachindex(fnum_i)
-        fnum[i,j] = 0.5 * (fL[j] + fR[j]) - 0.5 * cache.cfl_loc * (uR[j] - uL[j])
+    for j in 1:equation.p
+        fnum[i,j] = (fcont[stencil[1], j] + fcont[stencil[2],j]) *0.5 - cache.cfl_loc.*0.5 * (uprev[stencil[2],j] - uprev[stencil[1],j])
     end
-    =#
 end
