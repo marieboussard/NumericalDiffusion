@@ -41,3 +41,5 @@ end
 
 dimension(::OneDMesh) = 1
 dimension(::TwoDMesh) = 2
+
+abstract type Flux end

@@ -27,5 +27,3 @@ end
 #     end
 #     integrator.flux[1,:] .= integrator.flux[end,:]
 # end
-
-numflux!(integrator::Integrator) = numflux!(integrator.time_scheme, integrator)

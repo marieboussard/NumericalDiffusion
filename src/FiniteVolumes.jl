@@ -6,6 +6,8 @@ module FiniteVolumes
     include("parameters.jl")
 
     abstract type Cache end
+    abstract type tcacheType <: Cache end
+    abstract type scacheType <: Cache end
 
 
     include("schemes/abstract_schemes.jl")
