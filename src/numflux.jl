@@ -8,22 +8,27 @@ function view_stencil(u, j, sL, sR)
 end
 
 function view_stencil!(integrator::Integrator, j::Int)
-    @unpack cache, params = integrator
+    @unpack cache, params, uprev, fcont = integrator
     @unpack sL, sR, stencil = cache
-
     stencil .= mod1.(j - sL + 1 : j + sR, params.mesh.Nx) 
-    # if ndims(uprev) == 1 
-    #     return view(uprev,stencil)
-    # else
-    #     return view(uprev,stencil, :)
-    # end
+    nothing
+    #=
+    if ndims(uprev) == 1 
+        return view(uprev,stencil), view(fcont, stencil)
+    else
+        return view(uprev,stencil, :), view(fcont,stencil, :)
+    end
+    =#
 end
+
 
 #view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, compute_sL(integrator.time_scheme, integrator.space_scheme), compute_sR(integrator.time_scheme, integrator.space_scheme))
 
-# function numflux!(integrator::Integrator)
-#     for i ∈ 2:integrator.params.mesh.Nx+1
-#         numflux!(integrator.time_scheme, integrator, view_stencil!(integrator, i-1), i)
-#     end
-#     integrator.flux[1,:] .= integrator.flux[end,:]
-# end
+function numflux!(integrator::Integrator)
+    for i ∈ 1:integrator.params.mesh.Nx
+        view_stencil!(integrator, i)
+        numflux!(integrator.time_scheme, integrator, i+1)
+    end
+    integrator.fnum[end,:] .= integrator.fnum[1,:]
+    nothing
+end

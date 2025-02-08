@@ -45,4 +45,10 @@ module FiniteVolumes
     export numflux!
     export solve
 
+    export loopfooter!
+    export loopheader!
+    export performstep!
+    export update_log!
+    export dt_CFL!
+
 end

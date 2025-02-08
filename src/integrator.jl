@@ -4,18 +4,18 @@ end
 
 mutable struct IntegratorCache <: Cache 
 
-    cfl_loc
+    cfl_loc::Float64
     sL::Int
     sR::Int
-    stencil
+    stencil::Vector{Int}
 
     #IntegratorCache(sL, sR) = new(zero(Float64), sL, sR, zeros(Int, sL + sR))
-    function IntegratorCache(Nx, sL, sR)
-        new(zeros(Float64, Nx), sL, sR, zeros(Int, sL + sR))
+    function IntegratorCache(sL, sR)
+        new(zero(Float64), sL, sR, zeros(Int, sL + sR))
     end
 end
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -23,11 +23,11 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     time_scheme::tschemeType 
     space_scheme::sschemeType
 
-    u
-    uprev
-    uinit
-    fnum
-    fcont
+    u::dataType
+    uprev::dataType
+    uinit::dataType
+    fnum::dataType
+    fcont::dataType
 
     niter::Int
     dt::Float64
@@ -48,7 +48,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         
         # INIT SOLUTION AND FLUX
         uinit = equation.initcond.(params.mesh.x)
-        fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
+        #fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
+        fnum = zeros(Float64, params.mesh.Nx+1)
         fcont = equation.flux.(uinit)
         uprev = copy(uinit)
         u = zero(uprev)
@@ -60,14 +61,14 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         opts    = IntegratorOptions(maxiter)
 
         # INIT CACHE
-        space_cache         = init_cache(space_scheme, params.mesh.Nx)
+        space_cache         = init_cache(space_scheme)
         time_cache          = init_cache(time_scheme)
-        integrator_cache    = IntegratorCache(params.mesh.Nx, sL, sR)
+        integrator_cache    = IntegratorCache(sL, sR)
 
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme),typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
     end
 
 

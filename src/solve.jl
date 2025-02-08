@@ -13,10 +13,10 @@ end
 function performstep!(integrator::Integrator)
     @unpack dx = integrator.params.mesh
     @unpack u, uprev, dt, fnum = integrator
-    numflux!(integrator.time_scheme, integrator)
+    numflux!(integrator)
     @views fluxforward = fnum[2:end,:]
     @views fluxbackward = fnum[1:end-1,:]
-    @. u = uprev - dt / dx * (fluxforward .- fluxbackward)
+    @. u = uprev - dt / dx * (fluxforward - fluxbackward)
 end
 
 function loopheader!(integrator::Integrator)

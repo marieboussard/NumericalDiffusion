@@ -7,10 +7,10 @@ function CFL_cond!(integrator::Integrator)
     integrator.cfl = maximum(abs.(equation.Dflux(uprev)))
 end
 
-function CFL_local!(integrator::Integrator, u)
-    @unpack equation, cache = integrator
-    cache.cfl_loc = maximum(abs.(equation.Dflux(u)))
-end
+# function CFL_local!(integrator::Integrator, u)
+#     @unpack equation, cache = integrator
+#     cache.cfl_loc = maximum(abs.(equation.Dflux(u)))
+# end
 
 
 function dt_CFL!(integrator::Integrator)
