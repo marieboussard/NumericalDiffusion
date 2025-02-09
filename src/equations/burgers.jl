@@ -1,0 +1,1 @@
+struct Burgers <: AbstractEquation end

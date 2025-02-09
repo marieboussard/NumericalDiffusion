@@ -29,7 +29,7 @@ function loopfooter2!(integrator::Integrator)
     integrator.t += integrator.dt
     integrator.niter += 1
     integrator.uprev .= integrator.u
-    integrator.fcont .= integrator.equation.flux.(integrator.u)
+    integrator.fcont .= integrator.equation.funcs.flux.(integrator.u)
     update_log!(integrator)
 end
 

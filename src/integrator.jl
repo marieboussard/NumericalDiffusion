@@ -28,6 +28,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     uinit::dataType
     fnum::dataType
     fcont::dataType
+    Dfcont::dataType
 
     niter::Int
     dt::Float64
@@ -54,7 +55,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         else
             fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
         end
-        fcont = equation.flux.(uinit)
+        fcont = equation.funcs.flux.(uinit)
+        Dfcont = equation.funcs.Dflux.(uinit)
         uprev = copy(uinit)
         u = zero(uprev)
         
@@ -72,7 +74,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, Dfcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
     end
 
 

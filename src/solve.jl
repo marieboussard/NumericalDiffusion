@@ -33,7 +33,8 @@ function loopfooter!(integrator::Integrator)
     integrator.t += integrator.dt
     integrator.niter += 1
     integrator.uprev .= integrator.u
-    integrator.fcont .= integrator.equation.flux.(integrator.u)
+    integrator.fcont .= integrator.equation.funcs.flux.(integrator.u)
+    integrator.Dfcont .= integrator.equation.funcs.Dflux.(integrator.u)
     update_log!(integrator)
 end
 
@@ -41,10 +42,10 @@ function update_log!(integrator::Integrator)
     @unpack log = integrator
     @unpack ulog, tlog, dtlog = log.config
     # STORE INTERMEDIATE STATES OF THE SOLUTION 
-    ulog ? push!(log.u_log, copy(integrator.u)) : nothing
+    ulog ? push!(log.ulog, copy(integrator.u)) : nothing
     # STORE INTERMEDIATE TIMES OF THE SIMULATION
-    tlog ? push!(log.t_log, integrator.t) : nothing 
+    tlog ? push!(log.tlog, integrator.t) : nothing 
     # STORE INTERMEDIATE TIMESTEPS OF THE SIMULATION
-    dtlog ? push!(log.dt_log, integrator.dt) : nothing
+    dtlog ? push!(log.dtlog, integrator.dt) : nothing
 end
 

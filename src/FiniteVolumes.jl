@@ -11,7 +11,9 @@ module FiniteVolumes
 
 
     include("schemes/abstract_schemes.jl")
-    include("equation.jl")
+    include("equations/abstract_equation.jl")
+    include("equations/equation_fun.jl")
+    include("equations/equation.jl")
 
     export DefaultLogConfig
     include("log.jl")
@@ -50,5 +52,11 @@ module FiniteVolumes
     export performstep!
     export update_log!
     export dt_CFL!
+
+    export Scalar
+    export System
+    export EquationFun
+
+    export LogConfig
 
 end
