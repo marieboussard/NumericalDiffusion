@@ -33,8 +33,11 @@ function loopfooter!(integrator::Integrator)
     integrator.t += integrator.dt
     integrator.niter += 1
     integrator.uprev .= integrator.u
-    integrator.fcont .= integrator.equation.funcs.flux.(integrator.u)
-    integrator.Dfcont .= integrator.equation.funcs.Dflux.(integrator.u)
+    # integrator.fcont .= integrator.equation.funcs.flux.(integrator.u)
+    # integrator.Dfcont .= integrator.equation.funcs.Dflux.(integrator.u)
+    integrator.fcont .= flux(integrator.equation.funcs, integrator.u)
+    integrator.Dfcont .= Dflux(integrator.equation.funcs, integrator.u)
+
     update_log!(integrator)
 end
 

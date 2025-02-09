@@ -15,6 +15,8 @@ module FiniteVolumes
     include("equations/equation_fun.jl")
     include("equations/equation.jl")
 
+    include("equations/burgers.jl")
+
     export DefaultLogConfig
     include("log.jl")
 
@@ -58,5 +60,8 @@ module FiniteVolumes
     export EquationFun
 
     export LogConfig
+
+    export Burgers
+    export BurgersArticle
 
 end

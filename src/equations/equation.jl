@@ -5,9 +5,9 @@
 #     initcond
 # end
 
-struct Equation{T<:EquationType, F1} <: AbstractEquation{T}
+struct Equation{T<:EquationType, equationFunType<:AbstractEquationFun, F1} <: AbstractEquation{T}
     p::Int
     eqtype::T
-    funcs::EquationFun
+    funcs::equationFunType
     initcond::F1
 end

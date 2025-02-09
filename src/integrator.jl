@@ -55,8 +55,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         else
             fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
         end
-        fcont = equation.funcs.flux.(uinit)
-        Dfcont = equation.funcs.Dflux.(uinit)
+        fcont = flux(equation.funcs, uinit)
+        Dfcont = Dflux(equation.funcs, uinit)
         uprev = copy(uinit)
         u = zero(uprev)
         

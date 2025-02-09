@@ -4,7 +4,7 @@ end
 
 function CFL_cond!(::Scalar, integrator::Integrator)
     @unpack equation, uprev = integrator
-    integrator.cfl = maximum(abs.(equation.funcs.Dflux(uprev)))
+    integrator.cfl = maximum(abs.(Dflux(equation.funcs, uprev)))
 end
 
 # function CFL_local!(integrator::Integrator, u)
