@@ -49,7 +49,11 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT SOLUTION AND FLUX
         uinit = equation.initcond.(params.mesh.x)
         #fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
-        fnum = zeros(Float64, params.mesh.Nx+1)
+        if equation.p == 1
+            fnum = zeros(Float64, params.mesh.Nx+1)
+        else
+            fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
+        end
         fcont = equation.flux.(uinit)
         uprev = copy(uinit)
         u = zero(uprev)

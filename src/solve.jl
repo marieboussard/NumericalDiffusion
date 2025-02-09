@@ -11,12 +11,18 @@ function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_c
 end
 
 function performstep!(integrator::Integrator)
-    @unpack dx = integrator.params.mesh
-    @unpack u, uprev, dt, fnum = integrator
+    @unpack dx, Nx = integrator.params.mesh
+    @unpack u, uprev, dt, fnum, equation = integrator
     numflux!(integrator)
-    @views fluxforward = fnum[2:end,:]
-    @views fluxbackward = fnum[1:end-1,:]
-    @. u = uprev - dt / dx * (fluxforward - fluxbackward)
+    # @views fluxforward = fnum[2:end,:]
+    # @views fluxbackward = fnum[1:end-1,:]
+    # @. u = uprev - dt / dx * (fluxforward - fluxbackward)
+
+    for i in 1:Nx
+        for j in 1:equation.p
+            u[i,j] = uprev[i,j] - dt / dx * (fnum[i+1,j] - fnum[i,j])
+        end
+    end
 end
 
 function loopheader!(integrator::Integrator)

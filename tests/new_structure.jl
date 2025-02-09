@@ -80,3 +80,14 @@ function numflux5!(::Rusanov, integrator::Integrator, i, args...)
     end
 
 end
+
+function performstep2!(integrator::Integrator)
+    @unpack dx = integrator.params.mesh
+    @unpack u, uprev, dt, fnum, equation, params = integrator
+    @show @allocated numflux!(integrator)
+    for i in 1:params.mesh.Nx
+        for j in 1:equation.p
+            @show @allocated u[i,j] = uprev[i,j] - dt / dx * (fnum[i+1,j] - fnum[i,j])
+        end
+    end
+end
