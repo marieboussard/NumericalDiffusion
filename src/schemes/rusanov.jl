@@ -18,8 +18,8 @@ function numflux(::Rusanov, equation, u, args...)
 end
 
 function numflux!(::Rusanov, integrator::Integrator, i, args...)
-    @unpack equation, cache, fnum, fcont, Dfcont, uprev = integrator
-    @unpack stencil = integrator.cache
+    @unpack equation, cache, fnum, fcont, uprev = integrator
+    @unpack stencil = cache
     CFL_local!(equation.eqtype, integrator)
     for j in 1:equation.p
         # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))

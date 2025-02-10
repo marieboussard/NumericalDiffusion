@@ -5,16 +5,21 @@ module FiniteVolumes
 
     include("parameters.jl")
 
+    abstract type AbstractSourceDiscretize end
+
     abstract type Cache end
     abstract type tcacheType <: Cache end
     abstract type scacheType <: Cache end
+    abstract type sourceCacheType <: Cache end
 
 
     include("schemes/abstract_schemes.jl")
     include("equations/abstract_equation.jl")
     include("equations/equation_fun.jl")
+    include("equations/source.jl")
     include("equations/equation.jl")
 
+    abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
 
     export DefaultLogConfig
     include("log.jl")
@@ -30,6 +35,7 @@ module FiniteVolumes
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
+    include("schemes/source_discretization.jl")
     include("numflux.jl")
     include("cache.jl")
 
