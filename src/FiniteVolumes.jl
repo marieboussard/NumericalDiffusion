@@ -15,7 +15,6 @@ module FiniteVolumes
     include("equations/equation_fun.jl")
     include("equations/equation.jl")
 
-    include("equations/burgers.jl")
 
     export DefaultLogConfig
     include("log.jl")
@@ -25,6 +24,9 @@ module FiniteVolumes
     include("solution.jl")
 
     include("CFL.jl")
+    
+    include("equations/burgers.jl")
+    include("equations/saint_venant.jl")
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
@@ -63,5 +65,8 @@ module FiniteVolumes
 
     export Burgers
     export BurgersArticle
+
+    export SaintVenant
+    export SaintVenantAtRest
 
 end

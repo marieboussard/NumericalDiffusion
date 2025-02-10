@@ -15,7 +15,7 @@ mutable struct IntegratorCache <: Cache
     end
 end
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, dataTypeD <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -28,7 +28,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     uinit::dataType
     fnum::dataType
     fcont::dataType
-    Dfcont::dataType
+    Dfcont::dataTypeD
 
     niter::Int
     dt::Float64
@@ -48,7 +48,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config)
         
         # INIT SOLUTION AND FLUX
-        uinit = equation.initcond.(params.mesh.x)
+        uinit = equation.initcond(params.mesh.x)
         #fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
         if equation.p == 1
             fnum = zeros(Float64, params.mesh.Nx+1)
@@ -74,7 +74,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, Dfcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(Dfcont), typeof(space_cache), typeof(time_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, Dfcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, logbook, zero(Float64))
     end
 
 

@@ -3,9 +3,28 @@ function CFL_cond(u, equation::Equation)
 end
 
 function CFL_cond!(::Scalar, integrator::Integrator)
-    @unpack equation, uprev = integrator
-    integrator.cfl = maximum(abs.(Dflux(equation.funcs, uprev)))
+    @unpack equation, Dfcont = integrator
+    # integrator.cfl = maximum(abs.(Dflux(equation.funcs, uprev)))
+    integrator.cfl = 0.0
+    for k in eachindex(Dfcont)
+        integrator.cfl = max(integrator.cfl, abs(Dfcont[k]))
+    end
 end
+
+function CFL_local!(::Scalar, integrator::Integrator)
+    @unpack cache, Dfcont = integrator
+    @unpack stencil = cache
+    # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
+    cache.cfl_loc = 0.0
+    for k in eachindex(stencil)
+        cache.cfl_loc = max(cache.cfl_loc, abs(Dfcont[stencil[k]]))
+    end
+end
+
+CFL_cond!(::System, integrator::Integrator) = CFL_cond!(integrator.equation.funcs, integrator)
+CFL_local!(::System, integrator::Integrator) = CFL_local!(integrator.equation.funcs, integrator)
+
+
 
 # function CFL_local!(integrator::Integrator, u)
 #     @unpack equation, cache = integrator
