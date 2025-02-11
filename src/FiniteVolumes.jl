@@ -35,7 +35,6 @@ module FiniteVolumes
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
-    include("schemes/source_discretization.jl")
     include("numflux.jl")
     include("cache.jl")
 

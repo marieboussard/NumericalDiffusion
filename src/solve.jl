@@ -12,7 +12,8 @@ end
 
 function performstep!(integrator::Integrator)
     @unpack dx, Nx = integrator.params.mesh
-    @unpack u, uprev, dt, fnum, equation, sourceterm = integrator
+    @unpack u, uprev, dt, fnum, equation, cache = integrator
+    @unpack sourceterm = cache
     numflux!(integrator)
     # @views fluxforward = fnum[2:end,:]
     # @views fluxbackward = fnum[1:end-1,:]
@@ -27,7 +28,7 @@ function performstep!(integrator::Integrator)
     if has_source(equation.source)
         for i in 1:Nx
             for j in 1:equation.p
-                u[i,j] += dt * integrator.sourceterm[i,j]
+                u[i,j] += dt * sourceterm[i,j]
             end
         end
     end

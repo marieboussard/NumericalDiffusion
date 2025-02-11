@@ -105,6 +105,7 @@ end
 
 z(ts::TopoSource, x::AbstractVector) = ts.z.(x)
 Dz(ts::TopoSource, x::AbstractVector) = ts.Dz.(x)
+Dz(ts::TopoSource, x::Real) = ts.Dz(x)
 
 struct TopoSourceCache{znumType, DznumType} <: sourceCacheType
     znum::znumType
@@ -112,7 +113,7 @@ struct TopoSourceCache{znumType, DznumType} <: sourceCacheType
     function TopoSourceCache(topo_source::TopoSource, source_discretize::SourceDiscretize{SaintVenant}, x)
         znum = z(topo_source, x)
         Dznum = init_Dznum(source_discretize, topo_source, x)
-        new{typeof(znum), typeof{Dznum}}(znum, Dznum)
+        new{typeof(znum), typeof(Dznum)}(znum, Dznum)
     end
 end
 
@@ -125,18 +126,19 @@ init_Dznum(::HRDisc, args...) = nothing
 function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, x)
     res = zero(v)
     for i in eachindex(view(v, :, 1))
-        res[i,2] = - v[:,1] .*g.* Dz(topo_source, x)
+        res[i,2] = - v[i,1] * g * Dz(topo_source, x[i])
     end
     res
 end
 function discretize_sourceterm!(::Pointwise, integrator::Integrator)
-    @unpack uprev, sourceterm, source_cache = integrator
+    @unpack uprev, cache, source_cache = integrator
     @views h = uprev[:,1]
     for i in eachindex(h)
        cache.sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
     end
 end
 
+init_sourceterm(source::TopoSource, uinit, x) = discretize_sourceterm(source.source_discretize, source, uinit, x)
 
 # EXAMPLE OF CONFIGURATIONS FOR SAINT VENANT EQUATION
 
@@ -145,7 +147,7 @@ end
 freq = 1.0
 height = 0.5
 z(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
-Dz(x) = pi*freq*(sin.(2*pi*freq * x))*height
+Dz(x) = pi*freq*(sin(2*pi*freq * x))*height
 BumpTopo = TopoSource(z, Dz, Pointwise())
 
 SaintVenantAtRest = Equation(2, System(), SaintVenant(), x -> init_lake_at_rest(x,z), BumpTopo)

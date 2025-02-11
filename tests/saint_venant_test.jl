@@ -1,5 +1,5 @@
 using FiniteVolumes
-# using Plots
+using Plots
 using BenchmarkTools
 using UnPack
 
@@ -15,3 +15,5 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 equation = SaintVenantAtRest
 
 sol = solve(equation, params, Euler(), Rusanov());
+
+plot(mesh.x, sol.u[:,1])

@@ -5,5 +5,5 @@ init_cache(::Euler) = EulerCache()
 init_cache(::Rusanov) = RusanovCache()
 
 # INIT CACHE FOR SOURCE
-init_cache(::TopoSource, args...) = TopoSourceCache(args...)
+init_cache(ts::TopoSource, args...) = TopoSourceCache(ts, args...)
 init_cache(::NoSource, args...) = nothing

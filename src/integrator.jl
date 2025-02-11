@@ -22,17 +22,15 @@ end
 init_Dfcont(::Scalar, equation, uinit) = Dflux(equation.funcs, uinit)
 init_Dfcont(::System, equation, uinit) = nothing
 init_sourceterm(::NoSource, args...) = nothing
-init_sourceterm(source::TopoSource, uinit, x) = discretize_sourceterm(source.source_discretization, source, uinit, x)
 
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, sourceDiscType, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType<:sourceCacheType}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType<:sourceCacheType}
 
     # PROBLEM COMPONENTS
     equation::equationType
     params::parametersType
     time_scheme::tschemeType 
     space_scheme::sschemeType
-    source_discretize::sourceDiscType
 
     u::dataType
     uprev::dataType
@@ -84,7 +82,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(source_discretize), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, source_discretize, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook, zero(Float64))
     end
 
 
