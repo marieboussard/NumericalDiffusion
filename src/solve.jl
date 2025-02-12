@@ -2,7 +2,7 @@ function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_c
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
 
-    while integrator.t < integrator.params.tf && integrator.t < maxiter
+    while integrator.t < integrator.params.tf && integrator.niter < maxiter
         loopheader!(integrator)
         performstep!(integrator)
         loopfooter!(integrator)

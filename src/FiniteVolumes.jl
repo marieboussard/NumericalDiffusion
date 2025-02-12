@@ -73,5 +73,16 @@ module FiniteVolumes
 
     export SaintVenant
     export SaintVenantAtRest
+    export SaintVenantFlat
+
+    export discretize_sourceterm!
+    export Pointwise
+
+    export flux 
+    export Dflux
+    export has_source
+
+    export z
+    export Dz
 
 end

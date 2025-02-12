@@ -29,9 +29,9 @@ function numflux!(integrator::Integrator)
         view_stencil!(integrator, i)
         numflux!(integrator.time_scheme, integrator, i+1)
     end
-    # for j in 1:integrator.equation.p
-    #     integrator.fnum[end,j] = integrator.fnum[1,j]
-    # end
-    integrator.fnum[end,:] .= integrator.fnum[1,:]
+    for j in 1:integrator.equation.p
+        integrator.fnum[1,j] = integrator.fnum[end,j]
+    end
+    # integrator.fnum[end,:] .= integrator.fnum[1,:]
     nothing
 end

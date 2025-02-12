@@ -19,12 +19,16 @@ mutable struct IntegratorCache{typeDfcont, sourcetermType} <: Cache
 end
 
 # INIT CACHE CONTENT
-init_Dfcont(::Scalar, equation, uinit) = Dflux(equation.funcs, uinit)
+function init_Dfcont(::Scalar, equation, uinit)
+    Dfcont= zero(uinit)
+    Dfcont .= Dflux(equation.funcs, uinit)
+end
 init_Dfcont(::System, equation, uinit) = nothing
 init_sourceterm(::NoSource, args...) = nothing
+# init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
 
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType<:sourceCacheType}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -57,7 +61,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
         
         # INIT SOLUTION AND FLUX
-        uinit = equation.initcond(params.mesh.x)
+        uinit                 = initialize_u(equation.source, equation, params)
+        # @show @allocated uinit = equation.initcond(params.mesh.x)
         if equation.p == 1
             fnum = zeros(Float64, params.mesh.Nx+1)
         else
@@ -77,7 +82,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         space_cache         = init_cache(space_scheme)
         time_cache          = init_cache(time_scheme)
         integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh.x)
-        source_cache        = init_cache(equation.source, equation.source.source_discretize, params.mesh.x)
+        source_cache        = init_cache(equation.source, params.mesh.x)
 
         # INIT LOGBOOK
         logbook = LogBook(log_config)
@@ -90,6 +95,9 @@ end
 
 
 # # INIT INTEGRATOR CONTENT
+
+initialize_u(::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+
 # init_source_discretize(::NoSource) = nothing
 # init_source_discretize()
 

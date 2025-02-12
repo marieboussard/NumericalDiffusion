@@ -8,15 +8,15 @@ struct SaintVenant <: AbstractEquationFun end
 function flux(::SaintVenant, v)
     res = similar(v)
     g_half = g * 0.5 
-    for i in eachindex(view(v, :, 1))
-        h = v[i, 1]
-        if h > treshold
+    h = view(v, :, 1)
+    for i in eachindex(h)
+        if h[i] > treshold
             hu = v[i, 2]
             res[i, 1] = hu
-            res[i, 2] = hu^2 / h + g_half * h^2
+            res[i, 2] = hu^2 / h[i] + g_half * h[i]^2
         else
-            res[i, 1] = 0
-            res[i, 2] = 0
+            res[i, 1] = zero(eltype(v))
+            res[i, 2] = zero(eltype(v))
         end
     end
     res
@@ -30,11 +30,12 @@ end
 function CFL_cond(::SaintVenant, v)
     max = 0.0
     lamb = 0.0
-    for i in eachindex(view(v, :, 1))
-        h = v[i,1]
+    h = view(v, :, 1)
+    for i in eachindex(h)
+        hi = h[i]
         hu = v[i,2]
-        if h > treshold
-            lamb = abs(hu / h) + sqrt(g * abs(h))
+        if hi > treshold
+            lamb = abs(hu / hi) + sqrt(g * abs(hi))
             if lamb > max
                 max = lamb
             end
@@ -82,8 +83,8 @@ end
 
 # SOME INITIAL CONDITIONS
 
-function init_lake_at_rest(x::AbstractVector, z::Base.Callable; c=one(eltype(x)))
-    znum = z.(x)
+function init_lake_at_rest(x::T, znum::T; c=one(eltype(x))) where T<:AbstractVector
+    # znum = z.(x)
     v = zeros(eltype(x), (length(x), 2))
     for i in eachindex(x)
         v[i,1] = max(zero(eltype(x)), c - znum[i])
@@ -131,23 +132,41 @@ function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, x)
     res
 end
 function discretize_sourceterm!(::Pointwise, integrator::Integrator)
-    @unpack uprev, cache, source_cache = integrator
-    @views h = uprev[:,1]
+    @unpack u, cache, source_cache = integrator
+    @views h = u[:,1]
     for i in eachindex(h)
-       cache.sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
+        cache.sourceterm[i,1] = zero(eltype(cache.sourceterm))
+        cache.sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
     end
 end
 
+# INITIALIZATION FUNCTIONS
+
+function initialize_u(source::TopoSource, equation::AbstractEquation, params::Parameters)
+    @unpack x = params.mesh
+    znum = z(source, x)
+    #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
+    equation.initcond(x, znum)
+end
 init_sourceterm(source::TopoSource, uinit, x) = discretize_sourceterm(source.source_discretize, source, uinit, x)
 
 # EXAMPLE OF CONFIGURATIONS FOR SAINT VENANT EQUATION
 
-# 1 # LAKE AT REST WITH SINUSOIDAL TOPOGRAPHY
+# 1 # LAKE AT REST WITH FLAT TOPOGRAPHY
+
+zflat(x) = zero(x)
+Dzflat(x) = zero(x)
+FlatTopo = TopoSource(zflat, Dzflat, Pointwise())
+
+# SaintVenantFlat = Equation(2, System(), SaintVenant(), x -> init_lake_at_rest(x,zflat), FlatTopo)
+SaintVenantFlat = Equation(2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), FlatTopo)
+
+# 2 # LAKE AT REST WITH SINUSOIDAL TOPOGRAPHY
 
 freq = 1.0
 height = 0.5
-z(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
-Dz(x) = pi*freq*(sin(2*pi*freq * x))*height
-BumpTopo = TopoSource(z, Dz, Pointwise())
+zsinus(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
+Dzsinus(x) = pi*freq*(sin(2*pi*freq * x))*height
+BumpTopo = TopoSource(zsinus, Dzsinus, Pointwise())
 
-SaintVenantAtRest = Equation(2, System(), SaintVenant(), x -> init_lake_at_rest(x,z), BumpTopo)
+SaintVenantAtRest = Equation(2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo)
