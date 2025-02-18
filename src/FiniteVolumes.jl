@@ -19,6 +19,8 @@ module FiniteVolumes
     include("equations/source.jl")
     include("equations/equation.jl")
 
+    include("two_dim_tools.jl")
+
     abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
 
     export DefaultLogConfig
@@ -32,6 +34,7 @@ module FiniteVolumes
     
     include("equations/burgers.jl")
     include("equations/saint_venant.jl")
+    include("equations/advection.jl")
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
@@ -74,6 +77,9 @@ module FiniteVolumes
     export SaintVenant
     export SaintVenantAtRest
     export SaintVenantFlat
+
+    export Advection
+    export AdvectionExample
 
     export discretize_sourceterm!
     export Pointwise

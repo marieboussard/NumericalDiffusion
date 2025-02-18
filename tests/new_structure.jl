@@ -23,8 +23,8 @@ equation = BurgersArticle
 
 sol = solve(equation, params, Euler(), Rusanov());#; log_config=LogConfig(true, true, true));
 
-# plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
-# display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.params.tf)))
+plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
+display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.params.tf)))
 
 
 # integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig)

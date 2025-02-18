@@ -1,11 +1,9 @@
-# struct Equation <: AbstractEquation
-#     p::Int
-#     flux
-#     Dflux
-#     initcond
-# end
+abstract type EquationDim end
+struct OneD <: EquationDim end
+struct TwoD <: EquationDim end
 
-struct Equation{T<:EquationType, equationFunType<:AbstractEquationFun, F1<:Base.Callable, sourceType<:AbstractSource} <: AbstractEquation{T}
+struct Equation{dimType<:EquationDim, T<:EquationType, equationFunType<:AbstractEquationFun, F1<:Base.Callable, sourceType<:AbstractSource} <: AbstractEquation{T}
+    dim::dimType
     p::Int
     eqtype::T
     funcs::equationFunType
@@ -13,8 +11,8 @@ struct Equation{T<:EquationType, equationFunType<:AbstractEquationFun, F1<:Base.
     source::sourceType
 end
 
-function Equation(p::Int, eqtype::T, funcs::equationFunType, initcond::F1) where T<: EquationType where equationFunType<:AbstractEquationFun where F1<:Base.Callable
+function Equation(dim::dimType, p::Int, eqtype::T, funcs::equationFunType, initcond::F1) where dimType<:EquationDim where T<: EquationType where equationFunType<:AbstractEquationFun where F1<:Base.Callable
     source = NoSource()
-    Equation(p, eqtype, funcs, initcond, source)
+    Equation(dim, p, eqtype, funcs, initcond, source)
     #{typeof(eqtype), typeof(funcs), typeof(source), typeof(initcond)}
 end

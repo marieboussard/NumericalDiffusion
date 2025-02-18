@@ -159,7 +159,7 @@ Dzflat(x) = zero(x)
 FlatTopo = TopoSource(zflat, Dzflat, Pointwise())
 
 # SaintVenantFlat = Equation(2, System(), SaintVenant(), x -> init_lake_at_rest(x,zflat), FlatTopo)
-SaintVenantFlat = Equation(2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), FlatTopo)
+SaintVenantFlat = Equation(OneD(), 2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), FlatTopo)
 
 # 2 # LAKE AT REST WITH SINUSOIDAL TOPOGRAPHY
 
@@ -169,4 +169,4 @@ zsinus(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
 Dzsinus(x) = pi*freq*(sin(2*pi*freq * x))*height
 BumpTopo = TopoSource(zsinus, Dzsinus, Pointwise())
 
-SaintVenantAtRest = Equation(2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo)
+SaintVenantAtRest = Equation(OneD(), 2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo)

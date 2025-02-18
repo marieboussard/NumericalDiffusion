@@ -28,7 +28,7 @@ init_sourceterm(::NoSource, args...) = nothing
 # init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
 
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -39,7 +39,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     u::dataType
     uprev::dataType
     uinit::dataType
-    fnum::dataType
+    fnum::fnumType
     fcont::dataType
 
     niter::Int
@@ -63,11 +63,12 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT SOLUTION AND FLUX
         uinit                 = initialize_u(equation.source, equation, params)
         # @show @allocated uinit = equation.initcond(params.mesh.x)
-        if equation.p == 1
-            fnum = zeros(Float64, params.mesh.Nx+1)
-        else
-            fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
-        end
+        # if equation.p == 1
+        #     fnum = zeros(Float64, params.mesh.Nx+1)
+        # else
+        #     fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
+        # end
+        fnum = init_fnum(equation.dim, equation, params.mesh)
         fcont = flux(equation.funcs, uinit)
         uprev = copy(uinit)
         u = zero(uprev)
@@ -87,7 +88,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook, zero(Float64))
     end
 
 
@@ -97,6 +98,8 @@ end
 # # INIT INTEGRATOR CONTENT
 
 initialize_u(::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+init_fnum(::OneD, args...) = OneDFnum(args...).fnum
+init_fnum(::TwoD, args...) = TwoDFnum(args...)
 
 # init_source_discretize(::NoSource) = nothing
 # init_source_discretize()

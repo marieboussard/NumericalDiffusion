@@ -4,13 +4,13 @@ function solve(equation, params, time_scheme, space_scheme; maxiter = 100, log_c
 
     while integrator.t < integrator.params.tf && integrator.niter < maxiter
         loopheader!(integrator)
-        performstep!(integrator)
+        performstep!(integrator.equation.dim, integrator)
         loopfooter!(integrator)
     end
     Solution(integrator, name)
 end
 
-function performstep!(integrator::Integrator)
+function performstep!(::OneD, integrator::Integrator)
     @unpack dx, Nx = integrator.params.mesh
     @unpack u, uprev, dt, fnum, equation, cache = integrator
     @unpack sourceterm = cache
@@ -33,6 +33,32 @@ function performstep!(integrator::Integrator)
         end
     end
 end
+
+function performstep!(::TwoD, integrator::Integrator)
+    @unpack dx, Nx, Ny = integrator.params.mesh
+    @unpack u, uprev, dt, fnum, equation, cache = integrator
+    @unpack sourceterm = cache
+    numflux!(integrator)
+
+    for j in 1:Nx
+        for k in 1:Ny
+            for r in 1:equation.p
+            u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j+1,k,r]-fnum[j,k,r]) - dt/dy * (hnum[j,k+1,r]-hnum[j,k,r])
+            end
+        end
+    end
+
+    if has_source(equation.source)
+        for j in 1:Nx
+            for k in 1:Ny
+                for r in 1:equation.p
+                    u[j,k,r] += dt*sourceterm[j,k,r]
+                end
+            end
+        end
+    end
+end
+
 
 function loopheader!(integrator::Integrator)
     dt_CFL!(integrator)
@@ -59,12 +85,14 @@ end
 
 function update_log!(integrator::Integrator)
     @unpack log = integrator
-    @unpack ulog, tlog, dtlog = log.config
+    @unpack ulog, tlog, dtlog, fnumlog = log.config
     # STORE INTERMEDIATE STATES OF THE SOLUTION 
     ulog ? push!(log.ulog, copy(integrator.u)) : nothing
     # STORE INTERMEDIATE TIMES OF THE SIMULATION
     tlog ? push!(log.tlog, integrator.t) : nothing 
     # STORE INTERMEDIATE TIMESTEPS OF THE SIMULATION
     dtlog ? push!(log.dtlog, integrator.dt) : nothing
+    # STORE INTERMEDIATE NUMERICAL FLUX
+    fnumlog ? push!(log.fnumlog, integrator.fnum) : nothing
 end
 
