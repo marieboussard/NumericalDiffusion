@@ -38,6 +38,7 @@ module FiniteVolumes
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
+    include("schemes/roe.jl")
     include("numflux.jl")
     include("cache.jl")
 
@@ -50,6 +51,7 @@ module FiniteVolumes
 
     export Euler
     export Rusanov
+    export Roe
 
     export CFL_cond
     export CFL_cond!
