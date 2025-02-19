@@ -11,6 +11,7 @@ module FiniteVolumes
     abstract type tcacheType <: Cache end
     abstract type scacheType <: Cache end
     abstract type sourceCacheType <: Cache end
+    abstract type CFLCacheType <: Cache end
 
 
     include("schemes/abstract_schemes.jl")

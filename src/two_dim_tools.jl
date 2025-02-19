@@ -27,3 +27,33 @@ function init_fnum_two(equation::Equation, mesh::Mesh)
     hnum = zeros(Float64, mesh.Nx, mesh.Ny+1, equation.p)
     fnum, hnum
 end
+
+# Evaluated continuous flux
+
+abstract type AbstractFcont{T<:EquationDim, S<:EquationType} end
+
+struct OneDFcont{S<:EquationType, ftype<:AbstractArray} <: AbstractFcont{OneD, S}
+    fcont::ftype
+    function OneDFcont(equation::Equation, u)
+        fcont = init_fcont_one(equation, u)
+        new{typeof(equation.eqtype), typeof(fcont)}(fcont)
+    end
+end
+
+struct TwoDFcont{S<:EquationType, ftype<:AbstractArray} <: AbstractFcont{TwoD, S}
+    fcont::ftype
+    hcont::ftype
+    function TwoDFcont(equation::Equation, u)
+        fcont, hcont = init_fcont_two(equation, u)
+        new{typeof(equation.eqtype), typeof(fcont)}(fcont, hcont)
+    end
+end
+
+init_fcont_one(equation::Equation, u) = flux(equation.funcs, u)
+# init_fcont_one(::System, equation::Equation, mesh::Mesh) = zeros(Float64, (mesh.Nx+1, equation.p))
+
+function init_fcont_two(equation::Equation, u)
+    fcont = fflux(equation.funcs, u)
+    hcont = hflux(equation.funcs, u)
+    fcont, hcont
+end

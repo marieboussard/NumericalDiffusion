@@ -27,6 +27,29 @@ end
 
 # COMPUTING CFL CONDITION FOR SAINT VENANT
 
+mutable struct CFLCacheSaintVenant <: CFLCacheType
+    cfl::Float64
+    eigenmax::Vector{Float64}
+    function CFLCacheSaintVenant(uinit)
+        eigenmax = zero(uinit[:,1])
+        h = view(uinit, :, 1)
+    for i in eachindex(h)
+        eigenmax[i] = h[i] > treshold ? abs(uinit[i,2] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
+    end
+        new(zero(Float64), eigenmax)
+    end
+end
+
+init_cfl_cache(::System, ::SaintVenant, equation, uinit) = CFLCacheSaintVenant(uinit)
+function update_cflcache!(::System, ::SaintVenant, integrator::Integrator)
+    @unpack u, cache = integrator
+    @unpack eigenmax = cache.cfl_cache
+    h = view(u, :, 1)
+    for i in eachindex(h)
+        eigenmax[i] = h[i] > treshold ? abs(u[i,2] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
+    end
+end
+
 function CFL_cond(::SaintVenant, v)
     max = 0.0
     lamb = 0.0
@@ -46,39 +69,46 @@ end
 
 function CFL_cond!(::SaintVenant, integrator::Integrator)
 
-    @unpack uprev = integrator
-    integrator.cfl = 0.0
-    lamb = 0.0
+    @unpack cfl_cache = integrator.cache
 
-    for i in eachindex(view(uprev, :, 1))
-        h = uprev[i,1]
-        hu = uprev[i,2]
-        if h > treshold
-            lamb = abs(hu / h) + sqrt(g * abs(h))
-            if lamb > integrator.cfl
-                integrator.cfl = lamb
-            end
-        end
-    end
+    # @unpack uprev = integrator
+    # integrator.cfl = 0.0
+    # lamb = 0.0
+
+    # for i in eachindex(view(uprev, :, 1))
+    #     h = uprev[i,1]
+    #     hu = uprev[i,2]
+    #     if h > treshold
+    #         lamb = abs(hu / h) + sqrt(g * abs(h))
+    #         if lamb > integrator.cfl
+    #             integrator.cfl = lamb
+    #         end
+    #     end
+    # end
+    cfl_cache.cfl = maximum(cfl_cache.eigenmax)
 end
 
 function CFL_local!(::SaintVenant, integrator::Integrator)
 
-    @unpack uprev, cache = integrator
+    @unpack uprev, cache, space_cache = integrator
     @unpack stencil = cache
-    cache.cfl_loc = 0.0
-    lamb = 0.0
+    @unpack eigenmax = cache.cfl_cache
 
-    for i in eachindex(stencil)
-        h = uprev[i,1]
-        hu = uprev[i,2]
-        if h > treshold
-            lamb = abs(hu / h) + sqrt(g * abs(h))
-            if lamb > cache.cfl_loc
-                cache.cfl_loc = lamb
-            end
-        end
-    end
+    space_cache.cfl_loc = maximum(view(eigenmax, stencil))
+
+    # space_cache.cfl_loc = 0.0
+    # lamb = 0.0
+
+    # for i in eachindex(stencil)
+    #     h = uprev[i,1]
+    #     hu = uprev[i,2]
+    #     if h > treshold
+    #         lamb = abs(hu / h) + sqrt(g * abs(h))
+    #         if lamb > space_cache.cfl_loc
+    #             space_cache.cfl_loc = lamb
+    #         end
+    #     end
+    # end
 end
 
 # SOME INITIAL CONDITIONS
@@ -163,8 +193,8 @@ SaintVenantFlat = Equation(OneD(), 2, System(), SaintVenant(), (x,znum) -> init_
 
 # 2 # LAKE AT REST WITH SINUSOIDAL TOPOGRAPHY
 
-freq = 1.0
-height = 0.5
+const freq = 1.0
+const height = 0.5
 zsinus(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
 Dzsinus(x) = pi*freq*(sin(2*pi*freq * x))*height
 BumpTopo = TopoSource(zsinus, Dzsinus, Pointwise())

@@ -1,24 +1,36 @@
+mutable struct CFLCacheScalar <: CFLCacheType
+    cfl::Float64
+    Dfcont::Vector{Float64}
+    function CFLCacheScalar(equation, uinit)
+        Dfcont= zero(uinit)
+        Dfcont .= Dflux(equation.funcs, uinit)
+        new(zero(Float64), Dfcont)
+    end
+end
+
 function CFL_cond(u, equation::Equation)
     maximum(abs.(equation.funcs.Dflux(u)))
 end
 
 function CFL_cond!(::Scalar, integrator::Integrator)
     @unpack equation, cache = integrator
-    @unpack Dfcont = cache
+    @unpack cfl_cache = cache
+    @unpack Dfcont = cfl_cache
     # integrator.cfl = maximum(abs.(Dflux(equation.funcs, uprev)))
-    integrator.cfl = 0.0
+    cfl_cache.cfl = 0.0
     for k in eachindex(Dfcont)
-        integrator.cfl = max(integrator.cfl, abs(Dfcont[k]))
+        cfl_cache.cfl = max(cfl_cache.cfl, abs(Dfcont[k]))
     end
 end
 
 function CFL_local!(::Scalar, integrator::Integrator)
-    @unpack cache = integrator
-    @unpack stencil, Dfcont = cache
+    @unpack cache, space_cache = integrator
+    @unpack stencil, cfl_cache = cache
+    @unpack Dfcont = cfl_cache
     # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
-    cache.cfl_loc = 0.0
+    space_cache.cfl_loc = 0.0
     for k in eachindex(stencil)
-        cache.cfl_loc = max(cache.cfl_loc, abs(Dfcont[stencil[k]]))
+        space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
     end
 end
 
@@ -34,8 +46,26 @@ CFL_local!(::System, integrator::Integrator) = CFL_local!(integrator.equation.fu
 
 
 function dt_CFL!(integrator::Integrator)
-    @unpack params, t, = integrator
+    @unpack params, t, cache = integrator
     @unpack mesh, tf, CFL_factor = params
+    @unpack cfl_cache = cache
     CFL_cond!(integrator.equation.eqtype, integrator)
-    integrator.dt = min(CFL_factor * mesh.dx / integrator.cfl, tf - t)
+    integrator.dt = min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
+end
+
+# CFL CONDITION FOR TWO DIMENSIONNAL EQUATIONS 
+
+function CFL_cond2D(u, equation)
+
+end
+
+function dt_CFL2D!(integrator::Integrator)
+    @unpack params, t, cache = integrator
+    @unpack mesh, tf, CFL_factor = params
+    @unpack cfl_cache = cache
+    CFL_cond!(integrator.equation.eqtype, integrator)
+    integrator.dt = min(tf - t, CFL_factor/(cfl_cache.cfl))
+    
+    
+    min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
 end

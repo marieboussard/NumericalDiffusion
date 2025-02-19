@@ -2,33 +2,36 @@ struct IntegratorOptions
     maxiter::Int
 end
 
-mutable struct IntegratorCache{typeDfcont, sourcetermType} <: Cache 
+mutable struct IntegratorCache{cflCacheType<:CFLCacheType, sourcetermType} <: Cache 
 
-    cfl_loc::Float64
     sL::Int
     sR::Int
     stencil::Vector{Int}
-    Dfcont::typeDfcont
+    cfl_cache::cflCacheType
     sourceterm::sourcetermType
 
     function IntegratorCache(sL, sR, equation, uinit, x)
-        Dfcont = init_Dfcont(equation.eqtype, equation, uinit)
+        # Dfcont = init_Dfcont(equation.eqtype, equation, uinit)
+        cfl_cache = init_cfl_cache(equation.eqtype, equation.funcs, equation, uinit)
         sourceterm = init_sourceterm(equation.source, uinit, x)
-        new{typeof(Dfcont), typeof(sourceterm)}(zero(Float64), sL, sR, zeros(Int, sL + sR), Dfcont, sourceterm)
+        new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
     end
 end
 
 # INIT CACHE CONTENT
-function init_Dfcont(::Scalar, equation, uinit)
-    Dfcont= zero(uinit)
-    Dfcont .= Dflux(equation.funcs, uinit)
-end
-init_Dfcont(::System, equation, uinit) = nothing
+# function init_Dfcont(::Scalar, equation, uinit)
+#     Dfcont= zero(uinit)
+#     Dfcont .= Dflux(equation.funcs, uinit)
+# end
+# init_Dfcont(::System, equation, uinit) = nothing
+
+init_cfl_cache(::Scalar, ::AbstractEquationFun, args...) = CFLCacheScalar(args...)
+# init_cfl_cache(::System, equation, args...) = init_cfl_cache(equation, args...)
 init_sourceterm(::NoSource, args...) = nothing
 # init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
 
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, fcontType, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -40,7 +43,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     uprev::dataType
     uinit::dataType
     fnum::fnumType
-    fcont::dataType
+    fcont::fcontType
 
     niter::Int
     dt::Float64
@@ -55,7 +58,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
 
     log::LogBook
 
-    cfl::Float64
+    # cfl::Float64
     
 
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
@@ -69,7 +72,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         #     fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
         # end
         fnum = init_fnum(equation.dim, equation, params.mesh)
-        fcont = flux(equation.funcs, uinit)
+        # fcont = flux(equation.funcs, uinit)
+        fcont = init_fcont(equation.dim, equation, uinit)
         uprev = copy(uinit)
         u = zero(uprev)
         
@@ -88,7 +92,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook, zero(Float64))
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(fcont), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook)
     end
 
 
@@ -100,6 +104,8 @@ end
 initialize_u(::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
 init_fnum(::OneD, args...) = OneDFnum(args...).fnum
 init_fnum(::TwoD, args...) = TwoDFnum(args...)
+init_fcont(::OneD, args...) = OneDFcont(args...).fcont
+init_fcont(::TwoD, args...) = TwoDFcont(args...)
 
 # init_source_discretize(::NoSource) = nothing
 # init_source_discretize()

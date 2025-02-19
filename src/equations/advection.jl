@@ -1,3 +1,5 @@
+# 1D ADVECTION
+
 struct Advection <: AbstractEquationFun 
 a::Float64
 end
@@ -10,7 +12,11 @@ u0_gauss(x::AbstractArray) = u0_gauss.(x)
 
 AdvectionExample = Equation(OneD(), 1, Scalar(), Advection(2.0), u0_gauss)
 
-# u0_article(x::Real) = x <= 0 ? -2 -x : 3 - 3 / 2 * x
-# u0_article(x::AbstractVector) = u0_article.(x)
+# 2D ADVECTION
 
-# BurgersArticle = Equation(OneD(), 1, Scalar(), Burgers(), u0_article)
+struct Advection2D <: AbstractEquationFun
+    a::Float64
+    b::Float64
+end
+
+flux(eq::Advection2D, u) = 0
