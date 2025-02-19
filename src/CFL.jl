@@ -53,19 +53,3 @@ function dt_CFL!(integrator::Integrator)
     integrator.dt = min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
 end
 
-# CFL CONDITION FOR TWO DIMENSIONNAL EQUATIONS 
-
-function CFL_cond2D(u, equation)
-
-end
-
-function dt_CFL2D!(integrator::Integrator)
-    @unpack params, t, cache = integrator
-    @unpack mesh, tf, CFL_factor = params
-    @unpack cfl_cache = cache
-    CFL_cond!(integrator.equation.eqtype, integrator)
-    integrator.dt = min(tf - t, CFL_factor/(cfl_cache.cfl))
-    
-    
-    min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
-end

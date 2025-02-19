@@ -32,6 +32,7 @@ module FiniteVolumes
     include("solution.jl")
 
     include("CFL.jl")
+    include("CFL_2D.jl")
     
     include("equations/burgers.jl")
     include("equations/saint_venant.jl")

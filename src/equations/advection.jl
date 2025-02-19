@@ -19,4 +19,7 @@ struct Advection2D <: AbstractEquationFun
     b::Float64
 end
 
-flux(eq::Advection2D, u) = 0
+flux_f(eq::Advection2D, u) = eq.a*u
+flux_h(eq::Advection2D, u) = eq.b*u
+Dflux_f(eq::Advection2D, u) = eq.a
+Dflux_f(eq::Advection2D, u) = eq.b

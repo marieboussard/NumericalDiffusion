@@ -1,4 +1,4 @@
-# Numerical flux
+# NUMERICAL FLUX
 
 abstract type AbstractFnum{T<:EquationDim, S<:EquationType} end
 
@@ -28,7 +28,7 @@ function init_fnum_two(equation::Equation, mesh::Mesh)
     fnum, hnum
 end
 
-# Evaluated continuous flux
+# EVALUATED CONTINUOUS FLUX
 
 abstract type AbstractFcont{T<:EquationDim, S<:EquationType} end
 
@@ -53,7 +53,7 @@ init_fcont_one(equation::Equation, u) = flux(equation.funcs, u)
 # init_fcont_one(::System, equation::Equation, mesh::Mesh) = zeros(Float64, (mesh.Nx+1, equation.p))
 
 function init_fcont_two(equation::Equation, u)
-    fcont = fflux(equation.funcs, u)
-    hcont = hflux(equation.funcs, u)
+    fcont = flux_f(equation.funcs, u)
+    hcont = flux_h(equation.funcs, u)
     fcont, hcont
 end

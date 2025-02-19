@@ -9,8 +9,8 @@ end
 
 struct Rusanov <: SpaceScheme end
 
-compute_sL(::Rusanov) = 1
-compute_sR(::Rusanov) = 1
+get_sL(::Rusanov) = 1
+get_sR(::Rusanov) = 1
 
 function numflux(::Rusanov, equation, u, args...)
     @unpack flux = equation.funcs

@@ -37,6 +37,7 @@ end
 function performstep!(::TwoD, integrator::Integrator)
     @unpack dx, Nx, Ny = integrator.params.mesh
     @unpack u, uprev, dt, fnum, equation, cache = integrator
+    @unpack fnum, hnum = fnum
     @unpack sourceterm = cache
     numflux!(integrator)
 

@@ -78,7 +78,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         u = zero(uprev)
         
         # INIT SL AND SR
-        sL, sR = compute_sL(time_scheme, space_scheme), compute_sR(time_scheme, space_scheme)
+        sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)
 
         # INTEGRATOR OPTIONS
         opts    = IntegratorOptions(maxiter)
