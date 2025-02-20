@@ -174,7 +174,7 @@ end
 
 # INITIALIZATION FUNCTIONS
 
-function initialize_u(source::TopoSource, equation::AbstractEquation, params::Parameters)
+function initialize_u(::OneD, source::TopoSource, equation::AbstractEquation, params::Parameters)
     @unpack x = params.mesh
     znum = z(source, x)
     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))

@@ -49,7 +49,7 @@ function performstep!(::TwoD, integrator::Integrator)
     for j in 1:Nx
         for k in 1:Ny
             for r in 1:equation.p
-            u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j+1,k,r]-fnum[j,k,r]) - dt/dy * (hnum[j,k+1,r]-hnum[j,k,r])
+            u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r]-fnum[mod1(j-1,Nx),k,r]) - dt/dy * (hnum[j,k,r]-hnum[j,mod1(k-1,Nx),r])
             end
         end
     end
@@ -68,8 +68,6 @@ end
 
 function loopheader!(integrator::Integrator)
     dt_CFL!(integrator.equation.dim, integrator)
-    @show integrator.cache.cfl_cache.cflx
-    @show integrator.cache.cfl_cache.cfly
 end
 
 function loopfooter!(integrator::Integrator)
@@ -91,11 +89,13 @@ function loopfooter!(integrator::Integrator)
         discretize_sourceterm!(source.source_discretize, integrator)
     end
     update_log!(integrator)
+    nothing
 end
 
 function update_flux!(::OneD, integrator::Integrator)
     @unpack fcont, equation, u = integrator
-    fcont .= flux(equation.funcs, u)
+    @views vu = u
+    fcont .= flux(equation.funcs, vu)
 end
 
 function update_flux!(::TwoD, integrator::Integrator)
@@ -128,5 +128,6 @@ function update_log!(integrator::Integrator)
     dtlog ? push!(log.dtlog, integrator.dt) : nothing
     # STORE INTERMEDIATE NUMERICAL FLUX
     fnumlog ? push!(log.fnumlog, integrator.fnum) : nothing
+    nothing
 end
 

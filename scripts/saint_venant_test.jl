@@ -18,7 +18,7 @@ equation = SaintVenantAtRest
 znum = z(equation.source, mesh.x)
 
 
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true,true,true,true));
+sol = solve(equation, params, Euler(), Roe())#; log_config=LogConfig(true,true,true,true));
 
 plot(mesh.x, znum, label="topo")
 display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))

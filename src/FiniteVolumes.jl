@@ -52,6 +52,8 @@ module FiniteVolumes
     export Parameters
 
     export Equation
+    export OneD
+    export TwoD
 
     export Euler
     export Rusanov
