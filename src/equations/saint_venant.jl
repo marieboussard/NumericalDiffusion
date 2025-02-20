@@ -40,8 +40,8 @@ mutable struct CFLCacheSaintVenant <: CFLCacheType
     end
 end
 
-init_cfl_cache(::System, ::SaintVenant, equation, uinit) = CFLCacheSaintVenant(uinit)
-function update_cflcache!(::System, ::SaintVenant, integrator::Integrator)
+init_cfl_cache(::OneD, ::System, ::SaintVenant, equation, uinit) = CFLCacheSaintVenant(uinit)
+function update_cflcache!(::OneD, ::System, ::SaintVenant, integrator::Integrator)
     @unpack u, cache = integrator
     @unpack eigenmax = cache.cfl_cache
     h = view(u, :, 1)
@@ -88,13 +88,15 @@ function CFL_cond!(::SaintVenant, integrator::Integrator)
     cfl_cache.cfl = maximum(cfl_cache.eigenmax)
 end
 
-function CFL_local!(::SaintVenant, integrator::Integrator)
+function CFL_local!(::SaintVenant, integrator::Integrator, j::Int)
 
     @unpack uprev, cache, space_cache = integrator
-    @unpack stencil = cache
+    # @unpack stencil = cache
     @unpack eigenmax = cache.cfl_cache
+    @unpack Nx = integrator.params.mesh
 
-    space_cache.cfl_loc = maximum(view(eigenmax, stencil))
+    # space_cache.cfl_loc = maximum(view(eigenmax, stencil))
+    space_cache.cfl_loc = max(eigenmax[j], eigenmax[mod1(j+1,Nx)])
 
     # space_cache.cfl_loc = 0.0
     # lamb = 0.0

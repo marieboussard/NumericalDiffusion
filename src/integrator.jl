@@ -12,7 +12,7 @@ mutable struct IntegratorCache{cflCacheType<:CFLCacheType, sourcetermType} <: Ca
 
     function IntegratorCache(sL, sR, equation, uinit, x)
         # Dfcont = init_Dfcont(equation.eqtype, equation, uinit)
-        cfl_cache = init_cfl_cache(equation.eqtype, equation.funcs, equation, uinit)
+        cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, uinit)
         sourceterm = init_sourceterm(equation.source, uinit, x)
         new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
     end
@@ -25,7 +25,8 @@ end
 # end
 # init_Dfcont(::System, equation, uinit) = nothing
 
-init_cfl_cache(::Scalar, ::AbstractEquationFun, args...) = CFLCacheScalar(args...)
+init_cfl_cache(::OneD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScalar(args...)
+init_cfl_cache(::TwoD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScalar2D(args...)
 # init_cfl_cache(::System, equation, args...) = init_cfl_cache(equation, args...)
 init_sourceterm(::NoSource, args...) = nothing
 # init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
@@ -64,7 +65,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
         
         # INIT SOLUTION AND FLUX
-        uinit                 = initialize_u(equation.source, equation, params)
+        uinit                 = initialize_u(equation.dim, equation.source, equation, params)
         # @show @allocated uinit = equation.initcond(params.mesh.x)
         # if equation.p == 1
         #     fnum = zeros(Float64, params.mesh.Nx+1)
@@ -101,7 +102,7 @@ end
 
 # # INIT INTEGRATOR CONTENT
 
-initialize_u(::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+initialize_u(::OneD, ::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
 init_fnum(::OneD, args...) = OneDFnum(args...).fnum
 init_fnum(::TwoD, args...) = TwoDFnum(args...)
 init_fcont(::OneD, args...) = OneDFcont(args...).fcont

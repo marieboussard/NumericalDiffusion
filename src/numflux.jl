@@ -24,15 +24,22 @@ end
 
 #view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, get_sL(integrator.time_scheme, integrator.space_scheme), get_sR(integrator.time_scheme, integrator.space_scheme))
 
+# function numflux!(integrator::Integrator)
+#     for i ∈ 1:integrator.params.mesh.Nx
+#         view_stencil!(integrator, i)
+#         numflux!(integrator.time_scheme, integrator, i+1)
+#     end
+#     for j in 1:integrator.equation.p
+#         integrator.fnum[1,j] = integrator.fnum[end,j]
+#     end
+#     # integrator.fnum[end,:] .= integrator.fnum[1,:]
+#     nothing
+# end
+
 function numflux!(integrator::Integrator)
-    for i ∈ 1:integrator.params.mesh.Nx
-        view_stencil!(integrator, i)
-        numflux!(integrator.time_scheme, integrator, i+1)
+    for j ∈ 1:integrator.params.mesh.Nx
+        numflux!(integrator.time_scheme, integrator, j)
     end
-    for j in 1:integrator.equation.p
-        integrator.fnum[1,j] = integrator.fnum[end,j]
-    end
-    # integrator.fnum[end,:] .= integrator.fnum[1,:]
     nothing
 end
 

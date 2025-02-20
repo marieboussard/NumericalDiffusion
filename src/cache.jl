@@ -3,6 +3,7 @@ init_cache(::Euler) = EulerCache()
 
 # INIT CACHE FOR SPACE SCHEMES
 init_cache(::Rusanov) = RusanovCache()
+init_cache(::Rusanov2D) = Rusanov2DCache()
 init_cache(::Roe) = RoeCache()
 
 # INIT CACHE FOR SOURCE

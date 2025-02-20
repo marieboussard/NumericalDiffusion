@@ -1,3 +1,17 @@
+# STORAGE OF u
+
+function initialize_u(::TwoD, ::NoSource, equation::AbstractEquation, params::Parameters)
+    @unpack Nx, Ny, x, y = params.mesh
+    uinit = zeros(eltype(x), (Nx, Ny))
+    for j in eachindex(x)
+        for k in eachindex(y)
+            uinit[j,k] = equation.initcond(x[j], y[k])
+        end
+    end
+    uinit
+end
+
+
 # NUMERICAL FLUX
 
 abstract type AbstractFnum{T<:EquationDim, S<:EquationType} end

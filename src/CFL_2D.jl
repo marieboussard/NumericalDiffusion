@@ -1,16 +1,16 @@
 # CFL CONDITION FOR TWO DIMENSIONNAL EQUATIONS 
 
-mutable struct CFLCacheScalar2D <: CFLCacheType
-    clfx::Float64
+mutable struct CFLCacheScalar2D{dataType<:AbstractArray} <: CFLCacheType
+    cflx::Float64
     cfly::Float64
-    Dfcont::Matrix{Float64}
-    Dhcont::Matrix{Float64}
+    Dfcont::dataType
+    Dhcont::dataType
     function CFLCacheScalar2D(equation::Equation, uinit)
         Dfcont = zero(uinit)
         Dhcont = zero(uinit)
         Dfcont .= Dflux_f(equation.funcs, uinit)
         Dhcont .= Dflux_h(equation.funcs, uinit)
-        new(zero(Float64), zero(Float64), Dfcont, Dhcont)
+        new{typeof(Dfcont)}(zero(Float64), zero(Float64), Dfcont, Dhcont)
     end
 end
 
@@ -26,18 +26,18 @@ function CFL_cond2D!(::Scalar, integrator::Integrator)
     end
 end
 
-# function CFL_local2D!(::Scalar, integrator::Integrator)
-#     @unpack cache, space_cache = integrator
-#     @unpack stencil, cfl_cache = cache
-#     @unpack Dfcont, Dhcont = cfl_cache
-#     space_cache.cfl_loc = 0.0
-#     for k in eachindex(stencil)
-#         space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
-#     end
-# end
+function CFL_local2D!(::Scalar, integrator::Integrator, j::Int, k::Int)
+    @unpack cache, space_cache = integrator
+    @unpack cfl_cache = cache
+    @unpack Nx, Ny = integrator.params.mesh
+    @unpack Dfcont, Dhcont = cfl_cache
+    space_cache.cflx_loc = max(abs(Dfcont[j,k]), abs(Dfcont[mod1(j+1,Nx),k]))
+    space_cache.cfly_loc = max(abs(Dhcont[j,k]), abs(Dhcont[j, mod1(k+1,Ny)]))
+end
 
+CFL_local2D!(::System, integrator::Integrator, args...) = CFL_local2D!(integrator.equation.funcs, integrator, args...)
 
-function dt_CFL2D!(integrator::Integrator)
+function dt_CFL!(::TwoD, integrator::Integrator)
     @unpack params, t, cache = integrator
     @unpack mesh, tf, CFL_factor = params
     @unpack cfl_cache = cache

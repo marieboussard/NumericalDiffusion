@@ -23,19 +23,21 @@ function CFL_cond!(::Scalar, integrator::Integrator)
     end
 end
 
-function CFL_local!(::Scalar, integrator::Integrator)
+function CFL_local!(::Scalar, integrator::Integrator, j::Int)
     @unpack cache, space_cache = integrator
-    @unpack stencil, cfl_cache = cache
+    @unpack cfl_cache = cache
     @unpack Dfcont = cfl_cache
+    @unpack Nx = integrator.params.mesh
     # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
-    space_cache.cfl_loc = 0.0
-    for k in eachindex(stencil)
-        space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
-    end
+    space_cache.cfl_loc = max(abs(Dfcont[j]), abs(Dfcont[mod1(j+1,Nx)]))
+    # space_cache.cfl_loc = 0.0
+    # for k in eachindex(stencil)
+    #     space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
+    # end
 end
 
 CFL_cond!(::System, integrator::Integrator) = CFL_cond!(integrator.equation.funcs, integrator)
-CFL_local!(::System, integrator::Integrator) = CFL_local!(integrator.equation.funcs, integrator)
+CFL_local!(::System, integrator::Integrator, args...) = CFL_local!(integrator.equation.funcs, integrator, args...)
 
 
 
@@ -45,7 +47,7 @@ CFL_local!(::System, integrator::Integrator) = CFL_local!(integrator.equation.fu
 # end
 
 
-function dt_CFL!(integrator::Integrator)
+function dt_CFL!(::OneD, integrator::Integrator)
     @unpack params, t, cache = integrator
     @unpack mesh, tf, CFL_factor = params
     @unpack cfl_cache = cache

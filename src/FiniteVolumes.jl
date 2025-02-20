@@ -40,6 +40,7 @@ module FiniteVolumes
 
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
+    include("schemes/rusanov_2D.jl")
     include("schemes/roe.jl")
     include("numflux.jl")
     include("cache.jl")
@@ -47,12 +48,14 @@ module FiniteVolumes
     include("solve.jl")
 
     export OneDMesh
+    export TwoDCartesian
     export Parameters
 
     export Equation
 
     export Euler
     export Rusanov
+    export Rusanov2D
     export Roe
 
     export CFL_cond
@@ -84,6 +87,7 @@ module FiniteVolumes
 
     export Advection
     export AdvectionExample
+    export Advection2Example
 
     export discretize_sourceterm!
     export Pointwise

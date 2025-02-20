@@ -29,6 +29,13 @@ struct TwoDCartesian <: TwoDMesh
     dy::Float64 
     x::Vector{Float64} 
     y::Vector{Float64}
+    function TwoDCartesian(Nx::Int, Ny::Int, xmin::Real, xmax::Real, ymin::Real, ymax::Real)
+        dx = (xmax - xmin) / Nx
+        dy = (ymax - ymin) / Ny
+        x = collect(LinRange(xmin+dx/2, xmax-dx/2, Nx))
+        y = collect(LinRange(ymin+dy/2, ymax-dy/2, Ny))
+        new(Nx, Ny, xmin, xmax, ymin, ymax, dx, dy, x, y)
+    end
 end
 
 
@@ -41,5 +48,3 @@ end
 
 dimension(::OneDMesh) = 1
 dimension(::TwoDMesh) = 2
-
-abstract type Flux end
