@@ -21,10 +21,10 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 
 equation = BurgersArticle
 
-@show @allocated sol = solve(equation, params, Euler(), Roe(); maxiter=2);#; log_config=LogConfig(true, true, true));
+sol = solve(equation, params, Euler(), Rusanov())#; maxiter=2);#; log_config=LogConfig(true, true, true));
 
-plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
-display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.t)))
+# plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
+# display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.t)))
 
 
 integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig)
@@ -34,3 +34,15 @@ integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogCon
 
 using FiniteVolumes: view_stencil!
 
+
+function CFL_localv2!(::Scalar, integrator::Integrator, j::Int)
+    @unpack cache, space_cache = integrator
+    @unpack cfl_cache = cache
+    @unpack absDfcont = cfl_cache
+    @unpack Nx = integrator.params.mesh
+
+    space_cache.cfl_loc = absDfcont[j]
+    space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
+end
+
+@show @allocated CFL_localv2!(integrator.equation.eqtype, integrator,2)

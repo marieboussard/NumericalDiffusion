@@ -4,11 +4,11 @@ using BenchmarkTools
 using UnPack
 
 # Domain definition
-Nx = 100
-Ny = 100
+Nx = 10
+Ny = 10
 xmin, xmax, ymin, ymax = -2, 2,-2,2
 t0, tf = 0.0, 0.4
-CFL_factor = 0.1
+CFL_factor = 0.5
 
 mesh = TwoDCartesian(Nx, Ny, xmin, xmax, ymin, ymax)
 params = Parameters(mesh, t0, tf, CFL_factor)

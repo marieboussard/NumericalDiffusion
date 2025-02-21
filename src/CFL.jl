@@ -1,10 +1,10 @@
 mutable struct CFLCacheScalar <: CFLCacheType
     cfl::Float64
-    Dfcont::Vector{Float64}
+    absDfcont::Vector{Float64}
     function CFLCacheScalar(equation, uinit)
-        Dfcont= zero(uinit)
-        Dfcont .= Dflux(equation.funcs, uinit)
-        new(zero(Float64), Dfcont)
+        absDfcont= zero(uinit)
+        absDfcont .= abs.(Dflux(equation.funcs, uinit))
+        new(zero(Float64), absDfcont)
     end
 end
 
@@ -15,21 +15,31 @@ end
 function CFL_cond!(::Scalar, integrator::Integrator)
     @unpack equation, cache = integrator
     @unpack cfl_cache = cache
-    @unpack Dfcont = cfl_cache
+    @unpack absDfcont = cfl_cache
     # integrator.cfl = maximum(abs.(Dflux(equation.funcs, uprev)))
     cfl_cache.cfl = 0.0
-    for k in eachindex(Dfcont)
-        cfl_cache.cfl = max(cfl_cache.cfl, abs(Dfcont[k]))
+    for k in eachindex(absDfcont)
+        # cfl_cache.cfl = max(cfl_cache.cfl, abs(Dfcont[k]))
+        cfl_cache.cfl = max(cfl_cache.cfl, absDfcont[k])
     end
 end
 
 function CFL_local!(::Scalar, integrator::Integrator, j::Int)
     @unpack cache, space_cache = integrator
     @unpack cfl_cache = cache
-    @unpack Dfcont = cfl_cache
+    @unpack absDfcont = cfl_cache
     @unpack Nx = integrator.params.mesh
+
+    space_cache.cfl_loc = absDfcont[j]
+    space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
+
+    # D1, D2 = absDfcont[j], absDfcont[mod1(j+1,Nx)]
+    # space_cache.cfl_loc = max(D1,D2)
+
     # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
-    space_cache.cfl_loc = max(abs(Dfcont[j]), abs(Dfcont[mod1(j+1,Nx)]))
+    # D1, D2 = Dfcont[j], Dfcont[mod1(j+1,Nx)]
+    # space_cache.cfl_loc = max(abs(D1), abs(D2))
+    # space_cache.cfl_loc = max(abs(Dfcont[j]), abs(Dfcont[mod1(j+1,Nx)]))
     # space_cache.cfl_loc = 0.0
     # for k in eachindex(stencil)
     #     space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))

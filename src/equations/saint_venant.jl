@@ -115,13 +115,28 @@ end
 
 # SOME INITIAL CONDITIONS
 
+# function init_lake_at_rest(x::T, znum::T; c=one(eltype(x))) where T<:AbstractVector
+#     # znum = z.(x)
+#     v = zeros(eltype(x), (length(x), 2))
+#     for i in eachindex(x)
+#         v[i,1] = max(zero(eltype(x)), c - znum[i])
+#         v[i,2] = zero(eltype(x))
+#     end
+#     return v
+# end
+
 function init_lake_at_rest(x::T, znum::T; c=one(eltype(x))) where T<:AbstractVector
-    # znum = z.(x)
-    v = zeros(eltype(x), (length(x), 2))
-    for i in eachindex(x)
-        v[i,1] = max(zero(eltype(x)), c - znum[i])
-        v[i,2] = zero(eltype(x))
+    nvar = ndims(znum)+1
+    v = zeros(eltype(x), (size(znum)..., nvar))
+    indices = indices = [Colon() for i in 1:nvar-1]
+    for r in 1:nvar-1
+        vr = view(v, indices..., r)
+        for i in eachindex(x)
+            vr[i] = max(zero(eltype(x)), c - znum[i])
+        end
     end
+    vend = view(v, indices..., nvar)
+    vend .= zero(eltype(x))
     return v
 end
 

@@ -106,7 +106,8 @@ function update_flux!(::TwoD, integrator::Integrator)
 end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)
-    integrator.cache.cfl_cache.Dfcont .= Dflux(eqfun, integrator.u)
+    # integrator.cache.cfl_cache.Dfcont .= Dflux(eqfun, integrator.u)
+    integrator.cache.cfl_cache.absDfcont .= abs.(Dflux(eqfun, integrator.u))
 end
 
 function update_cflcache!(::TwoD, ::Scalar, eqfun::AbstractEquationFun, integrator)
