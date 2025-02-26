@@ -91,6 +91,8 @@ module FiniteVolumes
     export AdvectionExample
     export Advection2Example
     export advection2_vecfield
+    export exact_advection_sol
+    export u0_gauss2
 
     export discretize_sourceterm!
     export Pointwise

@@ -37,8 +37,10 @@ init_fnum_one(::Scalar, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx
 init_fnum_one(::System, equation::Equation, mesh::Mesh) = zeros(Float64, (mesh.Nx+1, equation.p))
 
 function init_fnum_two(equation::Equation, mesh::Mesh)
-    fnum = zeros(Float64, mesh.Nx+1, mesh.Ny, equation.p)
-    hnum = zeros(Float64, mesh.Nx, mesh.Ny+1, equation.p)
+    # fnum = zeros(Float64, mesh.Nx+1, mesh.Ny, equation.p)
+    # hnum = zeros(Float64, mesh.Nx, mesh.Ny+1, equation.p)
+    fnum = zeros(Float64, mesh.Nx, mesh.Ny, equation.p)
+    hnum = zeros(Float64, mesh.Nx, mesh.Ny, equation.p)
     fnum, hnum
 end
 

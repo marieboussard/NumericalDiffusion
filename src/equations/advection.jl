@@ -47,7 +47,7 @@ struct Advection2D <: AbstractEquationFun
 end
 
 phi(v) = exp(-v)
-velfield(x,y, varphi::Base.Callable) = varphi(x^2+y^2)*[x, -y]
+velfield(x,y, varphi::Base.Callable) = varphi(x^2+y^2)*[y, -x]
 
 flux_f(eq::Advection2D, u::Float64, j, k) = eq.cnum[j,k,1]*u
 flux_h(eq::Advection2D, u::Float64, j, k) = eq.cnum[j,k,2]*u
@@ -65,4 +65,8 @@ end
 Dflux_f(eq::Advection2D, ::Matrix) = eq.cnum[:,:,1]
 Dflux_h(eq::Advection2D, ::Matrix) = eq.cnum[:,:,2]
 
-advection2_vecfield(mesh::TwoDCartesian, varphi::Base.Callable=phi) = Equation(TwoD(), 1, Scalar(), Advection2D(mesh, varphi), u0_gauss2)
+advection2_vecfield(mesh::TwoDCartesian, varphi::Base.Callable=phi; kwargs...) = Equation(TwoD(), 1, Scalar(), Advection2D(mesh, varphi), (x,y) -> u0_gauss2(x,y;kwargs...))
+
+# EXACT SOLUTION IN THE CASE φ(v)=1
+
+exact_advection_sol(t, x, y, u0::Base.Callable) = u0(x*cos(t)-y*sin(t), x*sin(t)+y*cos(t))
