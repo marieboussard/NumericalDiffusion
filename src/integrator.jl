@@ -65,15 +65,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
         
         # INIT SOLUTION AND FLUX
-        uinit                 = initialize_u(equation.dim, equation.eqtype, equation.source, equation, params)
-        # @show @allocated uinit = equation.initcond(params.mesh.x)
-        # if equation.p == 1
-        #     fnum = zeros(Float64, params.mesh.Nx+1)
-        # else
-        #     fnum = zeros(Float64, (params.mesh.Nx+1, equation.p))
-        # end
+        uinit = initialize_u(equation.dim, equation.eqtype, equation.source, equation, params)
         fnum = init_fnum(equation.dim, equation, params.mesh)
-        # fcont = flux(equation.funcs, uinit)
         fcont = init_fcont(equation.dim, equation, uinit)
         uprev = copy(uinit)
         u = zero(uprev)
@@ -120,4 +113,10 @@ init_fcont(::TwoD, args...) = TwoDFcont(args...)
 
 # function Integrator(equation::equationType, params::paramsType, time_scheme::tschemeType, space_scheme::sschemeType, maxiter::Int, log_config::LogConfig) where equationType<:Equation where paramsType<:Parameters where tschemeType<:TimeScheme where sschemeType<:SpaceScheme
 #         Integrator(equation, params, time_scheme, space_scheme, maxiter, nothing, log_config)
+# end
+
+
+# function initialize_integrator(integrator::Integrator)
+#     update_flux!(equation.dim, integrator)
+#     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
 # end

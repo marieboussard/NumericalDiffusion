@@ -6,11 +6,8 @@ function flux_f(::SaintVenant2D, v)
     h = view(v, :, :, 1)
     hu = view(v, :, :, 2)
     hv = view(v, :, :, 3)
-    #for i in eachindex(h)
     for I in CartesianIndices(h)
         if h[I] > treshold
-            # hu = v[i, 2]
-            # hv = v[i, 3]
             res[I, 1] = hu[I]
             res[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
             res[I, 3] = hu[I]*hv[I] / h[I]
@@ -21,6 +18,26 @@ function flux_f(::SaintVenant2D, v)
         end
     end
     res
+end
+
+function flux_f!(::SaintVenant2D, integrator)
+    @unpack fcont = integrator.fcont
+    @unpack u = integrator
+    g_half = g * 0.5 
+    h = view(u, :, :, 1)
+    hu = view(u, :, :, 2)
+    hv = view(u, :, :, 3)
+    for I in CartesianIndices(h)
+        if h[I] > treshold
+            fcont[I, 1] = hu[I]
+            fcont[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
+            fcont[I, 3] = hu[I]*hv[I] / h[I]
+        else
+            fcont[I, 1] = zero(eltype(u))
+            fcont[I, 2] = zero(eltype(u))
+            fcont[I, 3] = zero(eltype(u))
+        end
+    end
 end
 
 function flux_h(::SaintVenant2D, v)
@@ -43,6 +60,26 @@ function flux_h(::SaintVenant2D, v)
         end
     end
     res
+end
+
+function flux_h!(::SaintVenant2D, integrator)
+    @unpack hcont = integrator.fcont
+    @unpack u = integrator
+    g_half = g * 0.5 
+    h = view(u, :, :, 1)
+    hu = view(u, :, :, 2)
+    hv = view(u, :, :, 3)
+    for I in CartesianIndices(h)
+        if h[I] > treshold
+            hcont[I, 1] = hv[I]
+            hcont[I, 2] = hu[I]*hv[I] / h[I]
+            hcont[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
+        else
+            hcont[I, 1] = zero(eltype(u))
+            hcont[I, 2] = zero(eltype(u))
+            hcont[I, 3] = zero(eltype(u))
+        end
+    end
 end
 
 # COMPUTING CFL CONDITION FOR SAINT VENANT 2D
@@ -74,8 +111,8 @@ function update_cflcache!(::TwoD, ::System, ::SaintVenant2D, integrator::Integra
     hu = view(u, :, :, 2)
     hv = view(u, :, :, 3)
     for i in eachindex(h)
-        xeigenmax[i] = h[i] > treshold ? abs(hu[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
-        yeigenmax[i] = h[i] > treshold ? abs(hv[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
+        xeigenmax[i] = h[i] > treshold ? abs(hu[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(xeigenmax))
+        yeigenmax[i] = h[i] > treshold ? abs(hv[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(yeigenmax))
     end
 end
 

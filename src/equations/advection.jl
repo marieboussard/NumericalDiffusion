@@ -26,6 +26,14 @@ flux_h(eq::ConstAdvection2D, u) = eq.b*u
 Dflux_f(eq::ConstAdvection2D, u) = eq.a
 Dflux_h(eq::ConstAdvection2D, u) = eq.b
 
+# IN PLACE VERSION
+function flux_f!(eq::ConstAdvection2D, integrator)
+    integrator.fcont.fcont .= eq.a*integrator.u
+end
+function flux_h!(eq::ConstAdvection2D, integrator)
+    integrator.fcont.hcont .= eq.b*integrator.u
+end
+
 u0_gauss2(x::Real, y::Real; xm=0.0, ym=0.0, sigmax=0.2, sigmay=0.2, A=2.0) = A*exp(-(x-xm)^2/(2*sigmax^2)-(y-ym)^2/(2*sigmay^2))
 
 Advection2Example = Equation(TwoD(), 1, Scalar(), ConstAdvection2D(2.0, 1.0), u0_gauss2)
@@ -64,6 +72,16 @@ function flux_h(eq::Advection2D, u::Matrix)
 end
 Dflux_f(eq::Advection2D, ::Matrix) = eq.cnum[:,:,1]
 Dflux_h(eq::Advection2D, ::Matrix) = eq.cnum[:,:,2]
+
+# IN PLACE VERSION
+function flux_f!(eq::Advection2D, integrator)
+    a = view(eq.cnum, :, :, 1)
+    integrator.fcont.fcont .= a.*integrator.u
+end
+function flux_h!(eq::Advection2D, integrator)
+    b = view(eq.cnum, :, :, 2)
+    integrator.fcont.hcont .= b.*integrator.u
+end
 
 advection2_vecfield(mesh::TwoDCartesian, varphi::Base.Callable=phi; kwargs...) = Equation(TwoD(), 1, Scalar(), Advection2D(mesh, varphi), (x,y) -> u0_gauss2(x,y;kwargs...))
 

@@ -72,6 +72,8 @@ module FiniteVolumes
     export loopfooter!
     export loopheader!
     export performstep!
+    export update_flux!
+    export update_cflcache!
     export update_log!
     export dt_CFL!
 
@@ -87,6 +89,7 @@ module FiniteVolumes
     export SaintVenant
     export SaintVenantAtRest
     export SaintVenantFlat
+    export SaintVenant2D
     export SaintVenant2Flat
 
     export Advection
@@ -101,9 +104,14 @@ module FiniteVolumes
 
     export flux 
     export Dflux
+    export flux_f
+    export flux_h
     export has_source
 
     export z
     export Dz
+
+    export g
+    export treshold
 
 end

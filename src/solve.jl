@@ -73,16 +73,10 @@ end
 function loopfooter!(integrator::Integrator)
     @unpack equation, uprev, u = integrator
     @unpack source = equation
-
     integrator.t += integrator.dt
     integrator.niter += 1
     uprev .= u
     update_flux!(equation.dim, integrator)
-    
-    # STORING FLUX DERIVATIVE IN SCALAR CASE
-    # if equation.p ==1
-    #     cache.cfl_cache.Dfcont .= Dflux(equation.funcs, u)
-    # end
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
     # UPDATING SOURCE TERM
     if has_source(source)
@@ -99,10 +93,12 @@ function update_flux!(::OneD, integrator::Integrator)
 end
 
 function update_flux!(::TwoD, integrator::Integrator)
-    @unpack equation, u = integrator
-    @unpack fcont, hcont = integrator.fcont
-    fcont .= flux_f(equation.funcs, u)
-    hcont .= flux_h(equation.funcs, u)
+    # @unpack equation, u = integrator
+    # @unpack fcont, hcont = integrator.fcont
+    # fcont .= flux_f(equation.funcs, u)
+    # hcont .= flux_h(equation.funcs, u)
+    flux_f!(integrator.equation.funcs, integrator)
+    flux_h!(integrator.equation.funcs, integrator)
 end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)
