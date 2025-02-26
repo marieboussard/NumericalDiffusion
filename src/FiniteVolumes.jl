@@ -90,6 +90,7 @@ module FiniteVolumes
     export Advection
     export AdvectionExample
     export Advection2Example
+    export advection2_vecfield
 
     export discretize_sourceterm!
     export Pointwise

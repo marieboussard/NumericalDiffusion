@@ -14,16 +14,55 @@ AdvectionExample = Equation(OneD(), 1, Scalar(), Advection(2.0), u0_gauss)
 
 # 2D ADVECTION
 
-struct Advection2D <: AbstractEquationFun
+    # CONSTANT COEFFICIENTS
+
+struct ConstAdvection2D <: AbstractEquationFun
     a::Float64
     b::Float64
 end
 
-flux_f(eq::Advection2D, u) = eq.a*u
-flux_h(eq::Advection2D, u) = eq.b*u
-Dflux_f(eq::Advection2D, u) = eq.a
-Dflux_h(eq::Advection2D, u) = eq.b
+flux_f(eq::ConstAdvection2D, u) = eq.a*u
+flux_h(eq::ConstAdvection2D, u) = eq.b*u
+Dflux_f(eq::ConstAdvection2D, u) = eq.a
+Dflux_h(eq::ConstAdvection2D, u) = eq.b
 
 u0_gauss2(x::Real, y::Real; xm=0.0, ym=0.0, sigmax=0.2, sigmay=0.2, A=2.0) = A*exp(-(x-xm)^2/(2*sigmax^2)-(y-ym)^2/(2*sigmay^2))
 
-Advection2Example = Equation(TwoD(), 1, Scalar(), Advection2D(2.0, 1.0), u0_gauss2)
+Advection2Example = Equation(TwoD(), 1, Scalar(), ConstAdvection2D(2.0, 1.0), u0_gauss2)
+
+    # DIVERGENCE FREE VELOCITY FIELD
+
+struct Advection2D <: AbstractEquationFun
+    cnum::Array{Float64,3}
+    function Advection2D(mesh::TwoDCartesian, varphi::Base.Callable=phi)
+        @unpack Nx, Ny, x, y = mesh 
+        cnum = zeros(Nx, Ny, 2)
+        for j in 1:Nx
+            for k in 1:Ny
+                cnum[j,k,:] .= velfield(x[j],y[k],varphi)
+            end
+        end
+        new(cnum)
+    end
+end
+
+phi(v) = exp(-v)
+velfield(x,y, varphi::Base.Callable) = varphi(x^2+y^2)*[x, -y]
+
+flux_f(eq::Advection2D, u::Float64, j, k) = eq.cnum[j,k,1]*u
+flux_h(eq::Advection2D, u::Float64, j, k) = eq.cnum[j,k,2]*u
+Dflux_f(eq::Advection2D, ::Float64, j, k) = eq.cnum[j,k,1]
+Dflux_h(eq::Advection2D, ::Float64, j, k) = eq.cnum[j,k,2]
+
+function flux_f(eq::Advection2D, u::Matrix)
+    a = view(eq.cnum, :, :, 1)
+    a.*u
+end
+function flux_h(eq::Advection2D, u::Matrix)
+    b = view(eq.cnum, :, :, 2)
+    b.*u
+end
+Dflux_f(eq::Advection2D, ::Matrix) = eq.cnum[:,:,1]
+Dflux_h(eq::Advection2D, ::Matrix) = eq.cnum[:,:,2]
+
+advection2_vecfield(mesh::TwoDCartesian, varphi::Base.Callable=phi) = Equation(TwoD(), 1, Scalar(), Advection2D(mesh, varphi), u0_gauss2)
