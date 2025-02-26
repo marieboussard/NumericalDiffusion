@@ -15,7 +15,7 @@ function numflux!(::Rusanov2D, integrator::Integrator, j::Int, k::Int, args...)
     @unpack fnum, hnum = fnum 
     @unpack fcont, hcont = fcont
     @unpack Nx = params.mesh
-    CFL_local2D!(equation.eqtype, integrator, j, k)
+    CFL_local!(equation.dim, equation.eqtype, integrator, j, k)
     for r in 1:equation.p
         fnum[j,k,r] = (fcont[j,k,r]+ fcont[mod1(j+1,Nx),k,r]) *0.5 - space_cache.cflx_loc.*0.5 * (uprev[mod1(j+1,Nx),k,r] - uprev[j,k,r])
         hnum[j,k,r] = (hcont[j,k,r]+ hcont[j,mod1(k+1,Nx),r]) *0.5 - space_cache.cfly_loc.*0.5 * (uprev[j,mod1(k+1,Nx),r] - uprev[j,k,r])

@@ -65,7 +65,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
         
         # INIT SOLUTION AND FLUX
-        uinit                 = initialize_u(equation.dim, equation.source, equation, params)
+        uinit                 = initialize_u(equation.dim, equation.eqtype, equation.source, equation, params)
         # @show @allocated uinit = equation.initcond(params.mesh.x)
         # if equation.p == 1
         #     fnum = zeros(Float64, params.mesh.Nx+1)
@@ -102,7 +102,13 @@ end
 
 # # INIT INTEGRATOR CONTENT
 
-initialize_u(::OneD, ::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+initialize_u(::OneD, ::Scalar, ::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+function initialize_u(::OneD, ::System,  ::NoSource, equation::AbstractEquation, params::Parameters, args...)
+    uinit = zeros(eltype(x), (params.mesh.Nx, equation.p))
+    for j in 1:Nx
+        uinit[j,:] .= equation.initcond(params.mesh.x)
+    end
+end
 init_fnum(::OneD, args...) = OneDFnum(args...).fnum
 init_fnum(::TwoD, args...) = TwoDFnum(args...)
 init_fcont(::OneD, args...) = OneDFcont(args...).fcont

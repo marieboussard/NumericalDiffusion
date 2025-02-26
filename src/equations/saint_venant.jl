@@ -88,7 +88,7 @@ function CFL_cond!(::SaintVenant, integrator::Integrator)
     cfl_cache.cfl = maximum(cfl_cache.eigenmax)
 end
 
-function CFL_local!(::SaintVenant, integrator::Integrator, j::Int)
+function CFL_local!(::OneD, ::SaintVenant, integrator::Integrator, j::Int)
 
     @unpack uprev, cache, space_cache = integrator
     # @unpack stencil = cache
@@ -189,7 +189,7 @@ end
 
 # INITIALIZATION FUNCTIONS
 
-function initialize_u(::OneD, source::TopoSource, equation::AbstractEquation, params::Parameters)
+function initialize_u(::OneD, ::EquationType, source::TopoSource, equation::AbstractEquation, params::Parameters)
     @unpack x = params.mesh
     znum = z(source, x)
     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))

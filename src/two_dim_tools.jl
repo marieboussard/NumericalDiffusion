@@ -1,11 +1,22 @@
 # STORAGE OF u
 
-function initialize_u(::TwoD, ::NoSource, equation::AbstractEquation, params::Parameters)
+function initialize_u(::TwoD, ::Scalar, ::NoSource, equation::AbstractEquation, params::Parameters)
     @unpack Nx, Ny, x, y = params.mesh
     uinit = zeros(eltype(x), (Nx, Ny))
     for j in eachindex(x)
         for k in eachindex(y)
             uinit[j,k] = equation.initcond(x[j], y[k])
+        end
+    end
+    uinit
+end
+
+function initialize_u(::TwoD, ::System, ::NoSource, equation::AbstractEquation, params::Parameters)
+    @unpack Nx, Ny, x, y = params.mesh
+    uinit = zeros(eltype(x), (Nx, Ny, equation.p))
+    for j in eachindex(x)
+        for k in eachindex(y)
+            uinit[j,k,:] .= equation.initcond(x[j], y[k])
         end
     end
     uinit

@@ -24,7 +24,7 @@ function CFL_cond!(::Scalar, integrator::Integrator)
     end
 end
 
-function CFL_local!(::Scalar, integrator::Integrator, j::Int)
+function CFL_local!(::OneD, ::Scalar, integrator::Integrator, j::Int)
     @unpack cache, space_cache = integrator
     @unpack cfl_cache = cache
     @unpack absDfcont = cfl_cache
@@ -47,7 +47,7 @@ function CFL_local!(::Scalar, integrator::Integrator, j::Int)
 end
 
 CFL_cond!(::System, integrator::Integrator) = CFL_cond!(integrator.equation.funcs, integrator)
-CFL_local!(::System, integrator::Integrator, args...) = CFL_local!(integrator.equation.funcs, integrator, args...)
+CFL_local!(dim::EquationDim, ::System, integrator::Integrator, args...) = CFL_local!(dim, integrator.equation.funcs, integrator, args...)
 
 
 

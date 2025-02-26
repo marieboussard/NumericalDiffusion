@@ -36,6 +36,7 @@ module FiniteVolumes
     
     include("equations/burgers.jl")
     include("equations/saint_venant.jl")
+    include("equations/saint_venant_2D.jl")
     include("equations/advection.jl")
 
     include("schemes/euler.jl")
@@ -86,6 +87,7 @@ module FiniteVolumes
     export SaintVenant
     export SaintVenantAtRest
     export SaintVenantFlat
+    export SaintVenant2Flat
 
     export Advection
     export AdvectionExample

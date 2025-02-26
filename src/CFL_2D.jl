@@ -26,7 +26,7 @@ function CFL_cond2D!(::Scalar, integrator::Integrator)
     end
 end
 
-function CFL_local2D!(::Scalar, integrator::Integrator, j::Int, k::Int)
+function CFL_local!(::TwoD, ::Scalar, integrator::Integrator, j::Int, k::Int)
     @unpack cache, space_cache = integrator
     @unpack cfl_cache = cache
     @unpack Nx, Ny = integrator.params.mesh
@@ -35,7 +35,8 @@ function CFL_local2D!(::Scalar, integrator::Integrator, j::Int, k::Int)
     space_cache.cfly_loc = max(abs(Dhcont[j,k]), abs(Dhcont[j, mod1(k+1,Ny)]))
 end
 
-CFL_local2D!(::System, integrator::Integrator, args...) = CFL_local2D!(integrator.equation.funcs, integrator, args...)
+CFL_cond2D!(::System, integrator::Integrator, args...) = CFL_cond2D!(integrator.equation.funcs, integrator, args...)
+# CFL_local2D!(::System, integrator::Integrator, args...) = CFL_local2D!(integrator.equation.funcs, integrator, args...)
 
 function dt_CFL!(::TwoD, integrator::Integrator)
     @unpack params, t, cache = integrator
