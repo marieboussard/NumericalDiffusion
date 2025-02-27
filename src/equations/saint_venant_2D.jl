@@ -3,9 +3,12 @@ struct SaintVenant2D <: AbstractEquationFun end
 function flux_f(::SaintVenant2D, v)
     res = similar(v)
     g_half = g * 0.5 
-    h = view(v, :, :, 1)
-    hu = view(v, :, :, 2)
-    hv = view(v, :, :, 3)
+    # h = view(v, :, :, 1)
+    # hu = view(v, :, :, 2)
+    # hv = view(v, :, :, 3)
+    h = selectdim(v, 3, 1)
+    hu = selectdim(v, 3, 2)
+    hv = selectdim(v, 3, 3)
     for I in CartesianIndices(h)
         if h[I] > treshold
             res[I, 1] = hu[I]
@@ -24,9 +27,12 @@ function flux_f!(::SaintVenant2D, integrator)
     @unpack fcont = integrator.fcont
     @unpack u = integrator
     g_half = g * 0.5 
-    h = view(u, :, :, 1)
-    hu = view(u, :, :, 2)
-    hv = view(u, :, :, 3)
+    # h = view(u, :, :, 1)
+    # hu = view(u, :, :, 2)
+    # hv = view(u, :, :, 3)
+    h = selectdim(u, 3, 1)
+    hu = selectdim(u, 3, 2)
+    hv = selectdim(u, 3, 3)
     for I in CartesianIndices(h)
         if h[I] > treshold
             fcont[I, 1] = hu[I]
@@ -43,9 +49,12 @@ end
 function flux_h(::SaintVenant2D, v)
     res = similar(v)
     g_half = g * 0.5 
-    h = view(v, :, :, 1)
-    hu = view(v, :, :, 2)
-    hv = view(v, :, :, 3)
+    h = selectdim(v, 3, 1)
+    hu = selectdim(v, 3, 2)
+    hv = selectdim(v, 3, 3)
+    # h = view(v, :, :, 1)
+    # hu = view(v, :, :, 2)
+    # hv = view(v, :, :, 3)
     for I in CartesianIndices(h)
         if h[I] > treshold
             # hu = v[i, 2]
@@ -66,9 +75,12 @@ function flux_h!(::SaintVenant2D, integrator)
     @unpack hcont = integrator.fcont
     @unpack u = integrator
     g_half = g * 0.5 
-    h = view(u, :, :, 1)
-    hu = view(u, :, :, 2)
-    hv = view(u, :, :, 3)
+    # h = view(u, :, :, 1)
+    # hu = view(u, :, :, 2)
+    # hv = view(u, :, :, 3)
+    h = selectdim(u, 3, 1)
+    hu = selectdim(u, 3, 2)
+    hv = selectdim(u, 3, 3)
     for I in CartesianIndices(h)
         if h[I] > treshold
             hcont[I, 1] = hv[I]
@@ -96,8 +108,8 @@ mutable struct CFLCacheSaintVenant2D <: CFLCacheType
         hu = view(uinit, :, :, 2)
         hv = view(uinit, :, :, 3)
     for i in eachindex(h)
-        xeigenmax[i] = h[i] > treshold ? abs(hu[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
-        yeigenmax[i] = h[i] > treshold ? abs(hv[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
+        xeigenmax[i] = h[i] > treshold ? abs(hu[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(xeigenmax))
+        yeigenmax[i] = h[i] > treshold ? abs(hv[i] / h[i]) + sqrt(g*h[i]) : zero(eltype(yeigenmax))
     end
         new(zero(Float64), zero(Float64), xeigenmax, yeigenmax)
     end
@@ -144,9 +156,20 @@ SaintVenant2Flat = Equation(TwoD(), 3, System(), SaintVenant2D(), init_sv)
 # SOURCE TERM
 
 z(ts::TopoSource, x::AbstractVector, y::AbstractVector) = [ts.z(xj, yk) for xj in x for yk in y]
-Dz(ts::TopoSource, x::AbstractVector, y::AbstractVector) = [ts.Dz(xj, yk) for xj in x for yk in y]
+# function Dz(ts::TopoSource, x::AbstractVector, y::AbstractVector)
+#     Nx, Ny = length(x), length(y)
+#     res = zeros(Nx, Ny, 2)
+#     for j in 1:Nx
+#         for k in 1:Ny
+#             dz = 
+#             res[j,k] = 
+#     [ts.Dz(xj, yk) for xj in x for yk in y]
+# end
 z(ts::TopoSource, x::Real, y::Real) = ts.z(x, y)
 Dz(ts::TopoSource, x::Real, y::Real) = ts.Dz(x, y)
+
+# z(ts::TopoSource, mesh::TwoDMesh) = ts.z(mesh.x, mesh.y)
+# Dz(ts::TopoSource, mesh::TwoDMesh) = ts.Dz(mesh.x, mesh.y)
 
 function z(ts::TopoSource, mesh::TwoDMesh)
     @unpack x, y, Nx, Ny = mesh
@@ -156,6 +179,7 @@ function z(ts::TopoSource, mesh::TwoDMesh)
             res[j,k] = ts.z(x[j], y[k])
         end
     end
+    res
 end
 function Dz(ts::TopoSource, mesh::TwoDMesh)
     @unpack x, y, Nx, Ny = mesh
@@ -167,39 +191,33 @@ function Dz(ts::TopoSource, mesh::TwoDMesh)
             res[j,k,2] = dz[2]
         end
     end
+    res
 end
 
 # BY DEFAULT, POINTWISE DISCRETIZATION
 
-# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
-#     @unpack Dznum = source_cache
-#     s = similar(v)
-#     nvar = ndims(Dznum)+1
-#     indices = indices = [Colon() for _ in 1:nvar-1]
-#     # FIRST EQUATION HAS ZERO SOURCE TERM
-#     s1 = view(s, indices..., 1)
-#     for i in eachindex(s1)
-#         s1[i] = zero(eltype(v))
-#     end
-#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
-#     for r in 1:nvar-1
-#         sr = view(v, indices..., r)
-#         for i in eachindex(sr)
-#             if nvar==2
-#                 sr[i] = -v[i][1]*g*Dznum[i]
-#             else
-#                 sr[i] = -v[i][1]*g*Dznum[i][r]
-#             end
-#         end
-#     end
-#     s
-# end
+function discretize_sourceterm!(::TwoD, ::Pointwise, integrator::Integrator)
+    @unpack u, cache, source_cache = integrator
+    @views h = u[:,:,1]
+    for I in CartesianIndices(h)
+        cache.sourceterm[I,1] = zero(eltype(cache.sourceterm))
+        cache.sourceterm[I,2] = -h[I]*g*source_cache.Dznum[I,1]
+        cache.sourceterm[I,3] = -h[I]*g*source_cache.Dznum[I,2]
+    end
+end
 
-# INITIALIZATION FUNCTIONS
+# 1 # LAKE AT REST WITH FLAT TOPOGRAPHY
 
-# function initialize_u(::OneD, ::EquationType, source::TopoSource, equation::AbstractEquation, params::Parameters)
-#     @unpack x = params.mesh
-#     znum = z(source, x)
-#     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
-#     equation.initcond(x, znum)
-# end
+zflat2(x, y) = zero(x)
+Dzflat2(x, y) = (zero(x), zero(y))
+FlatTopo2 = TopoSource(zflat2, Dzflat2, Pointwise())
+
+SaintVenantFlat2 = Equation(TwoD(), 3, System(), SaintVenant2D(), (x,znum) -> init_lake_at_rest(x,znum), FlatTopo2)
+
+# 2 # LAKE AT REST WITH SINUSOIDAL TOPOGRAPHY
+
+zsinus2(x,y) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5 .+ (-cos.(2*pi*freq * y) .+ 1)*height*0.5
+Dzsinus2(x,y) = (pi*freq*(sin(2*pi*freq * x))*height, pi*freq*(sin(2*pi*freq * y))*height)
+BumpTopo2 = TopoSource(zsinus2, Dzsinus2, Pointwise())
+
+SaintVenantAtRest2 = Equation(TwoD(), 3, System(), SaintVenant2D(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo2)

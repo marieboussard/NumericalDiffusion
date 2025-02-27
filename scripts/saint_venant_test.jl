@@ -19,44 +19,46 @@ znum = z(equation.source, mesh.x)
 
 sol = solve(equation, params, Euler(), Roe());#; log_config=LogConfig(true,true,true,true));
 
-# using Plots
-# plot(mesh.x, znum, label="topo")
-# display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
+using Plots
+plot(mesh.x, znum, label="topo")
+display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
 
 # plot(mesh.x, znum, label="topo")
 # display(plot!(mesh.x, sol.uinit[:,1] .+ znum, label="water height"))
 
 # display(plot(mesh.x, sol.u[:,2], label="water flow"))
+# const nvar = 2
 
-# function discretize_sourceterm2(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
-#     @unpack Dznum = source_cache
-#     @show @allocated s = similar(v)
-#     @show @allocated nvar = ndims(Dznum)+1
-#     # @show @allocated indices = [Colon() for _ in 1:nvar-1]
+# function discretize_sourceterm2!(::Pointwise, integrator::Integrator)
+#     @unpack u, cache, source_cache = integrator
+#     @unpack Dznum, nvar = source_cache
+#     @unpack sourceterm = cache
+#     # @show @allocated nvar = ndims(znum)+1
+#     @show @allocated indices = ntuple(i -> Colon(), nvar - 1)
+#     #@show @allocated indices = indices = [Colon() for i in 1:nvar-1]
 #     # FIRST EQUATION HAS ZERO SOURCE TERM
-#     # @show @allocated s1 = view(s, indices..., 1)
-#     @show @allocated s1 = selectdim(s, nvar, 1)
-#     @show @allocated fill!(s1, zero(eltype(v)))
-#     # for i in eachindex(s1)
-#     #     s1[i] = zero(eltype(v))
-#     # end
+#     @show @allocated h = view(u, indices..., 1)
+#     @show @allocated h = selectdim(u, nvar, 1)
+#     @show @allocated s1 = view(sourceterm, indices..., 1)
+#     @show @allocated s1 = selectdim(sourceterm, nvar, 1)
+#     @show @allocated fill!(s1, zero(eltype(u)))
 #     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
 #     if nvar==2
 #         for i in eachindex(Dznum)
-#             s[i,2] = -v[i][1]*g*Dznum[i]
+#             @show @allocated sourceterm[i,2] = -g*h[i]*Dznum[i]
 #         end
 #     else
 #         for r in 2:nvar
-#             @show @allocated sr = selectdim(s, nvar, r)
+#             @show @allocated sr = selectdim(sourceterm, nvar, r)
 #             for i in eachindex(s1)
-#                 sr[i] = -g * v[i, 1] * Dznum[i][r-1]
+#                 @show @allocated sr[i] = -g * h[i] * Dznum[i][r-1]
 #             end
 #         end
 #     end
-#     s
 # end
-
 # integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig);
+
+# @show @allocated discretize_sourceterm2!(integrator.equation.source.source_discretize, integrator)
 
 # @unpack equation, uinit, params, source_cache = integrator
 # @unpack source = equation

@@ -125,18 +125,31 @@ end
 #     return v
 # end
 
-function init_lake_at_rest(x::T, znum::T; c=one(eltype(x))) where T<:AbstractVector
+# function init_lake_at_rest(x::T, znum::T; c=one(eltype(x))) where T<:AbstractVector
+#     nvar = ndims(znum)+1
+#     v = zeros(eltype(x), (size(znum)..., nvar))
+#     indices = indices = [Colon() for i in 1:nvar-1]
+#     for r in 1:nvar-1
+#         vr = view(v, indices..., r)
+#         for i in eachindex(x)
+#             vr[i] = max(zero(eltype(x)), c - znum[i])
+#         end
+#     end
+#     vend = view(v, indices..., nvar)
+#     vend .= zero(eltype(x))
+#     return v
+# end
+function init_lake_at_rest(x::T, znum::S; c=one(eltype(x))) where T<:AbstractArray where S<:AbstractArray
     nvar = ndims(znum)+1
     v = zeros(eltype(x), (size(znum)..., nvar))
-    indices = indices = [Colon() for i in 1:nvar-1]
     for r in 1:nvar-1
-        vr = view(v, indices..., r)
-        for i in eachindex(x)
+        vr = selectdim(v, nvar, r)
+        for i in eachindex(vr)
             vr[i] = max(zero(eltype(x)), c - znum[i])
         end
     end
-    vend = view(v, indices..., nvar)
-    vend .= zero(eltype(x))
+    vend = selectdim(v, nvar, nvar)
+    fill!(vend, zero(eltype(x)))
     return v
 end
 
@@ -159,12 +172,14 @@ z(ts::TopoSource, mesh::OneDMesh) = ts.z.(mesh.x)
 Dz(ts::TopoSource, mesh::OneDMesh) = ts.Dz.(mesh.x)
 
 struct TopoSourceCache{znumType, DznumType} <: sourceCacheType
+    nvar::Int64
     znum::znumType
     Dznum::DznumType
     function TopoSourceCache(topo_source::TopoSource, source_discretize::SourceDiscretize, mesh::Mesh)
         znum = z(topo_source, mesh)
         Dznum = init_Dznum(source_discretize, topo_source, mesh)
-        new{typeof(znum), typeof(Dznum)}(znum, Dznum)
+        nvar = ndims(znum)+1
+        new{typeof(znum), typeof(Dznum)}(nvar, znum, Dznum)
     end
 end
 
@@ -194,54 +209,32 @@ init_Dznum(::HRDisc, args...) = nothing
 #     res
 # end
 
-# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
-#     @unpack Dznum = source_cache
-#     s = similar(v)
-#     nvar = ndims(Dznum)+1
-#     indices = [Colon() for _ in 1:nvar-1]
-#     # FIRST EQUATION HAS ZERO SOURCE TERM
-#     s1 = view(s, indices..., 1)
-#     for i in eachindex(s1)
-#         s1[i] = zero(eltype(v))
-#     end
-#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
-#     for r in 1:nvar-1
-#         sr = view(v, indices..., r)
-#         for i in eachindex(sr)
-#             if nvar==2
-#                 sr[i] = -v[i][1]*g*Dznum[i]
-#             else
-#                 sr[i] = -v[i][1]*g*Dznum[i][r]
-#             end
-#         end
-#     end
-#     s
-# end
-
 function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
-    @unpack Dznum = source_cache
+    @unpack nvar, Dznum = source_cache
     s = similar(v)
-    nvar = ndims(Dznum)+1
+    # nvar = ndims(Dznum)+1
     # FIRST EQUATION HAS ZERO SOURCE TERM
     s1 = selectdim(s, nvar, 1)
     fill!(s1, zero(eltype(v)))
     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
     if nvar==2
         for i in eachindex(Dznum)
-            s[i,2] = -v[i][1]*g*Dznum[i]
+            s[i,2] = -v[i, 1]*g*Dznum[i]
         end
     else
+        h = selectdim(v, nvar, 1)
         for r in 2:nvar
             sr = selectdim(s, nvar, r)
+            Dzr = selectdim(Dznum, nvar, r-1)
             for i in eachindex(s1)
-                sr[i] = -g * v[i, 1] * Dznum[i][r-1]
+                sr[i] = -g * h[i] * Dzr[i]
             end
         end
     end
     s
 end
 
-function discretize_sourceterm!(::Pointwise, integrator::Integrator)
+function discretize_sourceterm!(::OneD, ::Pointwise, integrator::Integrator)
     @unpack u, cache, source_cache = integrator
     @views h = u[:,1]
     for i in eachindex(h)
@@ -250,11 +243,59 @@ function discretize_sourceterm!(::Pointwise, integrator::Integrator)
     end
 end
 
+# function discretize_sourceterm!(::Pointwise, integrator::Integrator)
+#     @unpack u, cache, source_cache = integrator
+#     @unpack nvar, Dznum = source_cache
+#     @unpack sourceterm = cache
+#     # FIRST EQUATION HAS ZERO SOURCE TERM
+#     h = selectdim(u, nvar, 1)
+#     s1 = selectdim(sourceterm, nvar, 1)
+#     fill!(s1, zero(eltype(u)))
+#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+#     if nvar==2
+#         for i in eachindex(Dznum)
+#             sourceterm[i,2] = -g*h[i]*Dznum[i]
+#         end
+#     else
+#         for r in 2:nvar
+#             sr = selectdim(sourceterm, nvar, r)
+#             for i in eachindex(s1)
+#                 sr[i] = -g * h[i] * Dznum[i][r-1]
+#             end
+#         end
+#     end
+# end
+
+# function discretize_sourceterm!(::Pointwise, integrator::Integrator)
+#     @unpack u, cache, source_cache = integrator
+#     @unpack Dznum, nvar = source_cache
+#     @unpack sourceterm = cache
+#     indices = ntuple(i -> Colon(), nvar - 1)
+#     # FIRST EQUATION HAS ZERO SOURCE TERM
+#     h = view(u, indices..., 1)
+#     s1 = view(sourceterm, indices..., 1)
+#     fill!(s1, zero(eltype(u)))
+#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+#     if nvar==2
+#         for i in eachindex(Dznum)
+#             sourceterm[i,2] = -g*h[i]*Dznum[i]
+#         end
+#     else
+#         for r in 2:nvar
+#             sr = view(sourceterm, indices..., r)
+#             for i in eachindex(s1)
+#                 sr[i] = -g * h[i] * Dznum[i][r-1]
+#             end
+#         end
+#     end
+# end
+
 # INITIALIZATION FUNCTIONS
 
-function initialize_u(::OneD, ::EquationType, source::TopoSource, equation::AbstractEquation, params::Parameters)
+function initialize_u(::EquationDim, ::EquationType, source::TopoSource, equation::AbstractEquation, params::Parameters)
     @unpack x = params.mesh
-    znum = z(source, x)
+    #znum = z(source, x)
+    znum = z(source, params.mesh)
     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
     equation.initcond(x, znum)
 end

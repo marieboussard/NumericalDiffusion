@@ -80,7 +80,7 @@ function loopfooter!(integrator::Integrator)
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
     # UPDATING SOURCE TERM
     if has_source(source)
-        discretize_sourceterm!(source.source_discretize, integrator)
+        discretize_sourceterm!(equation.dim, source.source_discretize, integrator)
     end
     update_log!(integrator)
     nothing

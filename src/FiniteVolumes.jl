@@ -93,6 +93,8 @@ module FiniteVolumes
     export SaintVenantFlat
     export SaintVenant2D
     export SaintVenant2Flat
+    export SaintVenantFlat2
+    export SaintVenantAtRest2
 
     export Advection
     export AdvectionExample

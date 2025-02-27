@@ -1,5 +1,4 @@
 using FiniteVolumes
-# using Plots
 using BenchmarkTools
 using UnPack
 
@@ -14,12 +13,15 @@ mesh = TwoDCartesian(Nx, Ny, xmin, xmax, ymin, ymax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 
 using FiniteVolumes: SaintVenant2Flat
-equation = SaintVenant2Flat
+#equation = SaintVenant2Flat
+#equation = SaintVenantFlat2
+equation = SaintVenantAtRest2
 
-# sol = solve(equation, params, Euler(), Rusanov2D(); maxiter=1);
+sol = solve(equation, params, Euler(), Rusanov2D(); maxiter=1);
 
-# display(heatmap(mesh.x, mesh.y, sol.u[:,:,1]))
-# display(heatmap(mesh.x, mesh.y, sol.u[:,:,2]))
-# heatmap(mesh.x, mesh.y, sol.u[:,:,3])
+using Plots
+display(heatmap(mesh.x, mesh.y, sol.u[:,:,1], title="h"))
+display(heatmap(mesh.x, mesh.y, sol.u[:,:,2], title="hu"))
+heatmap(mesh.x, mesh.y, sol.u[:,:,3], title="hv")
 
-integrator = Integrator(equation, params, Euler(), Rusanov2D(), 1, DefaultLogConfig);
+# integrator = Integrator(equation, params, Euler(), Rusanov2D(), 1, DefaultLogConfig);
