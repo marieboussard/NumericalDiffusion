@@ -140,3 +140,66 @@ function init_sv(x, y, args...)
 end
 
 SaintVenant2Flat = Equation(TwoD(), 3, System(), SaintVenant2D(), init_sv)
+
+# SOURCE TERM
+
+z(ts::TopoSource, x::AbstractVector, y::AbstractVector) = [ts.z(xj, yk) for xj in x for yk in y]
+Dz(ts::TopoSource, x::AbstractVector, y::AbstractVector) = [ts.Dz(xj, yk) for xj in x for yk in y]
+z(ts::TopoSource, x::Real, y::Real) = ts.z(x, y)
+Dz(ts::TopoSource, x::Real, y::Real) = ts.Dz(x, y)
+
+function z(ts::TopoSource, mesh::TwoDMesh)
+    @unpack x, y, Nx, Ny = mesh
+    res = zeros(eltype(x), Nx, Ny)
+    for j in 1:Nx
+        for k in 1:Ny
+            res[j,k] = ts.z(x[j], y[k])
+        end
+    end
+end
+function Dz(ts::TopoSource, mesh::TwoDMesh)
+    @unpack x, y, Nx, Ny = mesh
+    res = zeros(eltype(x), Nx, Ny, 2)
+    for j in 1:Nx
+        for k in 1:Ny
+            dz = ts.Dz(x[j], y[k])
+            res[j,k,1] = dz[1]
+            res[j,k,2] = dz[2]
+        end
+    end
+end
+
+# BY DEFAULT, POINTWISE DISCRETIZATION
+
+# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
+#     @unpack Dznum = source_cache
+#     s = similar(v)
+#     nvar = ndims(Dznum)+1
+#     indices = indices = [Colon() for _ in 1:nvar-1]
+#     # FIRST EQUATION HAS ZERO SOURCE TERM
+#     s1 = view(s, indices..., 1)
+#     for i in eachindex(s1)
+#         s1[i] = zero(eltype(v))
+#     end
+#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+#     for r in 1:nvar-1
+#         sr = view(v, indices..., r)
+#         for i in eachindex(sr)
+#             if nvar==2
+#                 sr[i] = -v[i][1]*g*Dznum[i]
+#             else
+#                 sr[i] = -v[i][1]*g*Dznum[i][r]
+#             end
+#         end
+#     end
+#     s
+# end
+
+# INITIALIZATION FUNCTIONS
+
+# function initialize_u(::OneD, ::EquationType, source::TopoSource, equation::AbstractEquation, params::Parameters)
+#     @unpack x = params.mesh
+#     znum = z(source, x)
+#     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
+#     equation.initcond(x, znum)
+# end

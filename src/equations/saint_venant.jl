@@ -142,10 +142,10 @@ end
 
 # SOURCE TERM FOR SAINT VENANT EQUATION
 
-struct Pointwise <: SourceDiscretize{SaintVenant} end
-struct HRDisc <: SourceDiscretize{SaintVenant} end
+struct Pointwise <: SourceDiscretize end
+struct HRDisc <: SourceDiscretize end
 
-struct TopoSource{sourceDiscretizeType<:SourceDiscretize{SaintVenant}, F1<:Base.Callable, F2<:Base.Callable} <: AbstractSource{SaintVenant}
+struct TopoSource{sourceDiscretizeType<:SourceDiscretize, F1<:Base.Callable, F2<:Base.Callable} <: AbstractSource
     z::F1
     Dz::F2
     source_discretize::sourceDiscretizeType
@@ -155,29 +155,92 @@ z(ts::TopoSource, x::AbstractVector) = ts.z.(x)
 Dz(ts::TopoSource, x::AbstractVector) = ts.Dz.(x)
 Dz(ts::TopoSource, x::Real) = ts.Dz(x)
 
+z(ts::TopoSource, mesh::OneDMesh) = ts.z.(mesh.x)
+Dz(ts::TopoSource, mesh::OneDMesh) = ts.Dz.(mesh.x)
+
 struct TopoSourceCache{znumType, DznumType} <: sourceCacheType
     znum::znumType
     Dznum::DznumType
-    function TopoSourceCache(topo_source::TopoSource, source_discretize::SourceDiscretize{SaintVenant}, x)
-        znum = z(topo_source, x)
-        Dznum = init_Dznum(source_discretize, topo_source, x)
+    function TopoSourceCache(topo_source::TopoSource, source_discretize::SourceDiscretize, mesh::Mesh)
+        znum = z(topo_source, mesh)
+        Dznum = init_Dznum(source_discretize, topo_source, mesh)
         new{typeof(znum), typeof(Dznum)}(znum, Dznum)
     end
 end
 
 # INIT CACHE CONTENT
-init_Dznum(::Pointwise, topo_source::TopoSource, x) = Dz(topo_source, x)
+init_Dznum(::Pointwise, topo_source::TopoSource, mesh::Mesh) = Dz(topo_source, mesh)
 init_Dznum(::HRDisc, args...) = nothing
 
 # BY DEFAULT, POINTWISE DISCRETIZATION
 
-function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, x)
-    res = zero(v)
-    for i in eachindex(view(v, :, 1))
-        res[i,2] = - v[i,1] * g * Dz(topo_source, x[i])
+# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::OneDMesh)
+#     @unpack x = mesh
+#     res = zero(v)
+#     for i in eachindex(view(v, :, 1))
+#         res[i,2] = - v[i,1] * g * Dz(topo_source, x[i])
+#     end
+#     res
+# end
+
+# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::OneDMesh, source_cache::TopoSourceCache)
+#     @unpack x = mesh
+#     @unpack Dznum = source_cache
+#     res = similar(v)
+#     for i in eachindex(view(v, :, 1))
+#         res[i,1] = zero(eltype(v))
+#         res[i,2] = - v[i,1] * g * Dznum[i]
+#     end
+#     res
+# end
+
+# function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
+#     @unpack Dznum = source_cache
+#     s = similar(v)
+#     nvar = ndims(Dznum)+1
+#     indices = [Colon() for _ in 1:nvar-1]
+#     # FIRST EQUATION HAS ZERO SOURCE TERM
+#     s1 = view(s, indices..., 1)
+#     for i in eachindex(s1)
+#         s1[i] = zero(eltype(v))
+#     end
+#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+#     for r in 1:nvar-1
+#         sr = view(v, indices..., r)
+#         for i in eachindex(sr)
+#             if nvar==2
+#                 sr[i] = -v[i][1]*g*Dznum[i]
+#             else
+#                 sr[i] = -v[i][1]*g*Dznum[i][r]
+#             end
+#         end
+#     end
+#     s
+# end
+
+function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
+    @unpack Dznum = source_cache
+    s = similar(v)
+    nvar = ndims(Dznum)+1
+    # FIRST EQUATION HAS ZERO SOURCE TERM
+    s1 = selectdim(s, nvar, 1)
+    fill!(s1, zero(eltype(v)))
+    # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+    if nvar==2
+        for i in eachindex(Dznum)
+            s[i,2] = -v[i][1]*g*Dznum[i]
+        end
+    else
+        for r in 2:nvar
+            sr = selectdim(s, nvar, r)
+            for i in eachindex(s1)
+                sr[i] = -g * v[i, 1] * Dznum[i][r-1]
+            end
+        end
     end
-    res
+    s
 end
+
 function discretize_sourceterm!(::Pointwise, integrator::Integrator)
     @unpack u, cache, source_cache = integrator
     @views h = u[:,1]
@@ -195,7 +258,7 @@ function initialize_u(::OneD, ::EquationType, source::TopoSource, equation::Abst
     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
     equation.initcond(x, znum)
 end
-init_sourceterm(source::TopoSource, uinit, x) = discretize_sourceterm(source.source_discretize, source, uinit, x)
+init_sourceterm(source::TopoSource, args...) = discretize_sourceterm(source.source_discretize, source, args...)
 
 # EXAMPLE OF CONFIGURATIONS FOR SAINT VENANT EQUATION
 

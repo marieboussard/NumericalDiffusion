@@ -10,10 +10,10 @@ mutable struct IntegratorCache{cflCacheType<:CFLCacheType, sourcetermType} <: Ca
     cfl_cache::cflCacheType
     sourceterm::sourcetermType
 
-    function IntegratorCache(sL, sR, equation, uinit, x)
+    function IntegratorCache(sL::Int, sR::Int, equation::Equation, uinit::AbstractArray, mesh::Mesh, source_cache)
         # Dfcont = init_Dfcont(equation.eqtype, equation, uinit)
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, uinit)
-        sourceterm = init_sourceterm(equation.source, uinit, x)
+        sourceterm = init_sourceterm(equation.source, uinit, mesh, source_cache)
         new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
     end
 end
@@ -32,7 +32,7 @@ init_sourceterm(::NoSource, args...) = nothing
 # init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
 
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, fcontType, scacheType <: Cache, tcacheTpe <: Cache, icacheType <: IntegratorCache, srcacheType}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, fcontType, scacheType <: Cache, tcacheTpe <: Cache, srcacheType, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -40,27 +40,29 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     time_scheme::tschemeType 
     space_scheme::sschemeType
 
+    # DATA
     u::dataType
     uprev::dataType
     uinit::dataType
     fnum::fnumType
     fcont::fcontType
 
+    # TIME PARAMETERS
     niter::Int
     dt::Float64
     t::Float64
 
+    # OPTIONS
     opts::IntegratorOptions
     
+    # CACHE
     space_cache::scacheType
     time_cache::tcacheType
-    cache::icacheType
     source_cache::srcacheType
+    cache::icacheType
 
+    # LOGBOOK
     log::LogBook
-
-    # cfl::Float64
-    
 
     function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
         
@@ -80,13 +82,13 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT CACHE
         space_cache         = init_cache(space_scheme)
         time_cache          = init_cache(time_scheme)
-        integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh.x)
-        source_cache        = init_cache(equation.source, params.mesh.x)
+        source_cache        = init_cache(equation.source, params.mesh)
+        integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh, source_cache)
 
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(fcont), typeof(space_cache), typeof(time_cache), typeof(integrator_cache), typeof(source_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, integrator_cache, source_cache, logbook)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(fcont), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, source_cache, integrator_cache, logbook)
     end
 
 

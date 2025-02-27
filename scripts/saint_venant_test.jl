@@ -1,5 +1,4 @@
 using FiniteVolumes
-using Plots
 using BenchmarkTools
 using UnPack
 
@@ -18,44 +17,48 @@ equation = SaintVenantAtRest
 znum = z(equation.source, mesh.x)
 
 
-sol = solve(equation, params, Euler(), Roe())#; log_config=LogConfig(true,true,true,true));
+sol = solve(equation, params, Euler(), Roe());#; log_config=LogConfig(true,true,true,true));
 
-plot(mesh.x, znum, label="topo")
-display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
+# using Plots
+# plot(mesh.x, znum, label="topo")
+# display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
 
 # plot(mesh.x, znum, label="topo")
 # display(plot!(mesh.x, sol.uinit[:,1] .+ znum, label="water height"))
 
 # display(plot(mesh.x, sol.u[:,2], label="water flow"))
 
-# println("Burgers")
-# @btime uinit = BurgersArticle.initcond(params.mesh.x)
-# println("SaintVenant")
-# @btime uinit = SaintVenantAtRest.initcond(params.mesh.x)
+# function discretize_sourceterm2(::Pointwise, topo_source::TopoSource , v, mesh::Mesh, source_cache::TopoSourceCache)
+#     @unpack Dznum = source_cache
+#     @show @allocated s = similar(v)
+#     @show @allocated nvar = ndims(Dznum)+1
+#     # @show @allocated indices = [Colon() for _ in 1:nvar-1]
+#     # FIRST EQUATION HAS ZERO SOURCE TERM
+#     # @show @allocated s1 = view(s, indices..., 1)
+#     @show @allocated s1 = selectdim(s, nvar, 1)
+#     @show @allocated fill!(s1, zero(eltype(v)))
+#     # for i in eachindex(s1)
+#     #     s1[i] = zero(eltype(v))
+#     # end
+#     # OTHER EQUATIONS HAVE SPACE DERIVATED SOURCE TERMS
+#     if nvar==2
+#         for i in eachindex(Dznum)
+#             s[i,2] = -v[i][1]*g*Dznum[i]
+#         end
+#     else
+#         for r in 2:nvar
+#             @show @allocated sr = selectdim(s, nvar, r)
+#             for i in eachindex(s1)
+#                 sr[i] = -g * v[i, 1] * Dznum[i][r-1]
+#             end
+#         end
+#     end
+#     s
+# end
 
+# integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig);
 
+# @unpack equation, uinit, params, source_cache = integrator
+# @unpack source = equation
 
-# println()
-# println()
-# println("Burgers")
-# @show @allocated solve(BurgersArticle, params, Euler(), Rusanov(); maxiter=5);
-# println()
-# println("SaintVenant")
-# @show @allocated solve(SaintVenantAtRest, params, Euler(), Rusanov(); maxiter=5);
-
-
-# println()
-# println()
-# println("Burgers")
-# @btime solve(BurgersArticle, params, Euler(), Rusanov(); maxiter=1000);
-# println()
-# println("SaintVenant")
-# @btime solve(SaintVenantAtRest, params, Euler(), Rusanov(); maxiter=1000);
-
-# println()
-# println()
-# println("Burgers")
-# @allocated Integrator(BurgersArticle, params, Euler(), Rusanov(), 5, DefaultLogConfig);
-# println()
-# println("SaintVenant")
-# @allocated Integrator(SaintVenantAtRest, params, Euler(), Rusanov(), 5, DefaultLogConfig);
+# @show @allocated discretize_sourceterm2(source.source_discretize, source, uinit, params.mesh, source_cache)

@@ -22,7 +22,8 @@ module FiniteVolumes
 
     include("two_dim_tools.jl")
 
-    abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
+    # abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
+    abstract type SourceDiscretize end
 
     export DefaultLogConfig
     include("log.jl")
@@ -48,6 +49,7 @@ module FiniteVolumes
 
     include("solve.jl")
 
+    export Mesh
     export OneDMesh
     export TwoDCartesian
     export Parameters
@@ -101,6 +103,8 @@ module FiniteVolumes
 
     export discretize_sourceterm!
     export Pointwise
+    export TopoSource
+    export TopoSourceCache
 
     export flux 
     export Dflux

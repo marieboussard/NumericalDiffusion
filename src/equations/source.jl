@@ -1,7 +1,10 @@
-abstract type AbstractSource{eqFunType<:AbstractEquationFun} end
-struct NoSource <: AbstractSource{EquationFun} end
+# abstract type AbstractSource{eqFunType<:AbstractEquationFun} end
+# struct NoSource <: AbstractSource{EquationFun} end
+abstract type AbstractSource end
+struct NoSource <: AbstractSource end
 
-has_source(::AbstractSource{T}) where T = true
+# has_source(::AbstractSource{T}) where T = true
+has_source(::AbstractSource) = true
 has_source(::NoSource) = false
 
 # s(::NoSource) = nothing

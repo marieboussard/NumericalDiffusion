@@ -8,6 +8,10 @@
 
 # source_term(::InterpolDiscretize, sourcefun, x) = sourcefun.(x)
 
-abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
-struct Pointwise <: SourceDiscretize{SaintVenant} end
-struct HRDisc <: SourceDiscretize{SaintVenant} end
+# abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
+# struct Pointwise <: SourceDiscretize{SaintVenant} end
+# struct HRDisc <: SourceDiscretize{SaintVenant} end
+
+abstract type SourceDiscretize end
+struct Pointwise <: SourceDiscretize end
+struct HRDisc <: SourceDiscretize end
