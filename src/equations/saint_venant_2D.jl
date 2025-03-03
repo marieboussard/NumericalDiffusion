@@ -138,8 +138,8 @@ function CFL_local!(::TwoD, ::SaintVenant2D, integrator::Integrator, j::Int, k::
     @unpack uprev, cache, space_cache = integrator
     @unpack xeigenmax, yeigenmax = cache.cfl_cache
     @unpack Nx, Ny = integrator.params.mesh
-    space_cache.cflx_loc = max(xeigenmax[j, k], xeigenmax[mod1(j+1,Nx)])
-    space_cache.cfly_loc = max(yeigenmax[j, k], yeigenmax[j, mod1(k+1,Ny)])
+    space_cache.cflx_loc = max(xeigenmax[j], xeigenmax[mod1(j+1,Nx)])
+    space_cache.cfly_loc = max(yeigenmax[k], yeigenmax[mod1(k+1,Ny)])
 end
 
 # SOME INITIAL CONDITIONS
@@ -221,3 +221,10 @@ Dzsinus2(x,y) = (pi*freq*(sin(2*pi*freq * x))*height, pi*freq*(sin(2*pi*freq * y
 BumpTopo2 = TopoSource(zsinus2, Dzsinus2, Pointwise())
 
 SaintVenantAtRest2 = Equation(TwoD(), 3, System(), SaintVenant2D(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo2)
+
+# A FUNCTION TO CREATE ANY TOPOGRAPHY SPECIFIED BY THE USER (THE DERIVATIVES MUST BE KNOWN)
+
+function saintvenant_2d_with_topo(z, Dz; sourcedisc::SourceDiscretize=Pointwise(), init_fun=init_lake_at_rest)
+    topo = TopoSource(z, Dz, sourcedisc)
+    Equation(TwoD(), 3, System(), SaintVenant2D(), (x,znum) -> init_fun(x, znum), topo)
+end

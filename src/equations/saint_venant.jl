@@ -142,14 +142,14 @@ end
 function init_lake_at_rest(x::T, znum::S; c=one(eltype(x))) where T<:AbstractArray where S<:AbstractArray
     nvar = ndims(znum)+1
     v = zeros(eltype(x), (size(znum)..., nvar))
-    for r in 1:nvar-1
-        vr = selectdim(v, nvar, r)
-        for i in eachindex(vr)
-            vr[i] = max(zero(eltype(x)), c - znum[i])
-        end
+    h = selectdim(v, nvar, 1)
+    for i in eachindex(h)
+        h[i] = max(zero(eltype(x)), c - znum[i])
     end
-    vend = selectdim(v, nvar, nvar)
-    fill!(vend, zero(eltype(x)))
+    for r in 2:nvar
+        vr = selectdim(v, nvar, r)
+        fill!(vr, zero(eltype(x)))
+    end
     return v
 end
 

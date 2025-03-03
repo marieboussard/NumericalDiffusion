@@ -95,6 +95,7 @@ module FiniteVolumes
     export SaintVenant2Flat
     export SaintVenantFlat2
     export SaintVenantAtRest2
+    export saintvenant_2d_with_topo
 
     export Advection
     export AdvectionExample
@@ -114,8 +115,8 @@ module FiniteVolumes
     export flux_h
     export has_source
 
-    export z
-    export Dz
+    # export z
+    # export Dz
 
     export g
     export treshold
