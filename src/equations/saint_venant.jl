@@ -8,15 +8,24 @@ struct SaintVenant <: AbstractEquationFun end
 function flux(::SaintVenant, v)
     res = similar(v)
     g_half = g * 0.5 
-    h = view(v, :, 1)
-    for i in eachindex(h)
-        if h[i] > treshold
-            hu = v[i, 2]
-            res[i, 1] = hu
-            res[i, 2] = hu^2 / h[i] + g_half * h[i]^2
+    if ndims(v)==1
+        if v[1] > treshold
+            res[1] = v[2]
+            res[2] = v[2]^2/v[1] + g_half * v[1]^2
         else
-            res[i, 1] = zero(eltype(v))
-            res[i, 2] = zero(eltype(v))
+            fill!(res, zero(eltype(v)))
+        end
+    else
+        h = view(v, :, 1)
+        for i in eachindex(h)
+            if h[i] > treshold
+                hu = v[i, 2]
+                res[i, 1] = hu
+                res[i, 2] = hu^2 / h[i] + g_half * h[i]^2
+            else
+                res[i, 1] = zero(eltype(v))
+                res[i, 2] = zero(eltype(v))
+            end
         end
     end
     res
@@ -235,8 +244,8 @@ function discretize_sourceterm(::Pointwise, topo_source::TopoSource , v, mesh::M
 end
 
 function discretize_sourceterm!(::OneD, ::Pointwise, integrator::Integrator)
-    @unpack u, cache, source_cache = integrator
-    @views h = u[:,1]
+    @unpack uprev, cache, source_cache = integrator
+    @views h = uprev[:,1]
     for i in eachindex(h)
         cache.sourceterm[i,1] = zero(eltype(cache.sourceterm))
         cache.sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
@@ -299,7 +308,7 @@ function initialize_u(::EquationDim, ::EquationType, source::TopoSource, equatio
     #(equation.initcond(x, znum), init_cache(source, source.source_discretize, x, znum))
     equation.initcond(x, znum)
 end
-init_sourceterm(source::TopoSource, args...) = discretize_sourceterm(source.source_discretize, source, args...)
+#init_sourceterm(source::TopoSource, args...) = init_sourceterm(source.source_discretize, source, args...)
 
 # EXAMPLE OF CONFIGURATIONS FOR SAINT VENANT EQUATION
 
@@ -321,3 +330,10 @@ Dzsinus(x) = pi*freq*(sin(2*pi*freq * x))*height
 BumpTopo = TopoSource(zsinus, Dzsinus, Pointwise())
 
 SaintVenantAtRest = Equation(OneD(), 2, System(), SaintVenant(), (x,znum) -> init_lake_at_rest(x,znum), BumpTopo)
+
+# A FUNCTION TO CREATE ANY TOPOGRAPHY SPECIFIED BY THE USER (THE DERIVATIVES MUST BE KNOWN)
+
+function saintvenant_with_topo(z, Dz; sourcedisc::SourceDiscretize=Pointwise(), init_fun=init_lake_at_rest)
+    topo = TopoSource(z, Dz, sourcedisc)
+    Equation(OneD(), 2, System(), SaintVenant(), (x,znum) -> init_fun(x, znum), topo)
+end

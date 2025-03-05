@@ -35,7 +35,7 @@ display(plot(x, y, c, st=:surface, zlims=(0,1)))
 equation = saintvenant_2d_with_topo(z, Dz)
 
 # FINITE VOLUME RESOLUTION
-sol = solve(equation, params, Euler(), Rusanov2D(); maxiter=1);
+sol = solve(equation, params, Euler(), Rusanov2D());
 
 clim = (minimum(sol.u .- sol.uinit), maximum(sol.u .- sol.uinit))
 

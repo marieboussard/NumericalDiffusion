@@ -3,8 +3,8 @@ using BenchmarkTools
 using UnPack
 
 # Domain definition
-Nx = 20
-Ny = 20
+Nx = 100
+Ny = 100
 xmin, xmax, ymin, ymax = -2, 2,-2,2
 t0, tf = 0.0, 2.0
 CFL_factor = 0.5
@@ -17,7 +17,7 @@ using FiniteVolumes: SaintVenant2Flat
 #equation = SaintVenantFlat2
 equation = SaintVenantAtRest2
 
-sol = solve(equation, params, Euler(), Rusanov2D(); maxiter=1);
+sol = solve(equation, params, Euler(), Rusanov2D());
 
 using Plots
 clim = (minimum(sol.uinit), maximum(sol.uinit))

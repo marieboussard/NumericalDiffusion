@@ -1,6 +1,7 @@
 function solve(equation, params, time_scheme, space_scheme; maxiter = 1000, log_config = DefaultLogConfig, name="", kwargs...)
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
+    initialize_integrator!(integrator)
 
     while integrator.t < integrator.params.tf && integrator.niter < maxiter
         loopheader!(integrator)
@@ -12,8 +13,8 @@ end
 
 function performstep!(::OneD, integrator::Integrator)
     @unpack dx, Nx = integrator.params.mesh
-    @unpack u, uprev, dt, fnum, equation, cache = integrator
-    @unpack sourceterm = cache
+    @unpack u, uprev, dt, fnum, equation = integrator
+    
     numflux!(integrator)
     # @views fluxforward = fnum[2:end,:]
     # @views fluxbackward = fnum[1:end-1,:]
@@ -31,9 +32,10 @@ function performstep!(::OneD, integrator::Integrator)
     end
 
     if has_source(equation.source)
+        discretize_sourceterm!(equation.dim, equation.source.source_discretize, integrator)
         for i in 1:Nx
             for j in 1:equation.p
-                u[i,j] += dt * sourceterm[i,j]
+                u[i,j] += dt * integrator.cache.sourceterm[i,j]
             end
         end
     end
@@ -41,9 +43,8 @@ end
 
 function performstep!(::TwoD, integrator::Integrator)
     @unpack dx, dy, Nx, Ny = integrator.params.mesh
-    @unpack u, uprev, dt, fnum, equation, cache = integrator
+    @unpack u, uprev, dt, fnum, equation = integrator
     @unpack fnum, hnum = fnum
-    @unpack sourceterm = cache
     numflux2D!(integrator)
 
     for j in 1:Nx
@@ -55,10 +56,11 @@ function performstep!(::TwoD, integrator::Integrator)
     end
 
     if has_source(equation.source)
+        discretize_sourceterm!(equation.dim, equation.source.source_discretize, integrator)
         for j in 1:Nx
             for k in 1:Ny
                 for r in 1:equation.p
-                    u[j,k,r] += dt*sourceterm[j,k,r]
+                    u[j,k,r] += dt*integrator.cache.sourceterm[j,k,r]
                 end
             end
         end
@@ -79,9 +81,9 @@ function loopfooter!(integrator::Integrator)
     update_flux!(equation.dim, integrator)
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
     # UPDATING SOURCE TERM
-    if has_source(source)
-        discretize_sourceterm!(equation.dim, source.source_discretize, integrator)
-    end
+    # if has_source(source)
+    #     discretize_sourceterm!(equation.dim, source.source_discretize, integrator)
+    # end
     update_log!(integrator)
     nothing
 end

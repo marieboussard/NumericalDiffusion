@@ -44,6 +44,7 @@ module FiniteVolumes
     include("schemes/rusanov.jl")
     include("schemes/rusanov_2D.jl")
     include("schemes/roe.jl")
+    include("schemes/HR.jl")
     include("numflux.jl")
     include("cache.jl")
 
@@ -62,6 +63,7 @@ module FiniteVolumes
     export Rusanov
     export Rusanov2D
     export Roe
+    export HR
 
     export CFL_cond
     export CFL_cond!
@@ -95,6 +97,7 @@ module FiniteVolumes
     export SaintVenant2Flat
     export SaintVenantFlat2
     export SaintVenantAtRest2
+    export saintvenant_with_topo
     export saintvenant_2d_with_topo
 
     export Advection
@@ -106,6 +109,7 @@ module FiniteVolumes
 
     export discretize_sourceterm!
     export Pointwise
+    export HRDisc
     export TopoSource
     export TopoSourceCache
 

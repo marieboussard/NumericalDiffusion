@@ -11,16 +11,30 @@ CFL_factor = 0.5
 mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 
-equation = SaintVenantAtRest
+#equation = SaintVenantAtRest
 #equation = SaintVenantFlat
 
-znum = z(equation.source, mesh.x)
+# SINUSOIDAL TOPOGRAPHY
+const freq = 1.0
+const height = 0.5
+z(x) = (-cos.(2*pi*freq * x) .+ 1)*height*0.5
+Dz(x) = pi*freq*(sin(2*pi*freq * x))*height
+
+# # FLAT TOPOGRAPHY
+# z(x) = zero(x)
+# Dz(x) = zero(x)
+
+# equation = saintvenant_with_topo(z, Dz)
+equation = saintvenant_with_topo(z, Dz; sourcedisc=HRDisc())
+
+znum = z(mesh.x)
 
 
-sol = solve(equation, params, Euler(), Roe());#; log_config=LogConfig(true,true,true,true));
+sol = solve(equation, params, Euler(), HR(Rusanov()));#; log_config=LogConfig(true,true,true,true));
 
 using Plots
 plot(mesh.x, znum, label="topo")
+display(plot!(mesh.x, sol.uinit[:,1] .+ znum, label="initial water height"))
 display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
 
 # plot(mesh.x, znum, label="topo")

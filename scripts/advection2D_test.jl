@@ -27,7 +27,8 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 # end
 
 # A MORE SOPHISTICATED EXAMPLE
-equation = advection2_vecfield(mesh; sigmay=0.1)
+phi(v) = exp(-v)
+equation = advection2_vecfield(mesh, phi; sigmay=0.1)
 
 sol = solve(equation, params, Euler(), Rusanov2D())#; log_config=LogConfig(true,true,true,true));
 

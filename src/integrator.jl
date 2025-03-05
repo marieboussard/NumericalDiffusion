@@ -13,7 +13,8 @@ mutable struct IntegratorCache{cflCacheType<:CFLCacheType, sourcetermType} <: Ca
     function IntegratorCache(sL::Int, sR::Int, equation::Equation, uinit::AbstractArray, mesh::Mesh, source_cache)
         # Dfcont = init_Dfcont(equation.eqtype, equation, uinit)
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, uinit)
-        sourceterm = init_sourceterm(equation.source, uinit, mesh, source_cache)
+        #sourceterm = init_sourceterm(equation.source, uinit, mesh, source_cache)
+        sourceterm = init_sourceterm(equation.source, uinit)
         new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
     end
 end
@@ -29,8 +30,7 @@ init_cfl_cache(::OneD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScala
 init_cfl_cache(::TwoD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScalar2D(args...)
 # init_cfl_cache(::System, equation, args...) = init_cfl_cache(equation, args...)
 init_sourceterm(::NoSource, args...) = nothing
-# init_sourceterm(source::AbstractSource, args...) = init_sourceterm(source, source.source_discretize, args...)
-
+init_sourceterm(::AbstractSource, uinit, args...) = zero(uinit)
 
 mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, fcontType, scacheType <: Cache, tcacheTpe <: Cache, srcacheType, icacheType <: IntegratorCache}
 
@@ -80,7 +80,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         opts    = IntegratorOptions(maxiter)
 
         # INIT CACHE
-        space_cache         = init_cache(space_scheme)
+        space_cache         = init_cache(space_scheme, uinit)
         time_cache          = init_cache(time_scheme)
         source_cache        = init_cache(equation.source, params.mesh)
         integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh, source_cache)
@@ -118,7 +118,9 @@ init_fcont(::TwoD, args...) = TwoDFcont(args...)
 # end
 
 
-# function initialize_integrator(integrator::Integrator)
-#     update_flux!(equation.dim, integrator)
-#     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
-# end
+function initialize_integrator!(integrator::Integrator)
+    # update_flux!(equation.dim, integrator)
+    # update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
+    fillcache!(integrator.space_scheme, integrator)
+    nothing
+end
