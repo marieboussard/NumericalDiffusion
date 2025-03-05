@@ -31,6 +31,30 @@ function flux(::SaintVenant, v)
     res
 end
 
+function flux!(::SaintVenant, v, res)
+    g_half = g * 0.5 
+    if ndims(v)==1
+        if v[1] > treshold
+            res[1] = v[2]
+            res[2] = v[2]^2/v[1] + g_half * v[1]^2
+        else
+            fill!(res, zero(eltype(v)))
+        end
+    else
+        h = view(v, :, 1)
+        for i in eachindex(h)
+            if h[i] > treshold
+                hu = v[i, 2]
+                res[i, 1] = hu
+                res[i, 2] = hu^2 / h[i] + g_half * h[i]^2
+            else
+                res[i, 1] = zero(eltype(v))
+                res[i, 2] = zero(eltype(v))
+            end
+        end
+    end
+end
+
 function Dflux(::SaintVenant, u)
 end
 

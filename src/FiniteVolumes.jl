@@ -49,6 +49,7 @@ module FiniteVolumes
     include("cache.jl")
 
     include("solve.jl")
+    include("solve_functions.jl")
 
     export Mesh
     export OneDMesh
@@ -72,6 +73,7 @@ module FiniteVolumes
     export Integrator
     export numflux!
     export solve
+    export hrsolve
 
     export loopfooter!
     export loopheader!

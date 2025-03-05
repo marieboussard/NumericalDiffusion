@@ -89,9 +89,10 @@ function loopfooter!(integrator::Integrator)
 end
 
 function update_flux!(::OneD, integrator::Integrator)
-    @unpack fcont, equation, u = integrator
+    @unpack equation, u = integrator
     @views vu = u
-    fcont .= flux(equation.funcs, vu)
+    # fcont .= flux(equation.funcs, vu)
+    flux!(equation.funcs, vu, integrator.fcont)
 end
 
 function update_flux!(::TwoD, integrator::Integrator)

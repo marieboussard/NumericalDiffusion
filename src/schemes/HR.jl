@@ -59,10 +59,12 @@ function numflux!(scheme::HR, integrator::Integrator, j::Int, args...)
     hplus!(integrator, j)
     hminus!(integrator, j)
     @unpack hplus, hminus, uplus, uminus, fplus, fminus = space_cache
-    uplus .= [hplus[j], hplus[j]*uprev[mod1(j+1,Nx),2]]
-    uminus .= [hminus[j], hminus[j]*uprev[j,2]]
-    fplus .= flux(equation.funcs, uplus)
-    fminus .= flux(equation.funcs, uminus)
+    uplus[1], uplus[2] = hplus[j], hplus[j]*uprev[mod1(j+1,Nx),2]
+    uminus[1], uminus[2] = hminus[j], hminus[j]*uprev[j,2]
+    #fplus[1], fplus[2] = flux(equation.funcs, uplus)
+    flux!(equation.funcs, uplus, fplus)
+    #fminus[1], fminus[2] = flux(equation.funcs, uminus)
+    flux!(equation.funcs, uminus, fminus)
     numflux!(scheme.subscheme, uminus, uplus, fplus, fminus, space_cache.subcache, integrator, j)
 end
 
