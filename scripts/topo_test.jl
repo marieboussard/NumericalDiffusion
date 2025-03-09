@@ -32,10 +32,13 @@ end
 display(plot(x, y, c, st=:surface, zlims=(0,1)))
 
 # DEFINING A SAINT VENANT EQUATION
-equation = saintvenant_2d_with_topo(z, Dz)
+# equation = saintvenant_2d_with_topo(z, Dz; sourcedisc=HRDisc2())
 
 # FINITE VOLUME RESOLUTION
-sol = solve(equation, params, Euler(), Rusanov2D());
+#sol = solve(equation, params, Euler(), Rusanov2D());
+#sol = solve(equation, params, Euler(), HR2D(Rusanov()));
+
+sol = hrsolve2(params, Euler(), Rusanov(), z, Dz)
 
 clim = (minimum(sol.u .- sol.uinit), maximum(sol.u .- sol.uinit))
 

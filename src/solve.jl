@@ -100,8 +100,10 @@ function update_flux!(::TwoD, integrator::Integrator)
     # @unpack fcont, hcont = integrator.fcont
     # fcont .= flux_f(equation.funcs, u)
     # hcont .= flux_h(equation.funcs, u)
-    flux_f!(integrator.equation.funcs, integrator)
-    flux_h!(integrator.equation.funcs, integrator)
+    # flux_f!(integrator.equation.funcs, integrator)
+    # flux_h!(integrator.equation.funcs, integrator)
+    flux!(integrator.equation.funcs, integrator)
+
 end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)

@@ -45,6 +45,7 @@ module FiniteVolumes
     include("schemes/rusanov_2D.jl")
     include("schemes/roe.jl")
     include("schemes/HR.jl")
+    include("schemes/HR_2D.jl")
     include("numflux.jl")
     include("cache.jl")
 
@@ -65,6 +66,7 @@ module FiniteVolumes
     export Rusanov2D
     export Roe
     export HR
+    export HR2D
 
     export CFL_cond
     export CFL_cond!
@@ -74,6 +76,7 @@ module FiniteVolumes
     export numflux!
     export solve
     export hrsolve
+    export hrsolve2
 
     export loopfooter!
     export loopheader!
@@ -112,6 +115,7 @@ module FiniteVolumes
     export discretize_sourceterm!
     export Pointwise
     export HRDisc
+    export HRDisc2
     export TopoSource
     export TopoSourceCache
 
@@ -126,5 +130,8 @@ module FiniteVolumes
 
     export g
     export treshold
+
+    export hplus!
+    export hminus!
 
 end

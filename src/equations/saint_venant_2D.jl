@@ -94,6 +94,73 @@ function flux_h!(::SaintVenant2D, integrator)
     end
 end
 
+function flux!(::SaintVenant2D, u::AbstractArray, resf::AbstractArray, resh::AbstractArray)
+    g_half = g * 0.5
+    h = selectdim(u, 3, 1)
+    hu = selectdim(u, 3, 2)
+    hv = selectdim(u, 3, 3)
+    for I in CartesianIndices(h)
+        if h[I] > treshold
+            # f(U)
+            resf[I, 1] = hu[I]
+            resf[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
+            resf[I, 3] = hu[I]*hv[I] / h[I]
+            # h(U)
+            resh[I, 1] = hv[I]
+            resh[I, 2] = hu[I]*hv[I] / h[I]
+            resh[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
+        else
+            fill!(resf[I], zero(eltype(u)))
+        end
+    end
+end
+
+function flux!(::SaintVenant2D, u::Matrix, resf::Matrix, resh::Matrix)
+    g_half = g * 0.5
+    h = selectdim(u, 2, 1)
+    hu = selectdim(u, 2, 2)
+    hv = selectdim(u, 2, 3)
+    for I in CartesianIndices(h)
+        if h[I] > treshold
+            # f(U)
+            resf[I, 1] = hu[I]
+            resf[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
+            resf[I, 3] = hu[I]*hv[I] / h[I]
+            # h(U)
+            resh[I, 1] = hv[I]
+            resh[I, 2] = hu[I]*hv[I] / h[I]
+            resh[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
+        else
+            fill!(resf[I], zero(eltype(u)))
+        end
+    end
+end
+
+function flux_f!(::SaintVenant2D, u::AbstractVector, res::AbstractVector)
+    g_half = g * 0.5
+    if u[1] > treshold
+        # f(U)
+        res[1] = u[2]
+        res[2] = u[2]^2 / u[1] + g_half * u[1]^2
+        res[3] = u[2]*u[3] / u[1]
+    else
+        fill!(res, zero(eltype(u)))
+    end
+end
+
+function flux_h!(::SaintVenant2D, u::AbstractVector, res::AbstractVector)
+    g_half = g * 0.5
+    if u[1] > treshold
+        # h(U)
+        res[1] = u[3]
+        res[2] = u[2]*u[3] / u[1]
+        res[3] = u[3]^2 / u[1] + g_half * u[1]^2
+    else
+        fill!(res, zero(eltype(u)))
+    end
+end
+
+flux!(eqfun::SaintVenant2D, integrator::Integrator) = flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
 # COMPUTING CFL CONDITION FOR SAINT VENANT 2D
 
 mutable struct CFLCacheSaintVenant2D <: CFLCacheType
@@ -155,6 +222,8 @@ SaintVenant2Flat = Equation(TwoD(), 3, System(), SaintVenant2D(), init_sv)
 
 # SOURCE TERM
 
+struct HRDisc2 <: SourceDiscretize end
+
 z(ts::TopoSource, x::AbstractVector, y::AbstractVector) = [ts.z(xj, yk) for xj in x for yk in y]
 # function Dz(ts::TopoSource, x::AbstractVector, y::AbstractVector)
 #     Nx, Ny = length(x), length(y)
@@ -193,6 +262,9 @@ function Dz(ts::TopoSource, mesh::TwoDMesh)
     end
     res
 end
+
+
+init_Dznum(::HRDisc2, args...) = nothing
 
 # BY DEFAULT, POINTWISE DISCRETIZATION
 

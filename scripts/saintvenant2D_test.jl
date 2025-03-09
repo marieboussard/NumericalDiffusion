@@ -3,8 +3,8 @@ using BenchmarkTools
 using UnPack
 
 # Domain definition
-Nx = 100
-Ny = 100
+Nx = 10
+Ny = 10
 xmin, xmax, ymin, ymax = -2, 2,-2,2
 t0, tf = 0.0, 2.0
 CFL_factor = 0.5
