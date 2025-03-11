@@ -3,6 +3,7 @@ module FiniteVolumes
     using LinearAlgebra
     using UnPack
 
+    include("tools.jl")
     include("parameters.jl")
 
     abstract type AbstractSourceDiscretize end

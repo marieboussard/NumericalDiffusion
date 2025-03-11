@@ -40,6 +40,10 @@ function flux!(eq::ConstAdvection2D, u::AbstractArray, resf::AbstractArray, resh
     copyto!(resf, eq.a*u)
     copyto!(resh, eq.b*u)
 end
+function Dflux!(eq::ConstAdvection2D, u::AbstractArray, resf::AbstractArray, resh::AbstractArray)
+    fill!(resf, eq.a)
+    fill!(resh, eq.b)
+end
 
 u0_gauss2(x::Real, y::Real; xm=0.0, ym=0.0, sigmax=0.2, sigmay=0.2, A=2.0) = A*exp(-(x-xm)^2/(2*sigmax^2)-(y-ym)^2/(2*sigmay^2))
 
@@ -94,6 +98,12 @@ function flux!(eq::Advection2D, u::AbstractArray, resf::AbstractArray, resh::Abs
     b = view(eq.cnum, :, :, 2)
     copyto!(resf, a.*u)
     copyto!(resh, b.*u)
+end
+function Dflux!(eq::Advection2D, u::AbstractArray, resf::AbstractArray, resh::AbstractArray)
+    a = view(eq.cnum, :, :, 1)
+    b = view(eq.cnum, :, :, 2)
+    copyto!(resf, a)
+    copyto!(resh, b)
 end
 
 advection2_vecfield(mesh::TwoDCartesian, varphi::Base.Callable=phi; kwargs...) = Equation(TwoD(), 1, Scalar(), Advection2D(mesh, varphi), (x,y) -> u0_gauss2(x,y;kwargs...))

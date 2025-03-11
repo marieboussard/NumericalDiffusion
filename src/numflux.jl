@@ -59,7 +59,7 @@ flux!(::OneD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, 
 function flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)
     # @show @allocated fcont = selectdim(integrator.fcont, ndims(integrator.fcont), 1)
     # @show @allocated hcont = selectdim(integrator.fcont, ndims(integrator.fcont), 2)
-    fcont = view(integrator.fcont, :,:,:,1)
-    hcont = view(integrator.fcont, :,:,:, 2)
+    fcont = view(integrator.fcont, :, :, :, 1)
+    hcont = view(integrator.fcont, :, :, :, 2)
     flux!(eqfun, integrator.u, fcont, hcont)
 end

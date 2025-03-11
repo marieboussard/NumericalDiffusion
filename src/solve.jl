@@ -39,13 +39,11 @@ end
 function performstep!(::TwoD, integrator::Integrator)
     @unpack dx, dy, Nx, Ny = integrator.params.mesh
     @unpack u, uprev, dt, fnum, equation = integrator
-    #@unpack fnum, hnum = fnum
     numflux2D!(integrator)
 
     for j in 1:Nx
         for k in 1:Ny
             for r in 1:equation.p
-            # u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r]-fnum[mod1(j-1,Nx),k,r]) - dt/dy * (hnum[j,k,r]-hnum[j,mod1(k-1,Nx),r])
             u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r,1]-fnum[mod1(j-1,Nx),k,r,1]) - dt/dy * (fnum[j,k,r,2]-fnum[j,mod1(k-1,Nx),r,2])
             end
         end
@@ -89,13 +87,18 @@ end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)
     # integrator.cache.cfl_cache.Dfcont .= Dflux(eqfun, integrator.u)
-    integrator.cache.cfl_cache.absDfcont .= abs.(Dflux(eqfun, integrator.u))
+    #integrator.cache.cfl_cache.absDfcont .= abs.(Dflux(eqfun, integrator.u))
+    Dflux!(eqfun, integrator.u, integrator.cache.cfl_cache.absDfcont)
+    abs!(integrator.cache.cfl_cache.absDfcont, integrator.cache.cfl_cache.absDfcont)
 end
 
 function update_cflcache!(::TwoD, ::Scalar, eqfun::AbstractEquationFun, integrator)
-    @unpack Dfcont, Dhcont = integrator.cache.cfl_cache
-    Dfcont .= Dflux_f(eqfun, integrator.u)
-    Dhcont .= Dflux_h(eqfun, integrator.u)
+    # @unpack Dfcont, Dhcont = integrator.cache.cfl_cache
+    # Dfcont .= Dflux_f(eqfun, integrator.u)
+    # Dhcont .= Dflux_h(eqfun, integrator.u)
+    # Dflux!(eqfun, integrator.u, Dfcont, Dhcont)
+    @unpack Dfcont = integrator.cache.cfl_cache
+    Dflux!(eqfun, integrator.u, selectdim(Dfcont, ndims(Dfcont),1), selectdim(Dfcont, ndims(Dfcont),2))
 end
 
 # update_cflcache!(eqtype::EquationType, eqfun::AbstractEquationFun, integrator::Integrator) = nothing

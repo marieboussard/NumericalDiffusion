@@ -55,9 +55,6 @@ function flux!(::SaintVenant, v, res)
     end
 end
 
-function Dflux(::SaintVenant, u)
-end
-
 # COMPUTING CFL CONDITION FOR SAINT VENANT
 
 mutable struct CFLCacheSaintVenant <: CFLCacheType
