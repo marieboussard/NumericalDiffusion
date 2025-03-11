@@ -51,3 +51,15 @@ function numflux2D!(integrator::Integrator)
     end
     nothing
 end
+
+flux!(::OneD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, integrator.fcont)
+# flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
+# flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, selectdim(integrator.fcont, ndims(integrator.fcont), 1), selectdim(integrator.fcont, ndims(integrator.fcont), 2))
+
+function flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)
+    # @show @allocated fcont = selectdim(integrator.fcont, ndims(integrator.fcont), 1)
+    # @show @allocated hcont = selectdim(integrator.fcont, ndims(integrator.fcont), 2)
+    fcont = view(integrator.fcont, :,:,:,1)
+    hcont = view(integrator.fcont, :,:,:, 2)
+    flux!(eqfun, integrator.u, fcont, hcont)
+end

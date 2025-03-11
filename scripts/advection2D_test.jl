@@ -7,7 +7,7 @@ using UnPack
 Nx = 100
 Ny = 100
 xmin, xmax, ymin, ymax = -2, 2,-2,2
-t0, tf = 0.0, 2.0
+t0, tf = 0.0, 0.4
 CFL_factor = 0.5
 
 mesh = TwoDCartesian(Nx, Ny, xmin, xmax, ymin, ymax)

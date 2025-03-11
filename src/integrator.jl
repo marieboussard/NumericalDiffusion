@@ -32,7 +32,7 @@ init_cfl_cache(::TwoD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScala
 init_sourceterm(::NoSource, args...) = nothing
 init_sourceterm(::AbstractSource, uinit, args...) = zero(uinit)
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType, fcontType, scacheType <: Cache, tcacheTpe <: Cache, srcacheType, icacheType <: IntegratorCache}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, srcacheType, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -45,7 +45,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     uprev::dataType
     uinit::dataType
     fnum::fnumType
-    fcont::fcontType
+    fcont::fnumType
 
     # TIME PARAMETERS
     niter::Int
@@ -68,8 +68,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         
         # INIT SOLUTION AND FLUX
         uinit = initialize_u(equation.dim, equation.eqtype, equation.source, equation, params)
-        fnum = init_fnum(equation.dim, equation, params.mesh)
-        fcont = init_fcont(equation.dim, equation, uinit)
+        fnum = init_flux(equation.dim, equation.eqtype, equation, params.mesh)
+        fcont = zero(fnum)
         uprev = copy(uinit)
         u = zero(uprev)
         
@@ -88,7 +88,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         # INIT LOGBOOK
         logbook = LogBook(log_config)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(fcont), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, source_cache, integrator_cache, logbook)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, source_cache, integrator_cache, logbook)
     end
 
 
@@ -98,29 +98,45 @@ end
 # # INIT INTEGRATOR CONTENT
 
 initialize_u(::OneD, ::Scalar, ::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
+
 function initialize_u(::OneD, ::System,  ::NoSource, equation::AbstractEquation, params::Parameters, args...)
     uinit = zeros(eltype(x), (params.mesh.Nx, equation.p))
     for j in 1:Nx
         uinit[j,:] .= equation.initcond(params.mesh.x)
     end
 end
-init_fnum(::OneD, args...) = OneDFnum(args...).fnum
-init_fnum(::TwoD, args...) = TwoDFnum(args...)
-init_fcont(::OneD, args...) = OneDFcont(args...).fcont
-init_fcont(::TwoD, args...) = TwoDFcont(args...)
 
-# init_source_discretize(::NoSource) = nothing
-# init_source_discretize()
+function initialize_u(::TwoD, ::Scalar, ::NoSource, equation::AbstractEquation, params::Parameters)
+    @unpack Nx, Ny, x, y = params.mesh
+    uinit = zeros(eltype(x), (Nx, Ny))
+    for j in eachindex(x)
+        for k in eachindex(y)
+            uinit[j,k] = equation.initcond(x[j], y[k])
+        end
+    end
+    uinit
+end
 
+function initialize_u(::TwoD, ::System, ::NoSource, equation::AbstractEquation, params::Parameters)
+    @unpack Nx, Ny, x, y = params.mesh
+    uinit = zeros(eltype(x), (Nx, Ny, equation.p))
+    for j in eachindex(x)
+        for k in eachindex(y)
+            uinit[j,k,:] .= equation.initcond(x[j], y[k])
+        end
+    end
+    uinit
+end
 
-# function Integrator(equation::equationType, params::paramsType, time_scheme::tschemeType, space_scheme::sschemeType, maxiter::Int, log_config::LogConfig) where equationType<:Equation where paramsType<:Parameters where tschemeType<:TimeScheme where sschemeType<:SpaceScheme
-#         Integrator(equation, params, time_scheme, space_scheme, maxiter, nothing, log_config)
-# end
+init_flux(::OneD, ::Scalar, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx+1)
+init_flux(::OneD, ::System, equation::Equation, mesh::Mesh) = zeros(Float64, (mesh.Nx+1, equation.p))
+init_flux(::TwoD, ::EquationType, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx, mesh.Ny, equation.p, 2)
 
+# FILL INTEGRATOR FIELDS WITH INITIAL VALUES
 
 function initialize_integrator!(integrator::Integrator)
-    # update_flux!(equation.dim, integrator)
-    # update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
+    @unpack equation = integrator
+    flux!(equation.dim, equation.funcs, integrator)
     fillcache!(integrator.space_scheme, integrator)
     nothing
 end

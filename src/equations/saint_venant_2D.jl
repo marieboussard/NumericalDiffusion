@@ -23,28 +23,28 @@ function flux_f(::SaintVenant2D, v)
     res
 end
 
-function flux_f!(::SaintVenant2D, integrator)
-    @unpack fcont = integrator.fcont
-    @unpack u = integrator
-    g_half = g * 0.5 
-    # h = view(u, :, :, 1)
-    # hu = view(u, :, :, 2)
-    # hv = view(u, :, :, 3)
-    h = selectdim(u, 3, 1)
-    hu = selectdim(u, 3, 2)
-    hv = selectdim(u, 3, 3)
-    for I in CartesianIndices(h)
-        if h[I] > treshold
-            fcont[I, 1] = hu[I]
-            fcont[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
-            fcont[I, 3] = hu[I]*hv[I] / h[I]
-        else
-            fcont[I, 1] = zero(eltype(u))
-            fcont[I, 2] = zero(eltype(u))
-            fcont[I, 3] = zero(eltype(u))
-        end
-    end
-end
+# function flux_f!(::SaintVenant2D, integrator)
+#     @unpack fcont = integrator.fcont
+#     @unpack u = integrator
+#     g_half = g * 0.5 
+#     # h = view(u, :, :, 1)
+#     # hu = view(u, :, :, 2)
+#     # hv = view(u, :, :, 3)
+#     h = selectdim(u, 3, 1)
+#     hu = selectdim(u, 3, 2)
+#     hv = selectdim(u, 3, 3)
+#     for I in CartesianIndices(h)
+#         if h[I] > treshold
+#             fcont[I, 1] = hu[I]
+#             fcont[I, 2] = hu[I]^2 / h[I] + g_half * h[I]^2
+#             fcont[I, 3] = hu[I]*hv[I] / h[I]
+#         else
+#             fcont[I, 1] = zero(eltype(u))
+#             fcont[I, 2] = zero(eltype(u))
+#             fcont[I, 3] = zero(eltype(u))
+#         end
+#     end
+# end
 
 function flux_h(::SaintVenant2D, v)
     res = similar(v)
@@ -71,28 +71,28 @@ function flux_h(::SaintVenant2D, v)
     res
 end
 
-function flux_h!(::SaintVenant2D, integrator)
-    @unpack hcont = integrator.fcont
-    @unpack u = integrator
-    g_half = g * 0.5 
-    # h = view(u, :, :, 1)
-    # hu = view(u, :, :, 2)
-    # hv = view(u, :, :, 3)
-    h = selectdim(u, 3, 1)
-    hu = selectdim(u, 3, 2)
-    hv = selectdim(u, 3, 3)
-    for I in CartesianIndices(h)
-        if h[I] > treshold
-            hcont[I, 1] = hv[I]
-            hcont[I, 2] = hu[I]*hv[I] / h[I]
-            hcont[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
-        else
-            hcont[I, 1] = zero(eltype(u))
-            hcont[I, 2] = zero(eltype(u))
-            hcont[I, 3] = zero(eltype(u))
-        end
-    end
-end
+# function flux_h!(::SaintVenant2D, integrator)
+#     @unpack hcont = integrator.fcont
+#     @unpack u = integrator
+#     g_half = g * 0.5 
+#     # h = view(u, :, :, 1)
+#     # hu = view(u, :, :, 2)
+#     # hv = view(u, :, :, 3)
+#     h = selectdim(u, 3, 1)
+#     hu = selectdim(u, 3, 2)
+#     hv = selectdim(u, 3, 3)
+#     for I in CartesianIndices(h)
+#         if h[I] > treshold
+#             hcont[I, 1] = hv[I]
+#             hcont[I, 2] = hu[I]*hv[I] / h[I]
+#             hcont[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
+#         else
+#             hcont[I, 1] = zero(eltype(u))
+#             hcont[I, 2] = zero(eltype(u))
+#             hcont[I, 3] = zero(eltype(u))
+#         end
+#     end
+# end
 
 function flux!(::SaintVenant2D, u::AbstractArray, resf::AbstractArray, resh::AbstractArray)
     g_half = g * 0.5
@@ -110,7 +110,8 @@ function flux!(::SaintVenant2D, u::AbstractArray, resf::AbstractArray, resh::Abs
             resh[I, 2] = hu[I]*hv[I] / h[I]
             resh[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
         else
-            fill!(resf[I], zero(eltype(u)))
+            fill!(view(resf,I,:), zero(eltype(u)))
+            fill!(view(resh,I,:), zero(eltype(u)))
         end
     end
 end
@@ -132,6 +133,7 @@ function flux!(::SaintVenant2D, u::Matrix, resf::Matrix, resh::Matrix)
             resh[I, 3] = hv[I]^2 / h[I] + g_half * h[I]^2
         else
             fill!(resf[I], zero(eltype(u)))
+            fill!(resh[I], zero(eltype(u)))
         end
     end
 end
@@ -160,7 +162,7 @@ function flux_h!(::SaintVenant2D, u::AbstractVector, res::AbstractVector)
     end
 end
 
-flux!(eqfun::SaintVenant2D, integrator::Integrator) = flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
+# flux!(eqfun::SaintVenant2D, integrator::Integrator) = flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
 # COMPUTING CFL CONDITION FOR SAINT VENANT 2D
 
 mutable struct CFLCacheSaintVenant2D <: CFLCacheType

@@ -44,4 +44,5 @@ function dt_CFL!(::TwoD, integrator::Integrator)
     @unpack cfl_cache = cache
     CFL_cond2D!(integrator.equation.eqtype, integrator)
     integrator.dt = min(tf - t, CFL_factor/(cfl_cache.cflx/mesh.dx + cfl_cache.cfly/mesh.dy))
+    nothing
 end

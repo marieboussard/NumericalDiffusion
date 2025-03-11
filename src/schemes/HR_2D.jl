@@ -52,8 +52,11 @@ function numflux!(scheme::HR2D, integrator::Integrator, j::Int, k::Int, args...)
     flux_f!(equation.funcs, view(uminus,:,1), view(fminus,:,1))
     flux_h!(equation.funcs, view(uminus,:,2), view(fminus,:,2))
 
-    numflux!(scheme.subscheme, view(uminus,:,1), view(uplus,:,1), view(fplus,:,1), view(fminus,:,1), view(integrator.fnum.fnum,j,k,:), space_cache.subcache, equation)
-    numflux!(scheme.subscheme, view(uminus,:,2), view(uplus,:,2), view(fplus,:,2), view(fminus,:,2), view(integrator.fnum.hnum,j,k,:), space_cache.subcache, equation)
+    # numflux!(scheme.subscheme, view(uminus,:,1), view(uplus,:,1), view(fplus,:,1), view(fminus,:,1), view(integrator.fnum.fnum,j,k,:), space_cache.subcache, equation)
+    # numflux!(scheme.subscheme, view(uminus,:,2), view(uplus,:,2), view(fplus,:,2), view(fminus,:,2), view(integrator.fnum.hnum,j,k,:), space_cache.subcache, equation)
+
+    numflux!(scheme.subscheme, view(uminus,:,1), view(uplus,:,1), view(fplus,:,1), view(fminus,:,1), view(integrator.fnum,j,k,:,1), space_cache.subcache, equation)
+    numflux!(scheme.subscheme, view(uminus,:,2), view(uplus,:,2), view(fplus,:,2), view(fminus,:,2), view(integrator.fnum,j,k,:,2), space_cache.subcache, equation)
 end
 
 # SOURCE DISCRETIZATION

@@ -20,8 +20,6 @@ module FiniteVolumes
     include("equations/source.jl")
     include("equations/equation.jl")
 
-    include("two_dim_tools.jl")
-
     # abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
     abstract type SourceDiscretize end
 
@@ -124,6 +122,7 @@ module FiniteVolumes
     export flux_f
     export flux_h
     export has_source
+    export flux!
 
     # export z
     # export Dz

@@ -20,11 +20,6 @@ function performstep!(::OneD, integrator::Integrator)
     # @views fluxbackward = fnum[1:end-1,:]
     # @. u = uprev - dt / dx * (fluxforward - fluxbackward)
 
-    # for i in 1:Nx
-    #     for j in 1:equation.p
-    #         u[i,j] = uprev[i,j] - dt / dx * (fnum[i+1,j] - fnum[i,j])
-    #     end
-    # end
     for i in 1:Nx
         for j in 1:equation.p
             u[i,j] = uprev[i,j] - dt / dx * (fnum[i,j] - fnum[mod1(i-1, Nx),j])
@@ -44,13 +39,14 @@ end
 function performstep!(::TwoD, integrator::Integrator)
     @unpack dx, dy, Nx, Ny = integrator.params.mesh
     @unpack u, uprev, dt, fnum, equation = integrator
-    @unpack fnum, hnum = fnum
+    #@unpack fnum, hnum = fnum
     numflux2D!(integrator)
 
     for j in 1:Nx
         for k in 1:Ny
             for r in 1:equation.p
-            u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r]-fnum[mod1(j-1,Nx),k,r]) - dt/dy * (hnum[j,k,r]-hnum[j,mod1(k-1,Nx),r])
+            # u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r]-fnum[mod1(j-1,Nx),k,r]) - dt/dy * (hnum[j,k,r]-hnum[j,mod1(k-1,Nx),r])
+            u[j,k,r] = uprev[j,k,r] - dt/dx *(fnum[j,k,r,1]-fnum[mod1(j-1,Nx),k,r,1]) - dt/dy * (fnum[j,k,r,2]-fnum[j,mod1(k-1,Nx),r,2])
             end
         end
     end
@@ -78,33 +74,18 @@ function loopfooter!(integrator::Integrator)
     integrator.t += integrator.dt
     integrator.niter += 1
     uprev .= u
-    update_flux!(equation.dim, integrator)
+    flux!(equation.dim, equation.funcs, integrator)
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
-    # UPDATING SOURCE TERM
-    # if has_source(source)
-    #     discretize_sourceterm!(equation.dim, source.source_discretize, integrator)
-    # end
     update_log!(integrator)
     nothing
 end
 
-function update_flux!(::OneD, integrator::Integrator)
-    @unpack equation, u = integrator
-    @views vu = u
-    # fcont .= flux(equation.funcs, vu)
-    flux!(equation.funcs, vu, integrator.fcont)
-end
-
-function update_flux!(::TwoD, integrator::Integrator)
-    # @unpack equation, u = integrator
-    # @unpack fcont, hcont = integrator.fcont
-    # fcont .= flux_f(equation.funcs, u)
-    # hcont .= flux_h(equation.funcs, u)
-    # flux_f!(integrator.equation.funcs, integrator)
-    # flux_h!(integrator.equation.funcs, integrator)
-    flux!(integrator.equation.funcs, integrator)
-
-end
+# function update_flux!(::OneD, integrator::Integrator)
+#     @unpack equation, u = integrator
+#     @views vu = u
+#     # fcont .= flux(equation.funcs, vu)
+#     flux!(equation.funcs, vu, integrator.fcont)
+# end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)
     # integrator.cache.cfl_cache.Dfcont .= Dflux(eqfun, integrator.u)
