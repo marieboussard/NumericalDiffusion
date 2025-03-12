@@ -1,4 +1,4 @@
-mutable struct RusanovCache <: scacheType
+mutable struct RusanovCache <: SpaceCache
     cfl_loc::Float64
     RusanovCache() = new(zero(Float64))
 end
@@ -25,6 +25,14 @@ function numflux!(::Rusanov, integrator::Integrator, j::Int, args...)
     end
 end
 
+# function numflux!(::Rusanov, j::Int, params::Parameters, equation::Equation, cache::Cache, space_cache::SpaceCache, fnum::AbstractArray, fcont::AbstractArray, u::AbstractArray)
+#     @unpack Nx = params.mesh
+#     CFL_local!(equation.dim, equation.eqtype, j, params, cache, space_cache)
+#     for r in 1:equation.p
+#         fnum[j,r] = (fcont[j, r] + fcont[mod1(j+1,Nx),r]) *0.5 - space_cache.cfl_loc.*0.5 * (u[mod1(j+1,Nx),r] - u[j,r])
+#     end
+# end
+
 # function numflux!(::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, subcache::scacheType, integrator::Integrator, j::Int, args...)
 #     @unpack equation, params, fnum = integrator
 #     @unpack Nx = params.mesh
@@ -34,7 +42,7 @@ end
 #     end
 # end
 
-function numflux!(::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, fnum::AbstractVector, subcache::scacheType, equation::Equation, args...)
+function numflux!(::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, fnum::AbstractVector, subcache::SpaceCache, equation::Equation, args...)
     # @unpack equation, params, fnum = integrator
     # @unpack Nx = params.mesh
     subcache.cfl_loc = max(abs(uL[2]/uL[1]) + sqrt(g*uL[1]), abs(uR[2]/uR[1]) + sqrt(g*uR[1]))
@@ -43,4 +51,4 @@ function numflux!(::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::Abstra
     end
 end
 
-numflux!(scheme::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, subcache::scacheType, integrator::Integrator, j::Int, args...) = numflux!(scheme, uL, uR, fL, fR, view(integrator.fnum,j,:), subcache, integrator.equation, args...)
+numflux!(scheme::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, subcache::SpaceCache, integrator::Integrator, j::Int, args...) = numflux!(scheme, uL, uR, fL, fR, view(integrator.fnum,j,:), subcache, integrator.equation, args...)

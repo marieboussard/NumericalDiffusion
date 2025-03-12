@@ -165,7 +165,7 @@ end
 # flux!(eqfun::SaintVenant2D, integrator::Integrator) = flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
 # COMPUTING CFL CONDITION FOR SAINT VENANT 2D
 
-mutable struct CFLCacheSaintVenant2D <: CFLCacheType
+mutable struct CFLCacheSaintVenant2D <: CFLCache
     cflx::Float64
     cfly::Float64
     xeigenmax::Matrix{Float64}

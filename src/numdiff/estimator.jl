@@ -1,4 +1,19 @@
-mutable struct Estimator
+mutable struct EstimatorCache
+    sL::Int
+    sR::Int
+    indices
+    utilde
+    uhat
+    function EstimatorCache(time_scheme::TimeScheme, space_scheme::SpaceScheme)
+        sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)
+        utilde = init_utilde()
+        uhat = zero(utilde)
+        new(sL, sR, utilde, uhat)
+    end
+end
+
+
+mutable struct Estimator{entfunType<:AbstractEntropyFun, methodType<:QuantifMethod, mdtype<:ModifiedDataType, qparamsType <: QuantifParams, mcacheType<:MethodCache, gType <: AbstractArray}
 
     # # PROBLEM COMPONENTS
     # equation::equationType
@@ -19,17 +34,29 @@ mutable struct Estimator
     entfun::entfunType
 
     # QUANTIFICATION METHOD
-    method::QuantifMethod
+    method::methodType
+    md::mdtype
     qparams::qparamsType
 
     # CACHE
+    cache::EstimatorCache
     method_cache::mcacheType
+
+    # BOUNDS FOR NUMERICAL ENTROPY FLUX
+    Gcont::gType
+    m::gType
+    M::gType
 
     # RESULTS
     D::diffType
 
     function Estimator(sol::Solution, method::QuantifMethod, qparams::QuantifParams; kwargs...)
         entfun = entropy(typeof(sol.equation.eqfun))
+
+        # CACHE
+        cache = EstimatorCache(sol.time_scheme, sol.space_scheme)
+        method_cache = init_cache(method)
+
         new{}()
     end
 end
@@ -43,3 +70,7 @@ function Base.getproperty(estimator::Estimator, name::Symbol)
         return getfield(estimator, name)  # Accès normal aux autres champs de Outer
     end
 end
+
+# CACHE INITIALIZATION
+
+init_cache(::Posteriori, args...) = PosterioriCache(args...)

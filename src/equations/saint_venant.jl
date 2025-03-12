@@ -57,7 +57,7 @@ end
 
 # COMPUTING CFL CONDITION FOR SAINT VENANT
 
-mutable struct CFLCacheSaintVenant <: CFLCacheType
+mutable struct CFLCacheSaintVenant <: CFLCache
     cfl::Float64
     eigenmax::Vector{Float64}
     function CFLCacheSaintVenant(uinit)
@@ -201,7 +201,7 @@ Dz(ts::TopoSource, x::Real) = ts.Dz(x)
 z(ts::TopoSource, mesh::OneDMesh) = ts.z.(mesh.x)
 Dz(ts::TopoSource, mesh::OneDMesh) = ts.Dz.(mesh.x)
 
-struct TopoSourceCache{znumType, DznumType} <: sourceCacheType
+struct TopoSourceCache{znumType, DznumType} <: SourceCache
     nvar::Int64
     znum::znumType
     Dznum::DznumType

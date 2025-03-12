@@ -9,10 +9,10 @@ module FiniteVolumes
     abstract type AbstractSourceDiscretize end
 
     abstract type Cache end
-    abstract type tcacheType <: Cache end
-    abstract type scacheType <: Cache end
-    abstract type sourceCacheType <: Cache end
-    abstract type CFLCacheType <: Cache end
+    abstract type TimeCache <: Cache end
+    abstract type SpaceCache <: Cache end
+    abstract type SourceCache <: Cache end
+    abstract type CFLCache <: Cache end
 
 
     include("schemes/abstract_schemes.jl")

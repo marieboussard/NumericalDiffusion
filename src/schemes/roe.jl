@@ -1,4 +1,4 @@
-mutable struct RoeCache <: scacheType
+mutable struct RoeCache <: SpaceCache
     sigma::Float64
     RoeCache() = new(zero(Float64))
 end

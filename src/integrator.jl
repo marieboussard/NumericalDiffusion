@@ -2,7 +2,7 @@ struct IntegratorOptions
     maxiter::Int
 end
 
-mutable struct IntegratorCache{cflCacheType<:CFLCacheType, sourcetermType} <: Cache 
+mutable struct IntegratorCache{cflCacheType<:CFLCache, sourcetermType} <: Cache 
 
     sL::Int
     sR::Int
@@ -32,7 +32,7 @@ init_cfl_cache(::TwoD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScala
 init_sourceterm(::NoSource, args...) = nothing
 init_sourceterm(::AbstractSource, uinit, args...) = zero(uinit)
 
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, scacheType <: Cache, tcacheTpe <: Cache, srcacheType, icacheType <: IntegratorCache}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, scacheType <: SpaceCache, tcacheType <: TimeCache, srcacheType, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType

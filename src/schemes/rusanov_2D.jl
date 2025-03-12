@@ -1,4 +1,4 @@
-mutable struct Rusanov2DCache <: scacheType
+mutable struct Rusanov2DCache <: SpaceCache
     cflx_loc::Float64
     cfly_loc::Float64
     Rusanov2DCache() = new(zero(Float64), zero(Float64))

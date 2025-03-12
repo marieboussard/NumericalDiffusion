@@ -2,7 +2,7 @@ struct HR <: SpaceScheme
     subscheme::SpaceScheme
 end
 
-mutable struct HRCache{dtype<: AbstractArray, utype<:AbstractArray, subcache_type<:scacheType} <: scacheType
+mutable struct HRCache{dtype<: AbstractArray, utype<:AbstractArray, subcache_type<:SpaceCache} <: SpaceCache
     hplus::dtype    # hi+1/2,+
     hminus::dtype   # hi+1/2,-
     zinter::dtype   # zi+1/2

@@ -1,6 +1,6 @@
 # CFL CONDITION FOR TWO DIMENSIONNAL EQUATIONS 
 
-mutable struct CFLCacheScalar2D{dataType<:AbstractArray} <: CFLCacheType
+mutable struct CFLCacheScalar2D{dataType<:AbstractArray} <: CFLCache
     cflx::Float64
     cfly::Float64
     Dfcont::dataType
