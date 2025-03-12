@@ -64,7 +64,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     # LOGBOOK
     log::LogBook
 
-    function Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config::LogConfig)
+    function Integrator(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme, maxiter::Int, log_config::LogConfig)
         
         # INIT SOLUTION AND FLUX
         uinit = initialize_u(equation.dim, equation.eqtype, equation.source, equation, params)

@@ -1,0 +1,1 @@
+struct PrioriParams <: QuantifParams end

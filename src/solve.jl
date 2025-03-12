@@ -1,4 +1,4 @@
-function solve(equation, params, time_scheme, space_scheme; maxiter = 1000, log_config = DefaultLogConfig, name="", kwargs...)
+function solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme; maxiter::Int = 1000, log_config::LogConfig = DefaultLogConfig, name::String="", kwargs...)
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
     initialize_integrator!(integrator)
