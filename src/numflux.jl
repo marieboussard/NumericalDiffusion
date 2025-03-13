@@ -1,25 +1,25 @@
-function view_stencil(u, j, sL, sR)
-    indices = mod1.(j - sL + 1 : j + sR, size(u, 1))  
-    if ndims(u) == 1 
-        return view(u,indices)
-    else
-        return view(u,indices, :)
-    end
-end
+# function view_stencil(u, j, sL, sR)
+#     indices = mod1.(j - sL + 1 : j + sR, size(u, 1))  
+#     if ndims(u) == 1 
+#         return view(u,indices)
+#     else
+#         return view(u,indices, :)
+#     end
+# end
 
-function view_stencil!(integrator::Integrator, j::Int)
-    @unpack cache, params, uprev, fcont = integrator
-    @unpack sL, sR, stencil = cache
-    stencil .= mod1.(j - sL + 1 : j + sR, params.mesh.Nx) 
-    nothing
-    #=
-    if ndims(uprev) == 1 
-        return view(uprev,stencil), view(fcont, stencil)
-    else
-        return view(uprev,stencil, :), view(fcont,stencil, :)
-    end
-    =#
-end
+# function view_stencil!(integrator::Integrator, j::Int)
+#     @unpack cache, params, uprev, fcont = integrator
+#     @unpack sL, sR, stencil = cache
+#     stencil .= mod1.(j - sL + 1 : j + sR, params.mesh.Nx) 
+#     nothing
+#     #=
+#     if ndims(uprev) == 1 
+#         return view(uprev,stencil), view(fcont, stencil)
+#     else
+#         return view(uprev,stencil, :), view(fcont,stencil, :)
+#     end
+#     =#
+# end
 
 
 #view_stencil!(integrator::Integrator, j::Int) = view_stencil(integrator.uprev, j, get_sL(integrator.time_scheme, integrator.space_scheme), get_sR(integrator.time_scheme, integrator.space_scheme))
@@ -43,12 +43,12 @@ function numflux!(integrator::Integrator)
     nothing
 end
 
-# function numflux!(time_scheme::TimeScheme, space_scheme::SpaceScheme, params::Parameters, args...)
-#     for j ∈ 1:params.mesh.Nx
-#         numflux!(time_scheme, space_scheme, j, params, args...)
-#     end
-# nothing
-# end
+function numflux!(time_scheme::TimeScheme, space_scheme::SpaceScheme, params::Parameters, args...)
+    for j ∈ 1:params.mesh.Nx
+        numflux!(time_scheme, space_scheme, j, params, args...)
+    end
+nothing
+end
 
 # numflux!(integrator::Integrator) = numflux!(integrator.time_scheme, integrator.space_scheme, integrator.params, integrator.equation, integrator.cache, integrator.space_cache, integrator.fnum, integrator.fcont, integrator.uprev)
 

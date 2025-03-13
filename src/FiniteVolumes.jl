@@ -6,14 +6,14 @@ module FiniteVolumes
     include("tools.jl")
     include("parameters.jl")
 
-    abstract type AbstractSourceDiscretize end
-
     abstract type Cache end
     abstract type TimeCache <: Cache end
     abstract type SpaceCache <: Cache end
     abstract type SourceCache <: Cache end
     abstract type CFLCache <: Cache end
-
+    
+    abstract type AbstractSourceDiscretize end
+    abstract type SourceDiscretize end
 
     include("schemes/abstract_schemes.jl")
     include("equations/abstract_equation.jl")
@@ -22,9 +22,7 @@ module FiniteVolumes
     include("equations/equation.jl")
 
     # abstract type SourceDiscretize{eqFunType<:AbstractEquationFun} end
-    abstract type SourceDiscretize end
 
-    export DefaultLogConfig
     include("log.jl")
 
     include("integrator.jl")
@@ -34,11 +32,13 @@ module FiniteVolumes
     include("CFL.jl")
     include("CFL_2D.jl")
     
+    # CLASSICAL EQUATIONS
     include("equations/burgers.jl")
     include("equations/saint_venant.jl")
     include("equations/saint_venant_2D.jl")
     include("equations/advection.jl")
 
+    # NUMERICAL SCHEMES
     include("schemes/euler.jl")
     include("schemes/rusanov.jl")
     include("schemes/rusanov_2D.jl")
@@ -48,18 +48,33 @@ module FiniteVolumes
     include("numflux.jl")
     include("cache.jl")
 
+    # MAIN FUNCTIONS
     include("solve.jl")
     include("solve_functions.jl")
 
+
+    # SOLVING INTERFACE
+    export solve
+    export hrsolve
+    export hrsolve2
+    export DefaultLogConfig
+    export Solution
+
+    # BUILDING MESH
     export Mesh
     export OneDMesh
     export TwoDCartesian
     export Parameters
 
+    # BUILDING EQUATIONS
     export Equation
     export OneD
     export TwoD
+    export Scalar
+    export System
+    export EquationFun
 
+    # NUMERICAL SCHEMES
     export Euler
     export Rusanov
     export Rusanov2D
@@ -71,39 +86,14 @@ module FiniteVolumes
     export CFL_cond!
     export CFL_local!
 
-    export Integrator
-    export numflux!
-    export solve
-    export hrsolve
-    export hrsolve2
 
-    export loopfooter!
-    export loopheader!
-    export performstep!
-    export update_flux!
-    export update_cflcache!
-    export update_log!
-    export dt_CFL!
+    # SOME CLASSICAL EQUATIONS
 
-    export Scalar
-    export System
-    export EquationFun
-
-    export LogConfig
-
+    # BURGERS
     export Burgers
     export BurgersArticle
 
-    export SaintVenant
-    export SaintVenantAtRest
-    export SaintVenantFlat
-    export SaintVenant2D
-    export SaintVenant2Flat
-    export SaintVenantFlat2
-    export SaintVenantAtRest2
-    export saintvenant_with_topo
-    export saintvenant_2d_with_topo
-
+    # ADVECTION 
     export Advection
     export AdvectionExample
     export Advection2Example
@@ -111,6 +101,21 @@ module FiniteVolumes
     export exact_advection_sol
     export u0_gauss2
 
+    # SAINT-VENANT
+    export SaintVenant
+    export SaintVenantAtRest
+    export SaintVenantFlat
+    export saintvenant_with_topo
+
+    # SAINT-VENANT 2D 
+    export SaintVenant2D
+    export SaintVenant2Flat
+    export SaintVenantFlat2
+    export SaintVenantAtRest2
+    export saintvenant_2d_with_topo
+
+
+    # SOURCE DISCRETIZATION
     export discretize_sourceterm!
     export Pointwise
     export HRDisc
@@ -118,20 +123,18 @@ module FiniteVolumes
     export TopoSource
     export TopoSourceCache
 
-    export flux 
-    export Dflux
-    export flux_f
-    export flux_h
-    export has_source
+
+    # INTERNAL COMPONENTS
+    export Integrator
+    export performstep!
+    export loopheader!
+    export loopfooter!
     export flux!
-
-    # export z
-    # export Dz
-
-    export g
-    export treshold
-
-    export hplus!
-    export hminus!
+    export numflux!
+    export update_flux!
+    export update_cflcache!
+    export update_log!
+    export dt_CFL!
+    export LogConfig
 
 end

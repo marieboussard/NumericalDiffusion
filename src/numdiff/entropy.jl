@@ -12,7 +12,9 @@ G!(entfun::EntropyFun, args...) = entfun.eta!(args...)
 
 struct BurgersEnt <: AbstractEntropyFun end
 
+eta!(::BurgersEnt, u::Float64, res::Float64) = res = u^2
 eta!(::BurgersEnt, u::AbstractArray, res::AbstractArray) = @. res = u^2
+G!(::BurgersEnt, u::Float64, res::Float64) = res = 2*u^3/3
 G!(::BurgersEnt, u::AbstractArray, res::AbstractArray) = @. res = 2*u^3/3
 
 entropy(::Type{Burgers}) = BurgersEnt()

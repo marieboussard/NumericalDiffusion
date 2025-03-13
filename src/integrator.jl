@@ -6,7 +6,7 @@ mutable struct IntegratorCache{cflCacheType<:CFLCache, sourcetermType} <: Cache
 
     sL::Int
     sR::Int
-    stencil::Vector{Int}
+    #stencil::Vector{Int}
     cfl_cache::cflCacheType
     sourceterm::sourcetermType
 
@@ -15,7 +15,8 @@ mutable struct IntegratorCache{cflCacheType<:CFLCache, sourcetermType} <: Cache
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, uinit)
         #sourceterm = init_sourceterm(equation.source, uinit, mesh, source_cache)
         sourceterm = init_sourceterm(equation.source, uinit)
-        new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
+        # new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, zeros(Int, sL + sR), cfl_cache, sourceterm)
+        new{typeof(cfl_cache), typeof(sourceterm)}(sL, sR, cfl_cache, sourceterm)
     end
 end
 
@@ -86,7 +87,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh, source_cache)
 
         # INIT LOGBOOK
-        logbook = LogBook(log_config)
+        logbook = LogBook(log_config, u, fnum)
 
         new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, source_cache, integrator_cache, logbook)
     end
@@ -128,8 +129,8 @@ function initialize_u(::TwoD, ::System, ::NoSource, equation::AbstractEquation, 
     uinit
 end
 
-init_flux(::OneD, ::Scalar, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx+1)
-init_flux(::OneD, ::System, equation::Equation, mesh::Mesh) = zeros(Float64, (mesh.Nx+1, equation.p))
+init_flux(::OneD, ::Scalar, equation::Equation, mesh::OneDMesh) = zeros(Float64, mesh.Nx+1)
+init_flux(::OneD, ::System, equation::Equation, mesh::OneDMesh) = zeros(Float64, (mesh.Nx+1, equation.p))
 init_flux(::TwoD, ::EquationType, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx, mesh.Ny, equation.p, 2)
 
 # FILL INTEGRATOR FIELDS WITH INITIAL VALUES

@@ -1,4 +1,4 @@
-struct Solution
+struct Solution{utype<:AbstractArray}
     # PROBLEM COMPONENTS
     equation::Equation
     params::Parameters
@@ -8,8 +8,8 @@ struct Solution
     status::String      # SUCCESS or MAXITERS
     niter::Int          # Final number of iterations
 
-    u
-    uinit
+    u::utype
+    uinit::utype
     dt::Float64                  # Final timestep
     t::Float64                   # Time reached
 
@@ -24,7 +24,7 @@ struct Solution
         else
             status = "FAILED"
         end
-        new(integrator.equation, integrator.params, integrator.time_scheme, integrator.space_scheme, status, integrator.niter, integrator.u, integrator.uinit, integrator.dt, integrator.t, integrator.log, name)
+        new{typeof(integrator.uinit)}(integrator.equation, integrator.params, integrator.time_scheme, integrator.space_scheme, status, integrator.niter, integrator.u, integrator.uinit, integrator.dt, integrator.t, integrator.log, name)
     end
 
 end

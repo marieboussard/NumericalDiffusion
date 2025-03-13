@@ -37,3 +37,14 @@ u = collect(1:10)  # Vecteur exemple
 j, l, r = 3, 2, 3  # Paramètres
 v = periodic_view(u, j, l, r)
 println(v)
+
+
+
+# function numflux!(time_scheme::TimeScheme, space_scheme::SpaceScheme, params::Parameters, args...)
+#     for j ∈ 1:params.mesh.Nx
+#         numflux!(time_scheme, space_scheme, j, params, args...)
+#     end
+# nothing
+# end
+
+# numflux!(integrator::Integrator) = numflux!(integrator.time_scheme, integrator.space_scheme, integrator.params, integrator.equation, integrator.cache, integrator.space_cache, integrator.fnum, integrator.fcont, integrator.uprev)

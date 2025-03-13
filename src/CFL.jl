@@ -34,27 +34,27 @@ end
 
 CFL_local!(dim::EquationDim, eqtype::EquationType, integrator::Integrator, j::Int) = CFL_local!(dim, eqtype, j, integrator.params, integrator.cache, integrator.space_cache)
 
-# function CFL_local!(::OneD, ::Scalar, integrator::Integrator, j::Int)
-#     @unpack cache, space_cache = integrator
-#     @unpack cfl_cache = cache
-#     @unpack absDfcont = cfl_cache
-#     @unpack Nx = integrator.params.mesh
+function CFL_local!(::OneD, ::Scalar, integrator::Integrator, j::Int)
+    @unpack cache, space_cache = integrator
+    @unpack cfl_cache = cache
+    @unpack absDfcont = cfl_cache
+    @unpack Nx = integrator.params.mesh
 
-#     space_cache.cfl_loc = absDfcont[j]
-#     space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
+    space_cache.cfl_loc = absDfcont[j]
+    space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
 
-#     # D1, D2 = absDfcont[j], absDfcont[mod1(j+1,Nx)]
-#     # space_cache.cfl_loc = max(D1,D2)
+    # D1, D2 = absDfcont[j], absDfcont[mod1(j+1,Nx)]
+    # space_cache.cfl_loc = max(D1,D2)
 
-#     # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
-#     # D1, D2 = Dfcont[j], Dfcont[mod1(j+1,Nx)]
-#     # space_cache.cfl_loc = max(abs(D1), abs(D2))
-#     # space_cache.cfl_loc = max(abs(Dfcont[j]), abs(Dfcont[mod1(j+1,Nx)]))
-#     # space_cache.cfl_loc = 0.0
-#     # for k in eachindex(stencil)
-#     #     space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
-#     # end
-# end
+    # cache.cfl_loc = max(abs(Dfcont[stencil[1],j]), abs(Dfcont[stencil[2],j]))
+    # D1, D2 = Dfcont[j], Dfcont[mod1(j+1,Nx)]
+    # space_cache.cfl_loc = max(abs(D1), abs(D2))
+    # space_cache.cfl_loc = max(abs(Dfcont[j]), abs(Dfcont[mod1(j+1,Nx)]))
+    # space_cache.cfl_loc = 0.0
+    # for k in eachindex(stencil)
+    #     space_cache.cfl_loc = max(space_cache.cfl_loc, abs(Dfcont[stencil[k]]))
+    # end
+end
 
 CFL_cond!(::System, integrator::Integrator) = CFL_cond!(integrator.equation.funcs, integrator)
 CFL_local!(dim::EquationDim, ::System, integrator::Integrator, args...) = CFL_local!(dim, integrator.equation.funcs, integrator, args...)
