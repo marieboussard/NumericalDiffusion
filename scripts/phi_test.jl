@@ -35,7 +35,7 @@ end
 # plot(v, ph)
 # plot!([alpha, alpha], [0, 1])
 
-equation = advection2_vecfield(mesh, phi; sigmax=0.5, sigmay=0.2)
+equation = advection2_vecfield(mesh, phi; sigmax=0.3, sigmay=0.1)
 sol = solve(equation, params, Euler(), Rusanov2D())
 
 using Plots

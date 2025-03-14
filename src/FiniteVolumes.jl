@@ -130,6 +130,8 @@ module FiniteVolumes
     export loopheader!
     export loopfooter!
     export flux!
+    export Dflux!
+    export abs!
     export numflux!
     export update_flux!
     export update_cflcache!

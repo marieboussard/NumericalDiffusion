@@ -129,8 +129,10 @@ function initialize_u(::TwoD, ::System, ::NoSource, equation::AbstractEquation, 
     uinit
 end
 
-init_flux(::OneD, ::Scalar, equation::Equation, mesh::OneDMesh) = zeros(Float64, mesh.Nx+1)
-init_flux(::OneD, ::System, equation::Equation, mesh::OneDMesh) = zeros(Float64, (mesh.Nx+1, equation.p))
+# init_flux(::OneD, ::Scalar, equation::Equation, mesh::OneDMesh) = zeros(Float64, mesh.Nx+1)
+# init_flux(::OneD, ::System, equation::Equation, mesh::OneDMesh) = zeros(Float64, (mesh.Nx+1, equation.p))
+init_flux(::OneD, ::Scalar, equation::Equation, mesh::OneDMesh) = zeros(Float64, mesh.Nx)
+init_flux(::OneD, ::System, equation::Equation, mesh::OneDMesh) = zeros(Float64, (mesh.Nx, equation.p))
 init_flux(::TwoD, ::EquationType, equation::Equation, mesh::Mesh) = zeros(Float64, mesh.Nx, mesh.Ny, equation.p, 2)
 
 # FILL INTEGRATOR FIELDS WITH INITIAL VALUES

@@ -1,6 +1,6 @@
 struct Posteriori{mdtype_type<:ModifiedDataType} <: QuantifMethod
     mdtype::mdtype_type
-    Posteriori(mdtype::ModifiedDataType=MaxMD()) = new{typeof(mdtype)}(mdtype)
+    Posteriori(mdtype::ModifiedDataType=MeanMD()) = new{typeof(mdtype)}(mdtype)
 end
 
 
@@ -49,6 +49,7 @@ function J(estimator::Estimator, gamma::AbstractVector)
         # CONSISTENCY TERM
         res += (dt / dx)^2 *(max(zero(T), gamma[j] - M[j])^2 + max(zero(T), m[j] - gamma[j])^2)
     end
+    res += (dt / dx)^2 *(max(zero(T), gamma[end] - M[end])^2 + max(zero(T), m[end] - gamma[end])^2)
     res
 end
 

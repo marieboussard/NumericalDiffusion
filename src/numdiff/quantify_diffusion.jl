@@ -18,22 +18,18 @@ function perform_estimation!(method::Posteriori, estimator::Estimator; kwargs...
     optsol = optimize(gamma -> J(estimator, gamma), Ginit; kwargs...)
     copyto!(Gopt, Optim.minimizer(optsol))
     estimator.method_cache.Jopt = Optim.minimum(optsol)
+
     diffusion!(method, estimator)
 end
 
 function compute_G_bounds!(estimator::Estimator)
     @unpack Nx = estimator.params.mesh
     @unpack mdtype = estimator.method
-    # @show estimator.uinit
     for j in 1:Nx
         utilde!(mdtype, estimator, j)
-        # @show estimator.cache.utilde
         uhat!(estimator)
-        # @show estimator.cache.uhat
         init_bounds!(mdtype, estimator, j)
-        # @show estimator.m, estimator.M
         update_bounds!(mdtype, estimator, j)
-        # @show estimator.m, estimator.M
     end
 end
 
@@ -42,11 +38,12 @@ function uhat!(estimator::Estimator)
     @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
     @unpack dx = params.mesh
     flux!(equation.funcs, utilde, fcont_tilde)
+    Dflux!(equation.funcs, utilde, cache.cfl_cache.absDfcont)
+    abs!(cache.cfl_cache.absDfcont, cache.cfl_cache.absDfcont)
     for i in 1:2*(sL+sR)+1
         numflux!(time_scheme, space_scheme, i+sL-1, params, equation, cache, space_cache, ftilde, fcont_tilde, utilde, i)
     end
     for i in 1:2*(sL+sR)
-        # uhat[i] = utilde[i+sL] - dt/dx * (ftilde[i] - ftilde[mod1(i-1, 2*(sL+sR))])
         uhat[i] = utilde[i+sL] - dt/dx * (ftilde[i+1] - ftilde[i])
     end
 end

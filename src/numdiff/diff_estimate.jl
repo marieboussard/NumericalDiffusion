@@ -1,14 +1,16 @@
-struct DiffEstimate{methodType<:QuantifMethod, gType<:AbstractArray, diffType<:AbstractArray, mcacheType<:MethodCache}
+struct DiffEstimate{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, gType<:AbstractArray, diffType<:AbstractArray, mcacheType<:MethodCache}
 
-    # # PROBLEM COMPONENTS
-    # equation::Equation
-    # params::Parameters
-    # time_scheme::TimeScheme
-    # space_scheme::SpaceScheme
+    # PROBLEM COMPONENTS
+    equation::equationType
+    params::parametersType
+    time_scheme::tschemeType
+    space_scheme::sschemeType
 
-    # # DATA
-    # uinit::utype
-    # u::utype
+    # DATA
+    uinit::dataType
+    u::dataType
+    dt::Float64                  # Final timestep
+    t::Float64                   # Time reached
 
     # QUANTIFICATION METHOD
     method::methodType
@@ -25,7 +27,7 @@ struct DiffEstimate{methodType<:QuantifMethod, gType<:AbstractArray, diffType<:A
 
     name::String
     function DiffEstimate(estimator::Estimator, name::String)
-        new{typeof(estimator.method), typeof(estimator.m), typeof(estimator.D), typeof(estimator.method_cache)}(estimator.method, estimator.m, estimator.M, estimator.D, estimator.method_cache, name)
+        new{typeof(estimator.equation), typeof(estimator.params), typeof(estimator.time_scheme), typeof(estimator.space_scheme), typeof(estimator.u), typeof(estimator.method), typeof(estimator.m), typeof(estimator.D), typeof(estimator.method_cache)}(estimator. equation, estimator.params, estimator.time_scheme, estimator.space_scheme, estimator.uinit, estimator.u, estimator.dt, estimator.t, estimator.method, estimator.m, estimator.M, estimator.D, estimator.method_cache, name)
     end
 end
 

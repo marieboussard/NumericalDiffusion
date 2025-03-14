@@ -2,10 +2,13 @@ function utilde!(::SymmetricMD, estimator::Estimator, j::Int)# compute ̃uᵢʲ�
     @unpack uinit = estimator
     @unpack Nx = estimator.params.mesh
     @unpack sL, sR, indices, utilde = estimator.cache
-    indices = mod1.(j-2*sL-sR+1 : j+sL+2*sR, Nx)
+    indices .= mod1.(j-2*sL-sR+1 : j+sL+2*sR, Nx)
     @views ushort = uinit[indices]
-    # computeK!(estimator.method.mdtype, ushort, estimator.cache.K)
-    estimator.cache.K = computeK(estimator.method.mdtype, ushort)
+    indices_short = view(indices, sL+sR+1:2*(sL+sR))
+    @views ushorter = uinit[indices_short]
+    # @show @allocated ushorter = view(ushort, sL+sR+1:2*(sL+sR))
+    # @show @allocated ushorter = ushort[sL+sR+1:2*(sL+sR)]
+    estimator.cache.K = computeK(estimator.method.mdtype, ushorter)
     @unpack K = estimator.cache
     for i in 1:sL+sR
         utilde[i] = K
@@ -20,7 +23,7 @@ end
 
 function init_bounds!(::SymmetricMD, estimator::Estimator, j::Int)
     @unpack m, M, cache, entfun = estimator
-    G!(entfun, cache.K, cache.GK)
+    cache.GK = G(entfun, cache.K)
     m[j] = cache.GK
     M[j] = cache.GK
 end

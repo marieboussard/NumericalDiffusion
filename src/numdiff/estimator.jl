@@ -1,4 +1,4 @@
-mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, ktype} <: Cache
+mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache} <: Cache
     sL::Int
     sR::Int
     indices::Vector{Int}
@@ -9,12 +9,12 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, kt
     cfl_cache::cflCacheType
     eta_tilde::utype
     eta_hat::utype
-    K::ktype
+    K::Float64
     GK::Float64
     
     function EstimatorCache(equation::Equation, time_scheme::TimeScheme, space_scheme::SpaceScheme, u::AbstractArray)
         sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)
-        indices = zeros(Int64, 2*(sL+sR))
+        indices = zeros(Int64, 3*(sL+sR))
         utilde = init_utilde(equation.dim, equation.eqtype, u, sL, sR)
         uhat = init_uhat(equation.dim, equation.eqtype, u, sL, sR)
         fcont_tilde = zero(utilde)
@@ -22,9 +22,10 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, kt
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, utilde)
         eta_tilde = zero(uhat)
         eta_hat = zero(uhat)
-        K = init_K(equation.dim, equation.eqtype)
+        #K = init_K(equation.dim, equation.eqtype)
+        K = zero(Float64)
         GK = zero(Float64)
-        new{typeof(utilde), typeof(cfl_cache), typeof(K)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, K, GK)
+        new{typeof(utilde), typeof(cfl_cache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, K, GK)
     end
 end
 
@@ -34,11 +35,22 @@ init_ftilde(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(elty
 init_K(::OneD, ::Scalar) = zero(Float64)
 
 
-mutable struct Estimator{methodType<:QuantifMethod, ecacheType<:EstimatorCache, mcacheType<:MethodCache, scacheType<:SpaceCache, tcacheType<:TimeCache, entfunType<:AbstractEntropyFun, etaType <: AbstractArray, diffType<:AbstractArray}
+mutable struct Estimator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, ecacheType<:EstimatorCache, mcacheType<:MethodCache, scacheType<:SpaceCache, tcacheType<:TimeCache, entfunType<:AbstractEntropyFun, etaType <: AbstractArray, diffType<:AbstractArray}
 
     # PROBLEM COMPONENTS
-    sol::Solution
+    equation::equationType
+    params::parametersType
+    time_scheme::tschemeType
+    space_scheme::sschemeType
 
+    # sol::Solution
+
+    # DATA
+    uinit::dataType
+    u::dataType
+    dt::Float64                  # Final timestep
+    t::Float64                   # Time reached
+    
     # QUANTIFICATION METHOD
     method::methodType
 
@@ -63,6 +75,25 @@ mutable struct Estimator{methodType<:QuantifMethod, ecacheType<:EstimatorCache, 
 
     function Estimator(sol::Solution, method::QuantifMethod; kwargs...)
 
+        # INIT PROBLEM COMPONENTS
+        equation = sol.equation
+        params = sol.params
+        time_scheme = sol.time_scheme
+        space_scheme = sol.space_scheme
+
+        # INIT DATA
+        if sol.niter == 1
+            uinit = sol.uinit
+            dt = sol.dt
+        elseif sol.log.config.ulog && sol.log.config.dtlog
+            uinit = sol.log.ulog[end-1]
+            dt = sol.log.dtlog[end]
+        else
+            throw("Diffusion quantification can only be done for a single timestep : please give a solution with a single iteration or with a saving of intermediate values")
+        end
+        u = sol.u
+        t = sol.t
+
         # INIT CACHE
         cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u)
         method_cache = init_cache(method, sol.equation, sol.u)
@@ -81,19 +112,19 @@ mutable struct Estimator{methodType<:QuantifMethod, ecacheType<:EstimatorCache, 
         # INIT DIFFUSION
         D = zero(sol.uinit)
 
-        new{typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(entfun), typeof(etacont), typeof(D)}(sol, method, cache, method_cache, space_cache, time_cache, entfun, etacont_init, etacont, m, M, D)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(entfun), typeof(etacont), typeof(D)}(equation, params, time_scheme, space_scheme, uinit, u, dt, t, method, cache, method_cache, space_cache, time_cache, entfun, etacont_init, etacont, m, M, D)
     end
 end
 
-# FASTER ACCESS TO SOME FIELDS OF ESTIMATOR
+# # FASTER ACCESS TO SOME FIELDS OF ESTIMATOR
 
-function Base.getproperty(estimator::Estimator, name::Symbol)
-    if name in fieldnames(Solution)
-        return getproperty(getfield(estimator, :sol), name)
-    else
-        return getfield(estimator, name)
-    end
-end
+# function Base.getproperty(estimator::Estimator, name::Symbol)
+#     if name in fieldnames(Solution)
+#         return getproperty(getfield(estimator, :sol), name)
+#     else
+#         return getfield(estimator, name)
+#     end
+# end
 
 # SOME INITIALIZATIONS
 

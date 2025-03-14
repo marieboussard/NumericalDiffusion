@@ -15,7 +15,9 @@ import FiniteVolumes:init_cache
 using FiniteVolumes:get_sL
 using FiniteVolumes:get_sR
 
-include("methods/quantif_methods.jl")
+abstract type QuantifMethod end
+abstract type MethodCache <: FiniteVolumes.Cache end
+
 include("bounds_computing/modified_data_type.jl")
 include("entropy.jl")
 
