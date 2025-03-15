@@ -16,10 +16,6 @@ function performstep!(::OneD, integrator::Integrator)
     @unpack u, uprev, dt, fnum, equation = integrator
     
     numflux!(integrator)
-    # @views fluxforward = fnum[2:end,:]
-    # @views fluxbackward = fnum[1:end-1,:]
-    # @. u = uprev - dt / dx * (fluxforward - fluxbackward)
-
     for i in 1:Nx
         for j in 1:equation.p
             u[i,j] = uprev[i,j] - dt / dx * (fnum[i,j] - fnum[mod1(i-1, Nx),j])
@@ -86,17 +82,17 @@ end
 # end
 
 function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, integrator)
-    # integrator.cache.cfl_cache.Dfcont .= Dflux(eqfun, integrator.u)
-    #integrator.cache.cfl_cache.absDfcont .= abs.(Dflux(eqfun, integrator.u))
     Dflux!(eqfun, integrator.u, integrator.cache.cfl_cache.absDfcont)
     abs!(integrator.cache.cfl_cache.absDfcont, integrator.cache.cfl_cache.absDfcont)
 end
 
+function update_cflcache!(::OneD, ::Scalar, eqfun::AbstractEquationFun, u::AbstractVector, cfl_cache::CFLCache)
+    @unpack absDfcont = cfl_cache
+    Dflux!(eqfun, u, absDfcont)
+    abs!(absDfcont, absDfcont)
+end
+
 function update_cflcache!(::TwoD, ::Scalar, eqfun::AbstractEquationFun, integrator)
-    # @unpack Dfcont, Dhcont = integrator.cache.cfl_cache
-    # Dfcont .= Dflux_f(eqfun, integrator.u)
-    # Dhcont .= Dflux_h(eqfun, integrator.u)
-    # Dflux!(eqfun, integrator.u, Dfcont, Dhcont)
     @unpack Dfcont = integrator.cache.cfl_cache
     Dflux!(eqfun, integrator.u, selectdim(Dfcont, ndims(Dfcont),1), selectdim(Dfcont, ndims(Dfcont),2))
 end

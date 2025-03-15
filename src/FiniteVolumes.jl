@@ -113,6 +113,8 @@ module FiniteVolumes
     export SaintVenantFlat2
     export SaintVenantAtRest2
     export saintvenant_2d_with_topo
+    export g
+    export treshold
 
 
     # SOURCE DISCRETIZATION
@@ -138,5 +140,6 @@ module FiniteVolumes
     export update_log!
     export dt_CFL!
     export LogConfig
+    export has_source
 
 end

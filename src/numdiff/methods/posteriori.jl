@@ -34,6 +34,7 @@ mutable struct PosterioriCache{Gtype<:AbstractArray} <: MethodCache
 end
 
 init_G(::OneD, ::Scalar, u::Vector{Float64}) = zero(u)
+init_G(::OneD, ::System, u::Matrix{Float64}) = zero(selectdim(u,2,1))
 init_cache(::Posteriori, args...) = PosterioriCache(args...)
 
 # COST FUNCTION

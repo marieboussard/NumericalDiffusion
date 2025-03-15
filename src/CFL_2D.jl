@@ -32,7 +32,7 @@ function CFL_cond2D!(::Scalar, integrator::Integrator)
     end
 end
 
-function CFL_local!(::TwoD, ::Scalar, integrator::Integrator, j::Int, k::Int)
+function CFL_local!(::TwoD, ::Scalar, ::AbstractEquationFun, integrator::Integrator, j::Int, k::Int)
     @unpack cache, space_cache = integrator
     @unpack cfl_cache = cache
     @unpack Nx, Ny = integrator.params.mesh

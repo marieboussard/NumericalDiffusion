@@ -203,7 +203,7 @@ function CFL_cond2D!(::SaintVenant2D, integrator::Integrator)
     cfl_cache.cfly = maximum(cfl_cache.yeigenmax)
 end
 
-function CFL_local!(::TwoD, ::SaintVenant2D, integrator::Integrator, j::Int, k::Int)
+function CFL_local!(::TwoD, ::System, ::SaintVenant2D, integrator::Integrator, j::Int, k::Int)
     @unpack uprev, cache, space_cache = integrator
     @unpack xeigenmax, yeigenmax = cache.cfl_cache
     @unpack Nx, Ny = integrator.params.mesh

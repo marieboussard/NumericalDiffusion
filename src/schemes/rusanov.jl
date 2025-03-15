@@ -18,7 +18,7 @@ end
 function numflux!(::Rusanov, integrator::Integrator, j::Int, args...)
     @unpack equation, params, cache, space_cache, fnum, fcont, uprev = integrator
     @unpack Nx = params.mesh
-    CFL_local!(equation.dim, equation.eqtype, integrator, j)
+    CFL_local!(equation.dim, equation.eqtype, equation.funcs, integrator, j)
     for r in 1:equation.p
         # fnum[i,j] = (fcont[stencil[1], j] + fcont[stencil[2],j]) *0.5 - space_cache.cfl_loc.*0.5 * (uprev[stencil[2],j] - uprev[stencil[1],j])
         fnum[j,r] = (fcont[j, r] + fcont[mod1(j+1,Nx),r]) *0.5 - space_cache.cfl_loc.*0.5 * (uprev[mod1(j+1,Nx),r] - uprev[j,r])
@@ -27,7 +27,7 @@ end
 
 function numflux!(::Rusanov, j::Int, params::Parameters, equation::Equation, cache::Cache, space_cache::SpaceCache, fnum::AbstractArray, fcont::AbstractArray, u::AbstractArray, i::Int=j)
     @unpack Nx = params.mesh
-    CFL_local!(equation.dim, equation.eqtype, j, params, cache, space_cache)
+    CFL_local!(equation.dim, equation.eqtype, equation.funcs, j, params, cache, space_cache)
     for r in 1:equation.p
         fnum[i,r] = (fcont[j, r] + fcont[mod1(j+1,Nx),r]) *0.5 - space_cache.cfl_loc.*0.5 * (u[mod1(j+1,Nx),r] - u[j,r])
     end

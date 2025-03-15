@@ -79,6 +79,13 @@ function update_cflcache!(::OneD, ::System, ::SaintVenant, integrator::Integrato
         eigenmax[i] = h[i] > treshold ? abs(u[i,2] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
     end
 end
+function update_cflcache!(::OneD, ::System, ::SaintVenant, u::AbstractMatrix, cfl_cache::CFLCache)
+    @unpack eigenmax = cfl_cache
+    h = view(u, :, 1)
+    for i in eachindex(h)
+        eigenmax[i] = h[i] > treshold ? abs(u[i,2] / h[i]) + sqrt(g*h[i]) : zero(eltype(eigenmax))
+    end
+end
 
 function CFL_cond(::SaintVenant, v)
     max = 0.0
@@ -98,49 +105,20 @@ function CFL_cond(::SaintVenant, v)
 end
 
 function CFL_cond!(::SaintVenant, integrator::Integrator)
-
     @unpack cfl_cache = integrator.cache
-
-    # @unpack uprev = integrator
-    # integrator.cfl = 0.0
-    # lamb = 0.0
-
-    # for i in eachindex(view(uprev, :, 1))
-    #     h = uprev[i,1]
-    #     hu = uprev[i,2]
-    #     if h > treshold
-    #         lamb = abs(hu / h) + sqrt(g * abs(h))
-    #         if lamb > integrator.cfl
-    #             integrator.cfl = lamb
-    #         end
-    #     end
-    # end
     cfl_cache.cfl = maximum(cfl_cache.eigenmax)
 end
 
-function CFL_local!(::OneD, ::SaintVenant, integrator::Integrator, j::Int)
-
-    @unpack uprev, cache, space_cache = integrator
-    # @unpack stencil = cache
+function CFL_local!(::OneD, ::System, ::SaintVenant, integrator::Integrator, j::Int)
+    @unpack cache, space_cache = integrator
     @unpack eigenmax = cache.cfl_cache
     @unpack Nx = integrator.params.mesh
-
-    # space_cache.cfl_loc = maximum(view(eigenmax, stencil))
     space_cache.cfl_loc = max(eigenmax[j], eigenmax[mod1(j+1,Nx)])
-
-    # space_cache.cfl_loc = 0.0
-    # lamb = 0.0
-
-    # for i in eachindex(stencil)
-    #     h = uprev[i,1]
-    #     hu = uprev[i,2]
-    #     if h > treshold
-    #         lamb = abs(hu / h) + sqrt(g * abs(h))
-    #         if lamb > space_cache.cfl_loc
-    #             space_cache.cfl_loc = lamb
-    #         end
-    #     end
-    # end
+end
+function CFL_local!(::OneD, ::System, ::SaintVenant, j::Int, params::Parameters, cache::Cache, space_cache::SpaceCache)
+    @unpack eigenmax = cache.cfl_cache
+    @unpack Nx = params.mesh
+    space_cache.cfl_loc = max(eigenmax[j], eigenmax[mod1(j+1,Nx)])
 end
 
 # SOME INITIAL CONDITIONS
@@ -270,6 +248,13 @@ function discretize_sourceterm!(::OneD, ::Pointwise, integrator::Integrator)
     for i in eachindex(h)
         cache.sourceterm[i,1] = zero(eltype(cache.sourceterm))
         cache.sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
+    end
+end
+function discretize_sourceterm!(::OneD, ::Pointwise, u::AbstractMatrix, sourceterm::AbstractMatrix, source_cache::SourceCache)
+    @views h = u[:,1]
+    for i in eachindex(h)
+        sourceterm[i,1] = zero(eltype(sourceterm))
+        sourceterm[i,2] = -h[i]*g*source_cache.Dznum[i]
     end
 end
 

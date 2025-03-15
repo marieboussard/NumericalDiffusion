@@ -9,8 +9,10 @@ using FiniteVolumes:TimeScheme
 using FiniteVolumes:SpaceCache
 using FiniteVolumes:TimeCache
 using FiniteVolumes:CFLCache
+using FiniteVolumes:SourceCache
 using FiniteVolumes:init_cfl_cache
 import FiniteVolumes:init_cache
+import FiniteVolumes:init_sourceterm
 
 using FiniteVolumes:get_sL
 using FiniteVolumes:get_sR

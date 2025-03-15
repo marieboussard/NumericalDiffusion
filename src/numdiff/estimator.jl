@@ -1,4 +1,4 @@
-mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache} <: Cache
+mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, sourcetermType, ktype<:AbstractArray} <: Cache
     sL::Int
     sR::Int
     indices::Vector{Int}
@@ -9,7 +9,9 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache} <:
     cfl_cache::cflCacheType
     eta_tilde::utype
     eta_hat::utype
-    K::Float64
+    sourceterm_tilde::sourcetermType
+    K::ktype
+    S::Float64
     GK::Float64
     
     function EstimatorCache(equation::Equation, time_scheme::TimeScheme, space_scheme::SpaceScheme, u::AbstractArray)
@@ -22,20 +24,29 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache} <:
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, utilde)
         eta_tilde = zero(uhat)
         eta_hat = zero(uhat)
-        #K = init_K(equation.dim, equation.eqtype)
-        K = zero(Float64)
+        sourceterm_tilde = init_sourceterm(equation.source, utilde)
+        K = zeros(eltype(u), equation.p)
+        # K = init_K(equation.dim, equation.eqtype)
+        #K = zero(Float64)
         GK = zero(Float64)
-        new{typeof(utilde), typeof(cfl_cache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, K, GK)
+        new{typeof(utilde), typeof(cfl_cache), typeof(sourceterm_tilde), typeof(K)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, sourceterm_tilde, K, zero(Float64), GK)
     end
 end
 
+# ONE DIMENSIONAL SCALAR EQUATIONS
 init_utilde(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR))
 init_uhat(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR))
 init_ftilde(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1)
-init_K(::OneD, ::Scalar) = zero(Float64)
+# init_K(::OneD, ::Scalar) = zero(Float64)
+
+# ONE DIMENSIONAL SYSTEMS
+init_utilde(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR), size(u)[2])
+init_uhat(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR), size(u)[2])
+init_ftilde(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1, size(u)[2])
+# init_K(::OneD, ::Scalar) = zeros(Float64, size(u)[2])
 
 
-mutable struct Estimator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, ecacheType<:EstimatorCache, mcacheType<:MethodCache, scacheType<:SpaceCache, tcacheType<:TimeCache, entfunType<:AbstractEntropyFun, etaType <: AbstractArray, diffType<:AbstractArray}
+mutable struct Estimator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, ecacheType<:EstimatorCache, mcacheType<:MethodCache, scacheType<:SpaceCache, tcacheType<:TimeCache, srcacheType, entfunType<:AbstractEntropyFun, etaType <: AbstractArray, diffType<:AbstractArray}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -59,6 +70,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
     method_cache::mcacheType
     space_cache::scacheType
     time_cache::tcacheType
+    source_cache::srcacheType
     
     # ENTROPY
     entfun::entfunType
@@ -99,6 +111,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         method_cache = init_cache(method, sol.equation, sol.u)
         space_cache = init_cache(sol.space_scheme)
         time_cache = init_cache(sol.time_scheme)
+        source_cache = init_cache(sol.equation.source, sol.params.mesh)
         
         # INIT ENTROPY
         entfun = entropy(typeof(sol.equation.funcs))
@@ -110,9 +123,10 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         M = zero(etacont_init)
 
         # INIT DIFFUSION
-        D = zero(sol.uinit)
+        # D = zero(sol.uinit)
+        D = zero(etacont_init)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(entfun), typeof(etacont), typeof(D)}(equation, params, time_scheme, space_scheme, uinit, u, dt, t, method, cache, method_cache, space_cache, time_cache, entfun, etacont_init, etacont, m, M, D)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(entfun), typeof(etacont), typeof(D)}(equation, params, time_scheme, space_scheme, uinit, u, dt, t, method, cache, method_cache, space_cache, time_cache, source_cache, entfun, etacont_init, etacont, m, M, D)
     end
 end
 
@@ -129,3 +143,4 @@ end
 # SOME INITIALIZATIONS
 
 init_etacont(::OneD, ::Scalar, u::Vector{Float64}) = zero(u)
+init_etacont(::OneD, ::System, u::Matrix{Float64}) = zero(selectdim(u,2,1))

@@ -24,7 +24,7 @@ function CFL_cond!(::Scalar, integrator::Integrator)
     end
 end
 
-function CFL_local!(::OneD, ::Scalar, j::Int, params::Parameters, cache::Cache, space_cache::SpaceCache)
+function CFL_local!(::OneD, ::Scalar, ::AbstractEquationFun, j::Int, params::Parameters, cache::Cache, space_cache::SpaceCache)
     @unpack cfl_cache = cache
     @unpack absDfcont = cfl_cache
     @unpack Nx = params.mesh
@@ -32,9 +32,9 @@ function CFL_local!(::OneD, ::Scalar, j::Int, params::Parameters, cache::Cache, 
     space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
 end
 
-CFL_local!(dim::EquationDim, eqtype::EquationType, integrator::Integrator, j::Int) = CFL_local!(dim, eqtype, j, integrator.params, integrator.cache, integrator.space_cache)
+# CFL_local!(dim::EquationDim, eqtype::EquationType, integrator::Integrator, j::Int) = CFL_local!(dim, eqtype, j, integrator.params, integrator.cache, integrator.space_cache)
 
-function CFL_local!(::OneD, ::Scalar, integrator::Integrator, j::Int)
+function CFL_local!(::OneD, ::Scalar, ::AbstractEquationFun, integrator::Integrator, j::Int)
     @unpack cache, space_cache = integrator
     @unpack cfl_cache = cache
     @unpack absDfcont = cfl_cache
@@ -57,7 +57,7 @@ function CFL_local!(::OneD, ::Scalar, integrator::Integrator, j::Int)
 end
 
 CFL_cond!(::System, integrator::Integrator) = CFL_cond!(integrator.equation.funcs, integrator)
-CFL_local!(dim::EquationDim, ::System, integrator::Integrator, args...) = CFL_local!(dim, integrator.equation.funcs, integrator, args...)
+# CFL_local!(dim::EquationDim, ::System, integrator::Integrator, args...) = CFL_local!(dim, integrator.equation.funcs, integrator, args...)
 
 
 
