@@ -1,4 +1,4 @@
-mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, sourcetermType, ktype<:AbstractArray} <: Cache
+mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, sourcetermType, mdcacheType<:ModifiedDataCache} <: Cache
     sL::Int
     sR::Int
     indices::Vector{Int}
@@ -10,40 +10,26 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, so
     eta_tilde::utype
     eta_hat::utype
     sourceterm_tilde::sourcetermType
-    K::ktype
-    S::Float64
-    GK::Float64
+    mdcache::mdcacheType
     
-    function EstimatorCache(equation::Equation, time_scheme::TimeScheme, space_scheme::SpaceScheme, u::AbstractArray)
+    function EstimatorCache(equation::Equation, time_scheme::TimeScheme, space_scheme::SpaceScheme, u::AbstractArray, method::QuantifMethod)
         sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)
         indices = zeros(Int64, 3*(sL+sR))
-        utilde = init_utilde(equation.dim, equation.eqtype, u, sL, sR)
-        uhat = init_uhat(equation.dim, equation.eqtype, u, sL, sR)
+        utilde = init_utilde(method.mdtype, equation.dim, equation.eqtype, u, sL, sR)
+        uhat = init_uhat(method.mdtype, equation.dim, equation.eqtype, u, sL, sR)
         fcont_tilde = zero(utilde)
-        ftilde = init_ftilde(equation.dim, equation.eqtype, u, sL, sR)
+        ftilde = init_ftilde(method.mdtype, equation.dim, equation.eqtype, u, sL, sR)
         cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, utilde)
         eta_tilde = zero(uhat)
         eta_hat = zero(uhat)
         sourceterm_tilde = init_sourceterm(equation.source, utilde)
-        K = zeros(eltype(u), equation.p)
-        # K = init_K(equation.dim, equation.eqtype)
-        #K = zero(Float64)
-        GK = zero(Float64)
-        new{typeof(utilde), typeof(cfl_cache), typeof(sourceterm_tilde), typeof(K)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, sourceterm_tilde, K, zero(Float64), GK)
+        mdcache = init_cache(method.mdtype, equation, u)
+        
+        new{typeof(utilde), typeof(cfl_cache), typeof(sourceterm_tilde), typeof(mdcache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, sourceterm_tilde, mdcache)
     end
 end
 
-# ONE DIMENSIONAL SCALAR EQUATIONS
-init_utilde(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR))
-init_uhat(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR))
-init_ftilde(::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1)
-# init_K(::OneD, ::Scalar) = zero(Float64)
 
-# ONE DIMENSIONAL SYSTEMS
-init_utilde(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR), size(u)[2])
-init_uhat(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR), size(u)[2])
-init_ftilde(::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1, size(u)[2])
-# init_K(::OneD, ::Scalar) = zeros(Float64, size(u)[2])
 
 
 mutable struct Estimator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, ecacheType<:EstimatorCache, mcacheType<:MethodCache, scacheType<:SpaceCache, tcacheType<:TimeCache, srcacheType, entfunType<:AbstractEntropyFun, etaType <: AbstractArray, diffType<:AbstractArray}
@@ -107,7 +93,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         t = sol.t
 
         # INIT CACHE
-        cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u)
+        cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u, method)
         method_cache = init_cache(method, sol.equation, sol.u)
         space_cache = init_cache(sol.space_scheme)
         time_cache = init_cache(sol.time_scheme)

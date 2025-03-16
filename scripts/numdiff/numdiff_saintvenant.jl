@@ -2,7 +2,7 @@ using BenchmarkTools
 include("../../src/numdiff/include_file.jl")
 
 # Domain definition
-Nx = 50
+Nx = 6
 xmin, xmax = 0, 1
 t0, tf = 0.0, 0.5
 CFL_factor = 0.5

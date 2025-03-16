@@ -31,32 +31,9 @@ function compute_G_bounds!(estimator::Estimator)
     for j in 1:Nx
         utilde!(mdtype, estimator, j)
         has_source(estimator.equation.source) ? sourcetilde!(mdtype, estimator, j) : nothing
-        uhat!(estimator)
+        uhat!(mdtype, estimator)
         init_bounds!(mdtype, estimator, j)
         update_bounds!(mdtype, estimator, j)
     end
 end
 
-function uhat!(estimator::Estimator)
-    @unpack time_scheme, space_scheme, params, equation, cache, space_cache, source_cache, dt = estimator
-    @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
-    @unpack dx = params.mesh
-    flux!(equation.funcs, utilde, fcont_tilde)
-    update_cflcache!(equation.dim, equation.eqtype, equation.funcs, utilde, cache.cfl_cache)
-    for i in 1:2*(sL+sR)+1
-        numflux!(time_scheme, space_scheme, i+sL-1, params, equation, cache, space_cache, ftilde, fcont_tilde, utilde, i)
-    end
-    for i in 1:2*(sL+sR)
-        for r in 1:equation.p
-            uhat[i,r] = utilde[i+sL,r] - dt/dx * (ftilde[i+1,r] - ftilde[i,r])
-        end
-    end
-    if has_source(equation.source)
-        discretize_sourceterm!(equation.dim, equation.source.source_discretize, utilde, cache.sourceterm_tilde, source_cache)
-        for i in 1:2*(sL+sR)
-            for j in 1:equation.p
-                uhat[i,j] += dt * cache.sourceterm_tilde[i,j]
-            end
-        end
-    end
-end
