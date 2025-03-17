@@ -14,7 +14,7 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, so
     
     function EstimatorCache(equation::Equation, time_scheme::TimeScheme, space_scheme::SpaceScheme, u::AbstractArray, method::QuantifMethod)
         sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)
-        indices = zeros(Int64, 3*(sL+sR))
+        indices = init_indices(method.mdtype, sL, sR)
         utilde = init_utilde(method.mdtype, equation.dim, equation.eqtype, u, sL, sR)
         uhat = init_uhat(method.mdtype, equation.dim, equation.eqtype, u, sL, sR)
         fcont_tilde = zero(utilde)
@@ -24,7 +24,7 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, so
         eta_hat = zero(uhat)
         sourceterm_tilde = init_sourceterm(equation.source, utilde)
         mdcache = init_cache(method.mdtype, equation, u)
-        
+
         new{typeof(utilde), typeof(cfl_cache), typeof(sourceterm_tilde), typeof(mdcache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, sourceterm_tilde, mdcache)
     end
 end

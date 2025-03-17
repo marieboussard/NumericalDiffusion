@@ -13,9 +13,9 @@ equation = BurgersArticle
 
 sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
 
-estimate = quantify_diffusion(sol, Posteriori());
+estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
 
-estimator = Estimator(sol, Posteriori());
+estimator = Estimator(sol, Posteriori(AsymmetricMD()));
 eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
 eta!(estimator.entfun, estimator.u, estimator.etacont)
 compute_G_bounds!(estimator)

@@ -28,6 +28,7 @@ include("diff_estimate.jl")
 
 # BOUNDS COMPUTING
 include("bounds_computing/symmetric_md.jl")
+include("bounds_computing/asymmetric_md.jl")
 
 # METHODS OF QUANTIFICATION
 include("methods/posteriori.jl")

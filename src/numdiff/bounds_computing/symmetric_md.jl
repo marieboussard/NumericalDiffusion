@@ -9,6 +9,7 @@ mutable struct SymmetricMDCache{ktype<:AbstractArray} <: ModifiedDataCache
 end
 
 init_cache(::SymmetricMD, equation::Equation, u::AbstractArray) = SymmetricMDCache(equation, u)
+init_indices(::SymmetricMD, sL::Int, sR::Int) = zeros(Int64, 3*(sL+sR))
 
 # ONE DIMENSIONAL SCALAR EQUATIONS
 init_utilde(::SymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR))
