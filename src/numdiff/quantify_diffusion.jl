@@ -27,13 +27,13 @@ end
 
 function compute_G_bounds!(estimator::Estimator)
     @unpack Nx = estimator.params.mesh
-    @unpack mdtype = estimator.method
+    @unpack mdtype, boundstype = estimator.method
     for j in 1:Nx
-        utilde!(mdtype, estimator, j)
-        has_source(estimator.equation.source) ? sourcetilde!(mdtype, estimator, j) : nothing
-        uhat!(mdtype, estimator)
-        init_bounds!(mdtype, estimator, j)
-        update_bounds!(mdtype, estimator, j)
+        utilde!(mdtype, boundstype, estimator, j)
+        has_source(estimator.equation.source) ? sourcetilde!(mdtype, boundstype, estimator, j) : nothing
+        uhat!(mdtype, boundstype, estimator)
+        init_bounds!(mdtype, boundstype, estimator, j)
+        update_bounds!(mdtype, boundstype, estimator, j)
     end
 end
 

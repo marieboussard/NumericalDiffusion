@@ -1,6 +1,7 @@
-struct Posteriori{mdtype_type<:ModifiedDataType} <: QuantifMethod
+struct Posteriori{mdtype_type<:ModifiedDataType, btype_type<:BoundsType} <: QuantifMethod
     mdtype::mdtype_type
-    Posteriori(mdtype::ModifiedDataType=MeanMD()) = new{typeof(mdtype)}(mdtype)
+    boundstype::btype_type
+    Posteriori(mdtype::ModifiedDataType=MeanMD(), boundstype=DefaultBounds()) = new{typeof(mdtype), typeof(boundstype)}(mdtype, boundstype)
 end
 
 

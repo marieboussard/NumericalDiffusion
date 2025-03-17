@@ -1,15 +1,15 @@
 mutable struct AsymmetricMDCache <: ModifiedDataCache end
 
 init_cache(::AsymmetricMD, equation::Equation, u::AbstractArray) = AsymmetricMDCache()
-init_indices(::AsymmetricMD, sL::Int, sR::Int) = zeros(Int64, 3*(sL+sR)-2)
+init_indices(::AsymmetricMD, ::DefaultBounds, sL::Int, sR::Int) = zeros(Int64, 3*(sL+sR)-2)
 
 # ONE DIMENSIONAL SCALAR EQUATIONS
-init_utilde(::AsymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR)-2)
-init_uhat(::AsymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)-2)
-init_ftilde(::AsymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)-1)
+init_utilde(::AsymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR)-2)
+init_uhat(::AsymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)-2)
+init_ftilde(::AsymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)-1)
 
 
-function utilde!(::AsymmetricMD, estimator::Estimator, j::Int)# compute ̃uᵢʲ⁺¹/²
+function utilde!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)# compute ̃uᵢʲ⁺¹/²
     @unpack uinit = estimator
     @unpack Nx = estimator.params.mesh
     @unpack sL, sR, indices, utilde = estimator.cache
@@ -40,7 +40,7 @@ function utilde!(::AsymmetricMD, estimator::Estimator, j::Int)# compute ̃uᵢʲ
     end
 end
 
-function uhat!(::AsymmetricMD, estimator::Estimator)
+function uhat!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator)
     @unpack time_scheme, space_scheme, params, equation, cache, space_cache, source_cache, dt = estimator
     @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
     @unpack dx = params.mesh
@@ -64,7 +64,7 @@ function uhat!(::AsymmetricMD, estimator::Estimator)
     # end
 end
 
-function init_bounds!(::AsymmetricMD, estimator::Estimator, j::Int)
+function init_bounds!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
     @unpack equation, m, M, cache, entfun, uinit = estimator
     @unpack sL, sR = cache
     @unpack Nx = estimator.params.mesh
@@ -75,7 +75,7 @@ function init_bounds!(::AsymmetricMD, estimator::Estimator, j::Int)
     m[j] = G(entfun, uinit[mod1(j+sR, Nx)])
 end
 
-function update_bounds!(::AsymmetricMD, estimator::Estimator, j::Int)
+function update_bounds!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
     @unpack equation, m, M, cache, entfun, dt = estimator
     @unpack sL, sR, utilde, uhat, eta_tilde, eta_hat, sourceterm_tilde = cache
     @unpack dx = estimator.params.mesh

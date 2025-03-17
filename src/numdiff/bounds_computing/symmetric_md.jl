@@ -9,22 +9,22 @@ mutable struct SymmetricMDCache{ktype<:AbstractArray} <: ModifiedDataCache
 end
 
 init_cache(::SymmetricMD, equation::Equation, u::AbstractArray) = SymmetricMDCache(equation, u)
-init_indices(::SymmetricMD, sL::Int, sR::Int) = zeros(Int64, 3*(sL+sR))
+init_indices(::SymmetricMD, ::DefaultBounds, sL::Int, sR::Int) = zeros(Int64, 3*(sL+sR))
 
 # ONE DIMENSIONAL SCALAR EQUATIONS
-init_utilde(::SymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR))
-init_uhat(::SymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR))
-init_ftilde(::SymmetricMD, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1)
+init_utilde(::SymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR))
+init_uhat(::SymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR))
+init_ftilde(::SymmetricMD, ::DefaultBounds, ::OneD, ::Scalar, u::Vector{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1)
 # init_K(::OneD, ::Scalar) = zero(Float64)
 
 # ONE DIMENSIONAL SYSTEMS
-init_utilde(::SymmetricMD, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR), size(u)[2])
-init_uhat(::SymmetricMD, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR), size(u)[2])
-init_ftilde(::SymmetricMD, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1, size(u)[2])
+init_utilde(::SymmetricMD, ::DefaultBounds, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 3*(sL+sR), size(u)[2])
+init_uhat(::SymmetricMD, ::DefaultBounds, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR), size(u)[2])
+init_ftilde(::SymmetricMD, ::DefaultBounds, ::OneD, ::System, u::Matrix{Float64}, sL::Int, sR::Int) = zeros(eltype(u), 2*(sL+sR)+1, size(u)[2])
 # init_K(::OneD, ::Scalar) = zeros(Float64, size(u)[2])
 
 
-function utilde!(::SymmetricMD, estimator::Estimator, j::Int)# compute ̃uᵢʲ⁺¹/²
+function utilde!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)# compute ̃uᵢʲ⁺¹/²
     @unpack uinit = estimator
     @unpack Nx = estimator.params.mesh
     @unpack sL, sR, indices, utilde = estimator.cache
@@ -59,7 +59,7 @@ function utilde!(::SymmetricMD, estimator::Estimator, j::Int)# compute ̃uᵢʲ�
     end
 end
 
-function sourcetilde!(::SymmetricMD, estimator::Estimator, j::Int)# compute ̃zᵢʲ⁺¹/²
+function sourcetilde!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)# compute ̃zᵢʲ⁺¹/²
     @unpack znum = estimator.source_cache
     @unpack Nx = estimator.params.mesh
     @unpack sL, sR, indices, sourceterm_tilde = estimator.cache
@@ -81,7 +81,7 @@ function sourcetilde!(::SymmetricMD, estimator::Estimator, j::Int)# compute ̃z�
     end
 end
 
-function uhat!(::SymmetricMD, estimator::Estimator)
+function uhat!(::SymmetricMD, ::DefaultBounds, estimator::Estimator)
     @unpack time_scheme, space_scheme, params, equation, cache, space_cache, source_cache, dt = estimator
     @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
     @unpack dx = params.mesh
@@ -105,7 +105,7 @@ function uhat!(::SymmetricMD, estimator::Estimator)
     end
 end
 
-function init_bounds!(::SymmetricMD, estimator::Estimator, j::Int)
+function init_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
     @unpack equation, m, M, cache, entfun = estimator
     cache.mdcache.GK = G(entfun, cache.mdcache.K)
     if has_source(equation.source)
@@ -115,7 +115,7 @@ function init_bounds!(::SymmetricMD, estimator::Estimator, j::Int)
     M[j] = cache.mdcache.GK
 end
 
-function update_bounds!(::SymmetricMD, estimator::Estimator, j::Int)
+function update_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
     @unpack equation, m, M, cache, entfun, dt = estimator
     @unpack sL, sR, utilde, uhat, eta_tilde, eta_hat, sourceterm_tilde = cache
     @unpack dx = estimator.params.mesh

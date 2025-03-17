@@ -20,6 +20,10 @@ using FiniteVolumes:get_sR
 abstract type QuantifMethod end
 abstract type MethodCache <: FiniteVolumes.Cache end
 
+abstract type BoundsType end
+struct DefaultBounds <: BoundsType end
+struct MultiBounds <: BoundsType end
+
 include("bounds_computing/modified_data_type.jl")
 include("entropy.jl")
 
