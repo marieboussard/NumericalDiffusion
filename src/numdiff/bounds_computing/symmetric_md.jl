@@ -106,7 +106,8 @@ function uhat!(::SymmetricMD, ::DefaultBounds, estimator::Estimator)
 end
 
 function init_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
-    @unpack equation, m, M, cache, entfun = estimator
+    @unpack equation,cache, entfun = estimator
+    @unpack m, M = estimator.method_cache
     cache.mdcache.GK = G(entfun, cache.mdcache.K)
     if has_source(equation.source)
         cache.mdcache.GK += Gsource(entfun, cache.mdcache.K, cache.mdcache.S)
@@ -116,7 +117,8 @@ function init_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::I
 end
 
 function update_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
-    @unpack equation, m, M, cache, entfun, dt = estimator
+    @unpack equation, cache, entfun, dt = estimator
+    @unpack m, M = estimator.method_cache
     @unpack sL, sR, utilde, uhat, eta_tilde, eta_hat, sourceterm_tilde = cache
     @unpack dx = estimator.params.mesh
     @views utilde_short = selectdim(utilde, 1, sL+1:3*sL+2*sR)

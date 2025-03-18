@@ -63,11 +63,6 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
     etacont_init::etaType
     etacont::etaType
 
-    # BOUNDS FOR NUMERICAL ENTROPY FLUX
-    # Gcont::gType
-    m::etaType
-    M::etaType
-
     # RESULTS
     D::diffType
 
@@ -104,15 +99,10 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         etacont_init = init_etacont(sol.equation.dim, sol.equation.eqtype, sol.u)
         etacont = zero(etacont_init)
 
-        # INIT NUMERICAL ENTROPY FLUX BOUNDS
-        m = zero(etacont_init)
-        M = zero(etacont_init)
-
         # INIT DIFFUSION
-        # D = zero(sol.uinit)
         D = zero(etacont_init)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(entfun), typeof(etacont), typeof(D)}(equation, params, time_scheme, space_scheme, uinit, u, dt, t, method, cache, method_cache, space_cache, time_cache, source_cache, entfun, etacont_init, etacont, m, M, D)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(method), typeof(cache), typeof(method_cache), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(entfun), typeof(etacont), typeof(D)}(equation, params, time_scheme, space_scheme, uinit, u, dt, t, method, cache, method_cache, space_cache, time_cache, source_cache, entfun, etacont_init, etacont, D)
     end
 end
 
@@ -130,3 +120,14 @@ end
 
 init_etacont(::OneD, ::Scalar, u::Vector{Float64}) = zero(u)
 init_etacont(::OneD, ::System, u::Matrix{Float64}) = zero(selectdim(u,2,1))
+
+# FILL ESTIMATOR FIELDS WITH INITIAL VALUES
+
+function initialize_estimator!(estimator::Estimator)
+    eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
+    eta!(estimator.entfun, estimator.u, estimator.etacont)
+    if has_source(estimator.equation.source)
+        etasource!(estimator.entfun, estimator.uinit, estimator.source_cache, estimator.etacont_init)
+        etasource!(estimator.entfun, estimator.u, estimator.source_cache, estimator.etacont)
+    end
+end

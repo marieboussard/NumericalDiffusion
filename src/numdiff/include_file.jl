@@ -33,9 +33,11 @@ include("diff_estimate.jl")
 # BOUNDS COMPUTING
 include("bounds_computing/symmetric_md.jl")
 include("bounds_computing/asymmetric_md.jl")
+include("bounds_computing/multisymmetric_md.jl")
 
 # METHODS OF QUANTIFICATION
 include("methods/posteriori.jl")
+include("methods/priori_multidim.jl")
 
 # MAIN FILE
 include("quantify_diffusion.jl")

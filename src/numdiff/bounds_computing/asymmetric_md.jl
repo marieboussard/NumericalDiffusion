@@ -65,7 +65,8 @@ function uhat!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator)
 end
 
 function init_bounds!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
-    @unpack equation, m, M, cache, entfun, uinit = estimator
+    @unpack equation, cache, entfun, uinit = estimator
+    @unpack m, M = estimator.method_cache
     @unpack sL, sR = cache
     @unpack Nx = estimator.params.mesh
     # if has_source(equation.source)
@@ -76,7 +77,8 @@ function init_bounds!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::
 end
 
 function update_bounds!(::AsymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
-    @unpack equation, m, M, cache, entfun, dt = estimator
+    @unpack equation, cache, entfun, dt = estimator
+    @unpack m, M = estimator.method_cache
     @unpack sL, sR, utilde, uhat, eta_tilde, eta_hat, sourceterm_tilde = cache
     @unpack dx = estimator.params.mesh
     @views utilde_short = selectdim(utilde, 1, sL+1:3*sL+2*sR-2)

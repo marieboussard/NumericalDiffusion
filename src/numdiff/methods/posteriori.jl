@@ -24,13 +24,17 @@ end
 
 mutable struct PosterioriCache{Gtype<:AbstractArray} <: MethodCache
     Ginit::Gtype
+    m::Gtype
+    M::Gtype
     Gopt::Gtype
     Jopt::Float64
     function PosterioriCache(equation::Equation, u::AbstractArray)
         Ginit = init_G(equation.dim, equation.eqtype, u)
+        m = zero(Ginit)
+        M = zero(Ginit)
         Gopt = zero(Ginit)
         Jopt = zero(Float64)
-        new{typeof(Ginit)}(Ginit, Gopt, Jopt)
+        new{typeof(Ginit)}(Ginit, m, M, Gopt, Jopt)
     end
 end
 
@@ -41,7 +45,8 @@ init_cache(::Posteriori, args...) = PosterioriCache(args...)
 # COST FUNCTION
 
 function J(estimator::Estimator, gamma::AbstractVector)
-    @unpack params, etacont_init, etacont, m, M, dt = estimator
+    @unpack params, etacont_init, etacont, dt = estimator
+    @unpack m, M = estimator.method_cache
     @unpack Nx, dx = params.mesh
     T = eltype(etacont)
     res = zero(T)
