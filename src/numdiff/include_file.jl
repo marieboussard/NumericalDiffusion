@@ -38,6 +38,7 @@ include("bounds_computing/multiasymmetric_md.jl")
 
 # METHODS OF QUANTIFICATION
 include("methods/posteriori.jl")
+include("methods/priori.jl")
 include("methods/priori_multidim.jl")
 
 # MAIN FILE
