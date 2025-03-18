@@ -22,13 +22,13 @@ init_cache(::PrioriMultidim, args...) = PrioriMultidimCache(args...)
 # ESTIMATION
 
 function perform_estimation!(method::PrioriMultidim, estimator::Estimator; kwargs...)
-    compute_DG_bounds!(estimator)
+    compute_DG_bounds!(method.mdtype, estimator)
     diffusion!(method, estimator)
 end
 
 # BOUNDS
 
-function compute_DG_bounds!(estimator::Estimator)
+function compute_DG_bounds!(::SymmetricMD, estimator::Estimator)
     @unpack entfun, etacont, etacont_init = estimator
     @unpack Nx = estimator.params.mesh
     @unpack mdtype, boundstype = estimator.method

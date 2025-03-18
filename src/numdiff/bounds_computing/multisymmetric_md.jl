@@ -63,15 +63,3 @@ function uhat!(::SymmetricMD, ::MultiBounds, estimator::Estimator)
     #     end
     # end
 end
-
-# function init_bounds!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)
-#     @unpack m, M = estimator
-#     # cache.mdcache.GK = G(entfun, cache.mdcache.K)
-#     # if has_source(equation.source)
-#     #     cache.mdcache.GK += Gsource(entfun, cache.mdcache.K, cache.mdcache.S)
-#     # end
-#     # m[j] = cache.mdcache.GK
-#     # M[j] = cache.mdcache.GK
-#     m[j] = zero(eltype(m))
-#     M[j] = zero(eltype(M))
-# end

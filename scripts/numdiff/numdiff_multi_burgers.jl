@@ -2,7 +2,7 @@ using BenchmarkTools
 include("../../src/numdiff/include_file.jl")
 
 # Domain definition
-Nx = 30
+Nx = 100
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -13,7 +13,7 @@ equation = BurgersArticle
 
 sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
 
-estimate_priori = quantify_diffusion(sol, PrioriMultidim(); name="priori multidim");
+estimate_priori = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()); name="priori multidim");
 estimate_posteriori = quantify_diffusion(sol, Posteriori(AsymmetricMD()); name="asymmetric posteriori");
 
 # EXACT NUMERICAL ENTROPY FLUX
