@@ -47,6 +47,7 @@ display(plot!(mesh.x, sol.u, label="t = "*string(sol.t)))
 # QUANTIFICATION OF NUMERICAL DIFFUSION
 estimate_priori = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()); name="priori multidim");
 estimate_posteriori = quantify_diffusion(sol, Posteriori(AsymmetricMD()); name="asymmetric posteriori");
+estimate_prioristd = quantify_diffusion(sol, Priori(AsymmetricMD()); name="priori standard");
 
 # CHECKING COUNTER EXAMPLE CONDITIONS
 
@@ -58,3 +59,15 @@ println("sum(L)")
 println(sum(estimate_priori.L))
 println("sum(l)")
 println(sum(estimate_priori.l))
+
+plot(mesh.x, estimate_priori.l, label="l")
+display(plot!(mesh.x, estimate_priori.L, label="L"))
+
+plot(mesh.x, estimate_posteriori.m, label ="m")
+display(plot!(mesh.x, estimate_posteriori.M, label ="M"))
+
+plot(mesh.x, estimate_posteriori.D, label="posteriori")
+plot!(mesh.x, estimate_priori.D, label="priori multidim")
+plot!(mesh.x, estimate_prioristd.D, label = "priori standard")
+plot!(mesh.x, estimate_priori.Dlow, label="Dlow")
+display(title!("Numerical Diffusion"))
