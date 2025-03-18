@@ -8,7 +8,7 @@ boundsType = NormalBounds()
 nb_it = 1
 paramBound = 10
 
-# counter_ex = find_counter_example(Nx, CFL_factor, equation, scheme; modifiedDataType = AsymmetricModifiedData(), boundsType=boundsType, nb_it=nb_it, paramBound=paramBound)
+counter_ex = find_counter_example(Nx, CFL_factor, equation, scheme; modifiedDataType = AsymmetricModifiedData(), boundsType=boundsType, nb_it=nb_it, paramBound=paramBound)
 
 # @show counter_ex;
 
