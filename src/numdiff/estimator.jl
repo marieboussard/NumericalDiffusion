@@ -66,7 +66,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
     # RESULTS
     D::diffType
 
-    function Estimator(sol::Solution, method::QuantifMethod; kwargs...)
+    function Estimator(sol::Solution, method::QuantifMethod, i::Int; kwargs...)
 
         # INIT PROBLEM COMPONENTS
         equation = sol.equation
@@ -78,14 +78,29 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         if sol.niter == 1
             uinit = sol.uinit
             dt = sol.dt
+            u = sol.u
+            t = sol.t
         elseif sol.log.config.ulog && sol.log.config.dtlog
-            uinit = sol.log.ulog[end-1]
-            dt = sol.log.dtlog[end]
+            if i==0
+                uinit = sol.log.ulog[end-1]
+                dt = sol.log.dtlog[end]
+                u = sol.u
+                t = sol.t
+            elseif i==1
+                uinit = sol.uinit
+                dt = sol.log.dtlog[1]
+                u = sol.log.ulog[1]
+                t = sol.log.tlog[1]
+            else
+                uinit = sol.log.ulog[i-1]
+                dt = sol.log.dtlog[i]
+                u = sol.log.ulog[i]
+                t = sol.log.tlog[i]
+            end
         else
             throw("Diffusion quantification can only be done for a single timestep : please give a solution with a single iteration or with a saving of intermediate values")
         end
-        u = sol.u
-        t = sol.t
+        
 
         # INIT CACHE
         cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u, method)

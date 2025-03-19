@@ -33,11 +33,11 @@ function uexact_fun(x::Real, t::Real)
         return x/t
     end
 end
-uexact = [uexact_fun(xi, sol.t) for xi in mesh.x]
+uexact = [uexact_fun(xi, tf) for xi in mesh.x]
 
 # FINITE VOLUMES RESOLUTION
 equation = Equation(OneD(), 1, Scalar(), Burgers(), u0)
-sol = solve(equation, params, Euler(), Roe(); maxiter=1, log_config=LogConfig(true, false, true, false));
+sol = FiniteVolumes.solve(equation, params, Euler(), Roe(); maxiter=1, log_config=LogConfig(true, false, true, false));
 
 using Plots
 plot(mesh.x, sol.uinit, label="uinit")
@@ -45,7 +45,7 @@ plot!(mesh.x, uexact, label="exact")
 display(plot!(mesh.x, sol.u, label="t = "*string(sol.t)))
 
 # QUANTIFICATION OF NUMERICAL DIFFUSION
-estimate_priori = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()); name="priori multidim");
+estimate_priori = quantify_diffusion(sol, PrioriMultidim(MaxMD()); name="priori multidim");
 estimate_posteriori = quantify_diffusion(sol, Posteriori(AsymmetricMD()); name="asymmetric posteriori");
 estimate_prioristd = quantify_diffusion(sol, Priori(AsymmetricMD()); name="priori standard");
 

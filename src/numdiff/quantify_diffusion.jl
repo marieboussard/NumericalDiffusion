@@ -1,5 +1,5 @@
-function quantify_diffusion(sol::Solution, method::QuantifMethod; name="", kwargs...)
-    estimator = Estimator(sol, method)
+function quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", kwargs...)
+    estimator = Estimator(sol, method, i)
     initialize_estimator!(estimator)
     perform_estimation!(estimator.method, estimator; kwargs...)
     DiffEstimate(estimator, name)
