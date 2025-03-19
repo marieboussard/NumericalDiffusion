@@ -1,5 +1,5 @@
 using BenchmarkTools
-include("../../src/numdiff/include_file.jl")
+include("../../../src/numdiff/include_file.jl")
 
 # PARAMETRIZED INITIAL DATA
 
@@ -9,7 +9,7 @@ const a2 = 2.0
 const b2 = 4.5
 
 xmin, xmax = -b1/a1, b2/a2
-M = 500
+M = 60
 @show Nx = Int(floor((1 + floor(M/(a1*b2+a2*b1)))*(a2*b1+a1*b2)))
 t0, tf = 0.0, 0.2
 CFL_factor = 0.5
@@ -61,7 +61,10 @@ function quantify_each_step(sol::Solution)
     for k in 1:sol.niter
         println("Timestep "*string(k)*" reaching t = "*string(sol.log.tlog[k]))
         priori_multidim = quantify_diffusion(sol, PrioriMultidim(MaxMD()), k)
-        posteriori = quantify_diffusion(sol, Posteriori(AsymmetricMD()), k)
+        # posteriori = quantify_diffusion(sol, Posteriori(AsymmetricMD()), k)
+        # posteriori = quantify_diffusion(sol, Posteriori(MaxMD()), k)
+        posteriori = quantify_diffusion(sol, Priori(MaxMD()), k)
+
         println("min(M-m):")
         println(minimum(posteriori.M .- posteriori.m))
         println("min(L-l)")
@@ -88,7 +91,7 @@ umat, Dprio_mat, Dpost_mat = quantify_each_step(sol);
 
 animation(umat, sol.log.tlog, mesh.x, "u_"*string(Nx);d=5,fps=20, ylabel="u")
 animation(Dprio_mat, sol.log.tlog, mesh.x, "Dprio_"*string(Nx);d=5,fps=20, ylabel="D priori multidim")
-animation(Dpost_mat, sol.log.tlog, mesh.x, "Dpost_"*string(Nx);d=5,fps=20, ylabel="D posteriori");
+animation(Dpost_mat, sol.log.tlog, mesh.x, "Dprio_std_max_"*string(Nx);d=5,fps=20, ylabel="D priori std");
 
 
 #estimate_priori = quantify_diffusion(sol, PrioriMultidim(MaxMD()), i=3; name="priori multidim");

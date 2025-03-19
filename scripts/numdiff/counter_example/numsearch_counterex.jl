@@ -6,7 +6,7 @@ using OptimizationBBO
 # using ModelingToolkit
 # using JuMP, OSQP
 using BenchmarkTools
-include("../../src/numdiff/include_file.jl")
+include("../../../src/numdiff/include_file.jl")
 
 struct CounterExample_WID
     nb_it::Int
@@ -85,9 +85,9 @@ scheme = Roe()
 nb_it = 1
 paramBound = 10
 
-# counter_ex = find_counterex(Nx, CFL_factor, scheme; mdtype_prio=MeanMD(), nb_it=nb_it, paramBound=paramBound)
+counter_ex = find_counterex(Nx, CFL_factor, scheme; mdtype_prio=MeanMD(), mdtype_post=MeanMD(), nb_it=nb_it, paramBound=paramBound)
 # a = [1.0, 2.0, 2.0, 4.5]
 # a = [8.85, 10.0, 8.85, 10.0]
 # a = [0.005, 8.0, 1.3, 10.0]
 # a = [0.0052025404873337015, 8.071319267808494, 1.3084796721409913, 9.999999999999982]
-@show epsilon(a, Nx, CFL_factor, Roe(), MeanMD(), AsymmetricMD())
+# @show epsilon(a, Nx, CFL_factor, Roe(), MeanMD(), AsymmetricMD())

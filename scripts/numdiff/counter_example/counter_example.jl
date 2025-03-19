@@ -1,5 +1,5 @@
 using BenchmarkTools
-include("../../src/numdiff/include_file.jl")
+include("../../.../src/numdiff/include_file.jl")
 
 # PARAMETRIZED INITIAL DATA
 

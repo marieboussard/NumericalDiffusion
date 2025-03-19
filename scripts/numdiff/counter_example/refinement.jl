@@ -1,5 +1,5 @@
 using BenchmarkTools
-include("../../src/numdiff/include_file.jl")
+include("../../../src/numdiff/include_file.jl")
 
 # PARAMETRIZED INITIAL DATA
 
@@ -71,15 +71,15 @@ end
 # M_vec = [10, 20, 40, 80, 160, 320, 640, 1280]
 M_vec = [10*(2^k) for k in 0:15]
 #M_vec = [100]
-eps1, eps2, eps3, eps4 = refine_counterex(M_vec, xmin, xmax, t0, tf, CFL_factor, equation)
+eps1, eps2, eps3, eps4 = refine_counterex(M_vec, xmin, xmax, t0, tf, CFL_factor, equation, mdtype_post=MaxMD())
 
 # flog(x::Real) = x>0 ? log(x) : -log(x)
 
 display(scatter(log.(M_vec)./log(10), eps1, xlabel="log10(Nx)", title="min(M-m)"))
-savefig("images/counter_example/refinement/Mm.png")
+# savefig("images/counter_example/refinement/Mm.png")
 display(scatter(log.(M_vec)./log(10), log.(eps2)./log(10), xlabel="log10(Nx)", title="log10(min(L-l))"))
-savefig("images/counter_example/refinement/Ll.png")
+# savefig("images/counter_example/refinement/Ll.png")
 display(scatter(log.(M_vec)./log(10), eps3, xlabel="log10(Nx)", title="sum(L)"))
-savefig("images/counter_example/refinement/sumL.png")
+# savefig("images/counter_example/refinement/sumL.png")
 display(scatter(log.(M_vec)./log(10), eps4, xlabel="log10(Nx)", title="sum(l)"))
-savefig("images/counter_example/refinement/sum_l.png")
+# savefig("images/counter_example/refinement/sum_l.png")
