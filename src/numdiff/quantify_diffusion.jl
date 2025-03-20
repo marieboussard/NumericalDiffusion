@@ -12,7 +12,7 @@ function perform_estimation!(method::Posteriori, estimator::Estimator; kwargs...
     for i in eachindex(Ginit)
         Ginit[i] = 0.5*(m[i]+M[i])
     end
-    optsol = optimize(gamma -> J(estimator, gamma), Ginit; g_tol=1e-20, iterations=200000, method=LBFGS(), autodiff=:forward, kwargs...)
+    @show @allocated optsol = optimize(gamma -> J(estimator, gamma), Ginit; g_tol=1e-20, iterations=200000, method=LBFGS(), autodiff=:forward, kwargs...)
     copyto!(Gopt, Optim.minimizer(optsol))
     estimator.method_cache.Jopt = Optim.minimum(optsol)
     diffusion!(method, estimator)

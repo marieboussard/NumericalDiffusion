@@ -25,7 +25,7 @@ init_ftilde(::SymmetricMD, ::DefaultBounds, ::OneD, ::System, u::Matrix{Float64}
 
 
 function utilde!(::SymmetricMD, ::DefaultBounds, estimator::Estimator, j::Int)# compute ̃uᵢʲ⁺¹/²
-    @unpack uinit = estimator
+    @unpack uinit, equation = estimator
     @unpack Nx = estimator.params.mesh
     @unpack sL, sR, indices, utilde = estimator.cache
     indices .= mod1.(j-2*sL-sR+1 : j+sL+2*sR, Nx)

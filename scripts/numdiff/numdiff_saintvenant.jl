@@ -1,5 +1,6 @@
 using BenchmarkTools
 include("../../src/numdiff/include_file.jl")
+using FiniteVolumes:solve
 
 # Domain definition
 Nx = 6
