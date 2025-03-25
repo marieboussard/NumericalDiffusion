@@ -70,3 +70,10 @@ function diffusion!(::Posteriori, estimator::Estimator)
         D[j] = etacont[j] - etacont_init[j] + dt / dx * (Gopt[j] - Gopt[mod1(j-1, Nx)])
     end
 end
+
+function diffusion!(::Posteriori, G::AbstractVector, etacont_init::AbstractVector, etacont::AbstractVector, dt::Real, mesh::Mesh, D::AbstractVector)
+    @unpack Nx, dx = mesh
+    for j in 1:Nx
+        D[j] = etacont[j] - etacont_init[j] + dt / dx * (G[j] - G[mod1(j-1, Nx)])
+    end
+end

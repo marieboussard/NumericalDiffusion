@@ -1,10 +1,15 @@
-struct DiffEstimate{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, methodType<:QuantifMethod, diffType<:AbstractArray, mcacheType<:MethodCache}
+struct DiffEstimate{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, entfunType <: AbstractEntropyFun, etaType <: AbstractArray, dataType <: AbstractArray, methodType<:QuantifMethod, diffType<:AbstractArray, mcacheType<:MethodCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
     params::parametersType
     time_scheme::tschemeType
     space_scheme::sschemeType
+    
+    # ENTROPY
+    entfun::entfunType
+    etacont_init::etaType
+    etacont::etaType
 
     # DATA
     uinit::dataType
@@ -23,7 +28,7 @@ struct DiffEstimate{equationType <: Equation, parametersType <: Parameters, tsch
 
     name::String
     function DiffEstimate(estimator::Estimator, name::String)
-        new{typeof(estimator.equation), typeof(estimator.params), typeof(estimator.time_scheme), typeof(estimator.space_scheme), typeof(estimator.u), typeof(estimator.method), typeof(estimator.D), typeof(estimator.method_cache)}(estimator. equation, estimator.params, estimator.time_scheme, estimator.space_scheme, estimator.uinit, estimator.u, estimator.dt, estimator.t, estimator.method, estimator.D, estimator.method_cache, name)
+        new{typeof(estimator.equation), typeof(estimator.params), typeof(estimator.time_scheme), typeof(estimator.space_scheme), typeof(estimator.entfun), typeof(estimator.etacont), typeof(estimator.u), typeof(estimator.method), typeof(estimator.D), typeof(estimator.method_cache)}(estimator. equation, estimator.params, estimator.time_scheme, estimator.space_scheme, estimator.entfun, estimator.etacont_init, estimator.etacont, estimator.uinit, estimator.u, estimator.dt, estimator.t, estimator.method, estimator.D, estimator.method_cache, name)
     end
 end
 

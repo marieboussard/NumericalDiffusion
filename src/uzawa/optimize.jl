@@ -1,4 +1,5 @@
-function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=100, eps::Float64=1e-3)
+function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=10000, eps::Float64=1e-5)
+    println("SOLVING WITH UZAWA ALGORITHM...")
     optimizer = Optimizer(Gc, A, b; p0=p0, W=W, maxiter=maxiter, eps=eps)
     compute_mu!(optimizer)
     while optimizer.niter < maxiter && optimizer.iterate_gap > eps
@@ -9,11 +10,11 @@ function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector
 end
 
 function performstep!(optimizer::Optimizer)
-    @unpack W, A, b, Gc, gamma, pprev, p, mu = optimizer
-    @unpack Agamma, Atp, WAtp = optimizer.cache
+    @unpack A, b, Gc, gamma, pprev, p, mu = optimizer
+    @unpack Winv, Agamma, Atp, WAtp = optimizer.cache
     # 1 # Compute gamma as minimize the lagrangian without constraints
     mul!(Atp, A', pprev)
-    mul!(WAtp, W, Atp)
+    mul!(WAtp, Winv, Atp)
     @. gamma = Gc - WAtp
     # 2 # Compute p as the orthogonal projection of the dual gradient descent iterate
     mul!(Agamma, A, gamma)

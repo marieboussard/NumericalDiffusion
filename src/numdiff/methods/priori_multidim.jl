@@ -60,3 +60,11 @@ function diffusion!(::PrioriMultidim, estimator::Estimator)
     suml, sumL = sum(l), sum(L)
     @. D = -sumL/(sumL - suml)* (L - l)
 end
+
+function diffusion!(::PrioriMultidim, l::AbstractVector, L::AbstractVector, Dlow::AbstractVector, D::AbstractVector)
+    # LOWER DIFFUSION BOUND
+    @. Dlow = l - L
+    # DIFFUSION ESTIMATE AS THE NORMALIZATION OF LOWER BOUND
+    suml, sumL = sum(l), sum(L)
+    @. D = -sumL/(sumL - suml)* (L - l)
+end

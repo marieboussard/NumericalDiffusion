@@ -3,12 +3,17 @@ struct OptimizerOptions
     eps::Float64
 end
 
-mutable struct OptimizerCache{ptype<:AbstractVector, gtype<:AbstractVector}
-    Atp::ptype
-    WAtp::ptype
-    Agamma::gtype
-    function OptimizerCache(p0::AbstractVector, Gc::AbstractVector)
-        new{typeof(p0), typeof(Gc)}(zero(p0), zero(p0), zero(Gc))
+mutable struct OptimizerCache{wtype<:AbstractMatrix, ptype<:AbstractVector, gtype<:AbstractVector}
+    Winv::wtype
+    Atp::gtype
+    WAtp::gtype
+    Agamma::ptype
+    function OptimizerCache(W::AbstractMatrix, p0::AbstractVector, Gc::AbstractVector)
+        Winv = zero(W)
+        for j in 1:size(W)[1]
+            Winv[j,j] = 1.0/W[j,j]
+        end
+        new{typeof(Winv), typeof(p0), typeof(Gc)}(Winv, zero(Gc), zero(Gc), zero(p0))
     end
 end
 
@@ -46,7 +51,7 @@ mutable struct Optimizer{wtype<:AbstractMatrix, atype<:AbstractMatrix, ptype<:Ab
         iterate_gap = Inf
         opts = OptimizerOptions(maxiter, eps)
         mu = zero(Float64)
-        cache = OptimizerCache(p0, Gc)
+        cache = OptimizerCache(W, p0, Gc)
 
         new{typeof(W), typeof(A), typeof(p0), typeof(Gc), typeof(cache)}(W, A, b, Gc, p0, gammaprev, pprev, gamma, p, niter, iterate_gap, opts, mu, cache)
     end
