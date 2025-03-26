@@ -1,6 +1,7 @@
 struct OptimizerOptions
     maxiter::Int
     eps::Float64
+    start_with_gamma::Bool
 end
 
 mutable struct OptimizerCache{wtype<:AbstractMatrix, ptype<:AbstractVector, gtype<:AbstractVector}
@@ -27,6 +28,7 @@ mutable struct Optimizer{wtype<:AbstractMatrix, atype<:AbstractMatrix, ptype<:Ab
     Gc::gtype
 
     # Variables
+    gamma0::gtype
     p0::ptype
     gammaprev::gtype
     pprev::ptype
@@ -39,20 +41,20 @@ mutable struct Optimizer{wtype<:AbstractMatrix, atype<:AbstractMatrix, ptype<:Ab
     mu::Float64
     cache::cachetype
 
-    function Optimizer(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=100, eps::Float64=1e-3)
+    function Optimizer(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), gamma0=zero(Gc)::AbstractVector, W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=100, eps::Float64=1e-5, start_with_gamma::Bool=false)
 
         # Variables
         gammaprev = zero(Gc)
-        pprev = zero(p0)
+        pprev = copy(p0)
         gamma = zero(Gc)
         p = zero(p0)
 
         niter = 0
         iterate_gap = Inf
-        opts = OptimizerOptions(maxiter, eps)
+        opts = OptimizerOptions(maxiter, eps, start_with_gamma)
         mu = zero(Float64)
         cache = OptimizerCache(W, p0, Gc)
 
-        new{typeof(W), typeof(A), typeof(p0), typeof(Gc), typeof(cache)}(W, A, b, Gc, p0, gammaprev, pprev, gamma, p, niter, iterate_gap, opts, mu, cache)
+        new{typeof(W), typeof(A), typeof(p0), typeof(Gc), typeof(cache)}(W, A, b, Gc, gamma0, p0, gammaprev, pprev, gamma, p, niter, iterate_gap, opts, mu, cache)
     end
 end

@@ -1,7 +1,10 @@
-function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=10000, eps::Float64=1e-5)
+function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), gamma0::AbstractVector=zero(Gc), W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=10000, eps::Float64=1e-5, start_with_gamma::Bool=false)
     println("SOLVING WITH UZAWA ALGORITHM...")
-    optimizer = Optimizer(Gc, A, b; p0=p0, W=W, maxiter=maxiter, eps=eps)
+    optimizer = Optimizer(Gc, A, b; p0=p0, gamma0=gamma0, W=W, maxiter=maxiter, eps=eps, start_with_gamma=start_with_gamma)
     compute_mu!(optimizer)
+    if start_with_gamma
+        initstep!(optimizer)
+    end
     while optimizer.niter < maxiter && optimizer.iterate_gap > eps
         performstep!(optimizer)
         loopfooter!(optimizer)
@@ -26,6 +29,16 @@ end
 function compute_mu!(optimizer::Optimizer)
     @unpack W, A = optimizer
     optimizer.mu = minimum(diag(W))/opnorm(A)^2
+end
+
+function initstep!(optimizer::Optimizer)
+    @unpack A, b, gamma0, gammaprev, p0, pprev, mu = optimizer
+    @unpack Agamma = optimizer.cache
+    mul!(Agamma, A, gamma0)
+    for i in eachindex(p0)
+        pprev[i] = max(zero(eltype(p0)), p0[i]+mu*(Agamma[i]-b[i]))
+    end
+    copyto!(gammaprev, gamma0)
 end
 
 function loopfooter!(optimizer::Optimizer)

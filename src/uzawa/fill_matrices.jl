@@ -28,17 +28,17 @@ function fill_b!(b::AbstractVector, estimate::DiffEstimate)
     # end
 end
 
-function fill_W!(W::AbstractMatrix, estimate::DiffEstimate, alpha::Int)
+function fill_W!(W::AbstractMatrix, estimate::DiffEstimate, alpha::Real, beta::Real=1e-10)
     @unpack l, L = estimate
-    @unpack Nx = estimate.params.mesh
+    @unpack Nx, dx = estimate.params.mesh
     for j in 1:Nx
-        c = min(abs(L[j]-l[j]), abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)]))
-        if c < 1e-4
-            W[j,j] = one(typeof(c))
+        c = min(abs(L[j]-l[j])/dx, abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)])/dx)^alpha
+        if c < beta
+            W[j,j] = one(typeof(c))*beta
         else
-            # W[j,j] = 1.0/c
+            W[j,j] = 1.0/c
             # W[j,j]=c
-            W[j,j] = one(typeof(c))
+            # W[j,j] = one(typeof(c))
         end
     end
 end

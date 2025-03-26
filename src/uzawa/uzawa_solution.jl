@@ -12,7 +12,7 @@ struct UzawaSol{gtype<:AbstractVector, ptype<:AbstractVector}
         constraint_residual = norm(cache.Agamma .- b)
         if optimizer.iterate_gap <= optimizer.opts.eps
             status = "SUCCESS"
-            println("Convergence criteria reached! (eps<"*string(optimizer.opts.eps)*")")
+            println("Convergence criteria reached! (eps<"*string(optimizer.opts.eps)*") with "*string(optimizer.niter)*" iterations")
         elseif optimizer.niter == optimizer.opts.maxiter 
             status = "MAXITER"
             println("Stopped because maximum number of iterations was reached ("*string(optimizer.opts.maxiter)*")")

@@ -5,7 +5,7 @@ include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
 
 # Domain definition
-Nx = 20
+Nx = 100
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -25,7 +25,7 @@ Gc = zeros(eltype(u), Nx)
 A = zeros(eltype(u), 2*Nx, Nx)
 b = zeros(eltype(u), 2*Nx)
 W = zeros(eltype(u), Nx, Nx)
-alpha=2
+alpha=1
 
 Gflux!(CenteredG(), Gc, estimate)
 fill_A!(A, estimate)
@@ -53,7 +53,9 @@ end
 
 
 # Uzawa algorithm
-optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-8);
+optsol = optimize_uzawa(Gc, A, b; gamma0=Gexact, W=W, maxiter=100000, eps=1e-12, start_with_gamma=true);
+# optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
+
 
 # With posteriori estimation
 estimate_opt = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
