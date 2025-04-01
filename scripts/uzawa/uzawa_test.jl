@@ -53,8 +53,8 @@ end
 
 
 # Uzawa algorithm
-optsol = optimize_uzawa(Gc, A, b; gamma0=Gexact, W=W, maxiter=100000, eps=1e-12, start_with_gamma=true);
-# optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
+# optsol = optimize_uzawa(Gc, A, b; gamma0=Gexact, W=W, maxiter=100000, eps=1e-12, start_with_gamma=true);
+optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
 
 
 # With posteriori estimation
@@ -87,7 +87,9 @@ diffusion!(Posteriori(), gamma_opt, etacont_init, etacont, estimate.dt, mesh, D)
 scatter(mesh.x, estimate.D, label="priori multidim")
 plot!(mesh.x, D, label="uzawa")
 plot!(mesh.x, estimate_opt.D, label="posteriori")
+xlabel!("x")
 display(title!("Max Diff:"*string(maximum(D))))
 
-plot(optsol.popt[1:Nx], label="popt for l")
-plot!(optsol.popt[Nx:end], label="popt for L")
+plot(mesh.x, optsol.popt[1:Nx], label="popt for l")
+plot!(mesh.x, optsol.popt[Nx:end], label="popt for L")
+xlabel!("x")

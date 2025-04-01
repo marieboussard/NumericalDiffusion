@@ -5,6 +5,17 @@ include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
 include("../../src/optimisation/interior_penalty.jl")
 
+function interior_init(gammaN::Real, params::Parameters, dt::Real, l::AbstractVector, L::AbstractVector)
+    @unpack Nx, dx = params.mesh
+    res = zero(l)
+    alpha = sum(L)/sum(L.-l)
+    res[1] = gammaN + dx/dt*(alpha*l[1]+(1-alpha)*L[1])
+    for j in 2:Nx
+        res[j] = res[j-1] + dx/dt*(alpha*l[j] + (1-alpha)*L[j])
+    end
+    res
+end
+
 # Domain definition
 Nx = 20
 xmin, xmax = -2, 2
@@ -28,24 +39,24 @@ alpha=1
 Gflux!(CenteredG(), Gc, estimate)
 fill_W!(W, estimate, alpha)
 
-# Exact flux
-estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);
-eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
-eta!(estimator.entfun, estimator.u, estimator.etacont)
-compute_G_bounds!(estimator)
-etavec = zero(mesh.x)
-Gvec = zero(mesh.x)
-eta!(BurgersEnt(), estimate.uinit, etavec)
-G!(BurgersEnt(), estimate.uinit, Gvec)
-Gexact = zero(mesh.x)
-for i in 1:Nx
-    Gexact[i] = 0.5*(Gvec[i] + Gvec[mod1(i+1,Nx)]) - max(abs(estimate.uinit[i]), abs(estimate.uinit[mod1(i+1,Nx)]))*0.5*(etavec[mod1(i+1,Nx)] - etavec[i])
+eps = 1/(0.1*Nx^2)
+# eps=1.0
+gammaN = Gc[Nx]
+
+Ginit = interior_init(gammaN, params, estimate.dt, l, L)
+
+DG = zeros(Nx)
+for i in eachindex(DG)
+    DG[i] = (Ginit[i] - Ginit[mod1(i-1,Nx)])*estimate.dt/mesh.dx
 end
 
-eps = 10.0*1.0/(0.1*Nx^2)
-# eps=1.0
+using Plots
+plot(mesh.x, Gc, label="Gc")
+display(plot!(mesh.x, Ginit, label="Ginit"))
 
-Ginit = Gexact
+plot(mesh.x, l, label="l")
+plot!(mesh.x, DG, label="DG")
+display(plot!(mesh.x, L, label="L"))
 
 cache = InteriorPenCache(Nx, estimate.dt, mesh.dx, eps, W, Gc, l, L)
 @show JIntPen(Ginit, cache)

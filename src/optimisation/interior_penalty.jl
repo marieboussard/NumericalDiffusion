@@ -33,9 +33,10 @@ function JIntPen(gamma::AbstractVector, cache::InteriorPenCache)
     res = zero(eltype(gamma))
     @unpack Nx, dt, dx, W, Gc, eps, L, l = cache
     for j in 1:Nx
-        # @show dt/dx*(gamma[j]-gamma[mod1(j-1,Nx)])-L[j]
-        # @show dt/dx*(gamma[mod1(j-1,Nx)]-gamma[j])+l[j]
-        res += W[j]*norm(gamma .- Gc) - eps*(1.0/(dt/dx*(gamma[j]-gamma[mod1(j-1,Nx)])-L[j]) + 1.0/(dt/dx*(gamma[mod1(j-1,Nx)]-gamma[j])+l[j]))
+        # @show eps*1.0/(dt/dx*(gamma[j]-gamma[mod1(j-1,Nx)])-L[j])
+        # @show  eps*1.0/(dt/dx*(gamma[mod1(j-1,Nx)]-gamma[j])+l[j])
+        # @show  W[j,j]*(gamma[j] - Gc[j])^2
+        res += W[j,j]*(gamma[j] - Gc[j])^2 - eps*(1.0/(dt/dx*(gamma[j]-gamma[mod1(j-1,Nx)])-L[j]) + 1.0/(dt/dx*(gamma[mod1(j-1,Nx)]-gamma[j])+l[j]))
     end
     res
 end
