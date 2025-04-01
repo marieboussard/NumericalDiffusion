@@ -5,7 +5,7 @@ struct CenteredG <: NumEntFlux end
 get_sL(::CenteredG) = 1
 get_sR(::CenteredG) = 1
 
-numFlux(::CenteredG, equation::Equation, u; kwargs...) = (get_G(equation, u[begin]) + get_G(equation, u[end])) / 2
+numFlux(::CenteredG, equation::Equation, u; kwargs...) = (G(equation, u[begin]) + G(equation, u[end])) / 2
 
 
 # function giveAnalyticG(::CenteredG, u)

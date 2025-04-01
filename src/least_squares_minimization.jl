@@ -27,6 +27,8 @@ function lsEntropicConsistentG(domain::Domain, equation::Equation, scheme::FVSch
     @show l, L = compute_multidim_bounds(u0, domain.Nx, domain.dx, dt, equation, domain, scheme, modifiedDataType)
     @show gc = vecNumFlux(equation.source, Gc, equation, u0; dt=dt, domain=domain)[end-1]
     gamma_init, p0 = zeros(domain.Nx), 0.0
+    Gexact = exactG(scheme, equation, u0)
+    gamma_init = Gexact
     # cons(res, x, p) = (res .= compute_delta_G(x))
     # prob = Optimization.OptimizationProblem((x,p)->norm(x.-gc, 2), gamma_init, p0, l[begin+1:end], L[begin+1:end])
     # sol = solve(prob, BBO_adaptive_de_rand_1_bin_radiuslimited(), maxiters = 1000,
