@@ -45,5 +45,6 @@ include("methods/priori_multidim.jl")
 include("quantify_diffusion.jl")
 
 # AUXILIARY FUNCTIONS
+include("G_from_theory.jl")
 include("../uzawa/consistent_fluxes.jl")
 include("../uzawa/fill_matrices.jl")

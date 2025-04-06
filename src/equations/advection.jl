@@ -8,7 +8,7 @@ flux(eq::Advection, u) = eq.a*u
 Dflux(eq::Advection, u) = eq.a
 
 flux!(eq::Advection, u, res) = copyto!(res, eq.a*u)
-Dflux!(eq::Advection, u, res) = copyto!(res, eq.a)
+Dflux!(eq::Advection, u, res) = fill!(res, eq.a)
 
 u0_gauss(x::Real; xm=0.0, sigma=0.1) = 1/sqrt(2*pi*sigma)*exp(-(x-xm)^2/sigma^2)
 u0_gauss(x::AbstractArray) = u0_gauss.(x)

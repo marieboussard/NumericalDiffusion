@@ -16,14 +16,28 @@ G(entfun::EntropyFun, args...) = entfun.G(args...)
 struct BurgersEnt <: AbstractEntropyFun end
 
 G(::BurgersEnt, u::Float64) = 2.0*u^3/3.0
-G(::BurgersEnt, u::AbstractVector) = 2.0*u[1]^3/3.0
+# G(::BurgersEnt, u::AbstractVector) = 2.0*u[1]^3/3.0
 
 # eta!(::BurgersEnt, u::Float64, res::Float64) = res = u^2
 eta!(::BurgersEnt, u::AbstractArray, res::AbstractArray) = @. res = u^2
 # G!(::BurgersEnt, u::Float64, res::Float64) = res = 2*u^3/3
 G!(::BurgersEnt, u::AbstractArray, res::AbstractArray) = @. res = 2*u^3/3
 
-entropy(::Type{Burgers}) = BurgersEnt()
+# entropy(::Type{Burgers}) = BurgersEnt()
+entropy(::Burgers) = BurgersEnt()
+
+# ADVECTION
+struct AdvectionEnt <: AbstractEntropyFun
+    a::Float64
+end
+
+G(entfun::AdvectionEnt, u::Float64) = 0.5*entfun.a*u^2
+# G(entfun::AdvectionEnt, u::AbstractVector) = 2.0*entfun.a*u[1]^2
+
+eta!(::AdvectionEnt, u::AbstractArray, res::AbstractArray) = @. res = 0.5*u^2
+G!(entfun::AdvectionEnt, u::AbstractArray, res::AbstractArray) = @. res = 0.5*entfun.a*u^2
+
+entropy(eqfun::Advection) = AdvectionEnt(eqfun.a)
 
 # SAINT VENANT
 struct SaintVenantEnt <: AbstractEntropyFun end
@@ -76,4 +90,6 @@ etasource!(::SaintVenantEnt, v::AbstractArray, sourceterm::AbstractArray, res::A
 etasource!(entfun::SaintVenantEnt, v::AbstractArray, source_cache::SourceCache, res::AbstractArray) = etasource!(entfun, v, source_cache.znum, res)
 G!(::SaintVenantEnt, v::AbstractArray, z::AbstractArray, res::AbstractArray) = @. res += view(v,:,1)*g*z
 Gsource(::SaintVenantEnt, v::AbstractVector, z::Float64) = v[1]*g*z
-entropy(::Type{SaintVenant}) = SaintVenantEnt()
+
+# entropy(::Type{SaintVenant}) = SaintVenantEnt()
+entropy(::SaintVenant) = SaintVenantEnt()

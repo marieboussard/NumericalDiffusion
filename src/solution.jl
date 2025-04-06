@@ -18,7 +18,7 @@ struct Solution{utype<:AbstractArray}
 
     function Solution(integrator::Integrator, name::String)
         if integrator.t == integrator.params.tf
-            status = "SUCCES"
+            status = "SUCCESS"
         elseif integrator.niter == integrator.opts.maxiter 
             status = "MAXITER"
         else

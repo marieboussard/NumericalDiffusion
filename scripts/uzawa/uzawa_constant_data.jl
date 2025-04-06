@@ -6,16 +6,19 @@ include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
 
 # Domain definition
-Nx = 400
-xmin, xmax = -2, 2
-t0, tf = 0.0, 0.4
+Nx = 100
+xmin, xmax = -4, 4
+t0, tf = 0.0, 0.5
 CFL_factor = 0.5
 mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
-equation = BurgersArticle
+equation = BurgersConstant
 
 # Finite volumes resolution
 sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
+
+plot(mesh.x, sol.uinit, label="u0")
+display(plot!(mesh.x, sol.u, label="u"))
 
 # Multidimensional bounds for ΔG
 estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
@@ -33,11 +36,11 @@ fill_A!(A, estimate)
 fill_b!(b, estimate)
 fill_W!(W, estimate, alpha)
 
-# Exact flux
-estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);
-eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
-eta!(estimator.entfun, estimator.u, estimator.etacont)
-compute_G_bounds!(estimator)
+# # Exact flux
+# estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);
+# eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
+# eta!(estimator.entfun, estimator.u, estimator.etacont)
+# compute_G_bounds!(estimator)
 
 etavec = zero(mesh.x)
 Gvec = zero(mesh.x)
@@ -66,9 +69,9 @@ gammaN = Gc[Nx]
 Ginit = interior_init(gammaN, params, estimate.dt, l, L)
 
 # Uzawa algorithm
-optsol = optimize_uzawa(Gc, A, b; gamma0=Ginit, W=W, maxiter=1000000, eps=1e-12, start_with_gamma=true);
+# optsol = optimize_uzawa(Gc, A, b; gamma0=Ginit, W=W, maxiter=1000000, eps=1e-12, start_with_gamma=true);
 # optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
-# optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-12);
+optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-12);
 
 
 # With posteriori estimation
@@ -83,6 +86,9 @@ end
 D = zero(L)
 @unpack etacont_init, etacont = estimate
 diffusion!(Posteriori(), gamma_opt, etacont_init, etacont, estimate.dt, mesh, D)
+
+Dc = zero(L)
+diffusion!(Posteriori(), Gc, etacont_init, etacont, estimate.dt, mesh, Dc)
 
 pltA = []
 
@@ -113,6 +119,7 @@ tickfontsize=18)
 scatter!(mesh.x, estimate.D, label="priori multidim")
 plot!(mesh.x, D, label="uzawa", lw=2)
 plot!(mesh.x, estimate_opt.D, label="posteriori", lw=2)
+plot!(mesh.x, Dc, label="Gc", lw=2)
 xlabel!("x")
 ylabel!("Numerical Diffusion")
 title!("Max Diff:"*string(maximum(D)))
@@ -148,4 +155,6 @@ ylabel!("Lagrange multiplier")
 
 push!(pltA, plt4)
 
-plot(pltA..., layout=(2,2), size=(1600, 1200))
+display(plot(pltA..., layout=(2,2), size=(1600, 1200)))
+
+plot(mesh.x, optsol.Gcgap)

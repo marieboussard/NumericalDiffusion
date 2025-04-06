@@ -1,4 +1,4 @@
-function solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme; maxiter::Int = 1000, log_config::LogConfig = DefaultLogConfig, name::String="", kwargs...)
+function solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme; maxiter::Int = 10000, log_config::LogConfig = DefaultLogConfig, name::String="", kwargs...)
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
     initialize_integrator!(integrator)
@@ -68,9 +68,10 @@ function loopfooter!(integrator::Integrator)
     integrator.t += integrator.dt
     integrator.niter += 1
     uprev .= u
+    update_log!(integrator)
     flux!(equation.dim, equation.funcs, integrator)
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
-    update_log!(integrator)
+    
     nothing
 end
 
@@ -101,7 +102,7 @@ end
 
 function update_log!(integrator::Integrator)
     @unpack log = integrator
-    @unpack ulog, tlog, dtlog, fnumlog = log.config
+    @unpack ulog, tlog, dtlog, fnumlog, fcontlog = log.config
     # STORE INTERMEDIATE STATES OF THE SOLUTION 
     ulog ? push!(log.ulog, copy(integrator.u)) : nothing
     # STORE INTERMEDIATE TIMES OF THE SIMULATION
@@ -110,6 +111,8 @@ function update_log!(integrator::Integrator)
     dtlog ? push!(log.dtlog, integrator.dt) : nothing
     # STORE INTERMEDIATE NUMERICAL FLUX
     fnumlog ? push!(log.fnumlog, integrator.fnum) : nothing
+    # STORE INTERMEDIATE POINTWISE FLUX FUNCTION
+    fcontlog ? push!(log.fcontlog, integrator.fcont) : nothing
     nothing
 end
 

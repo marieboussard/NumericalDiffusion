@@ -110,7 +110,8 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         source_cache = init_cache(sol.equation.source, sol.params.mesh)
         
         # INIT ENTROPY
-        entfun = entropy(typeof(sol.equation.funcs))
+        # entfun = entropy(typeof(sol.equation.funcs))
+        entfun = entropy(sol.equation.funcs)
         etacont_init = init_etacont(sol.equation.dim, sol.equation.eqtype, sol.u)
         etacont = zero(etacont_init)
 

@@ -84,14 +84,19 @@ module FiniteVolumes
 
     export CFL_cond
     export CFL_cond!
+    export CFL_local
     export CFL_local!
 
 
     # SOME CLASSICAL EQUATIONS
 
+    export AbstractEquationFun
+    export EquationFun
+
     # BURGERS
     export Burgers
     export BurgersArticle
+    export BurgersConstant
 
     # ADVECTION 
     export Advection

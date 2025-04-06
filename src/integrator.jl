@@ -72,7 +72,8 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
         fnum = init_flux(equation.dim, equation.eqtype, equation, params.mesh)
         fcont = zero(fnum)
         uprev = copy(uinit)
-        u = zero(uprev)
+        #u = zero(uprev)
+        u = copy(uprev)
         
         # INIT SL AND SR
         sL, sR = get_sL(time_scheme, space_scheme), get_sR(time_scheme, space_scheme)

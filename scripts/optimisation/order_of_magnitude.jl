@@ -40,11 +40,11 @@ CFL_factor = 0.5
 Nx_vec = [10, 30, 100, 300, 1000, 3000, 10000, 30000]#, 100000, 300000, 1000000]
 Gorder, dLorder = magnitude_order(Nx_vec, xmin, xmax, t0, tf, CFL_factor)
 
-# x = log10.(Nx_vec)
-# y = log10.(Gorder./dLorder)
+x = log10.(Nx_vec)
+y = log10.(Gorder./dLorder)
 
-# using Plots
-# display(scatter(x, y))
+using Plots
+display(scatter(x, y))
 
 # using GLM, DataFrames
 

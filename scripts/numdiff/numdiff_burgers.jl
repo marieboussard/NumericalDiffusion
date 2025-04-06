@@ -15,7 +15,7 @@ sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, fal
 
 estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
 
-estimator = Estimator(sol, Posteriori(AsymmetricMD()));
+estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);
 eta!(estimator.entfun, estimator.uinit, estimator.etacont_init)
 eta!(estimator.entfun, estimator.u, estimator.etacont)
 compute_G_bounds!(estimator)

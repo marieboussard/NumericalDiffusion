@@ -24,6 +24,19 @@ function CFL_cond!(::Scalar, integrator::Integrator)
     end
 end
 
+function CFL_local(::OneD, ::Scalar, eqfun::AbstractEquationFun, params::Parameters, u::AbstractVector)
+    @unpack mesh = params
+    @unpack Nx = mesh
+    absDfcont = zero(mesh.x)
+    res = zero(mesh.x)
+    Dflux!(eqfun, u, absDfcont)
+    abs!(absDfcont, absDfcont)
+    for j in 1:Nx
+        res[j] = max(absDfcont[j], absDfcont[mod1(j+1,Nx)])
+    end
+    res
+end
+
 function CFL_local!(::OneD, ::Scalar, ::AbstractEquationFun, j::Int, params::Parameters, cache::Cache, space_cache::SpaceCache)
     @unpack cfl_cache = cache
     @unpack absDfcont = cfl_cache
