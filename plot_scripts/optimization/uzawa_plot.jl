@@ -6,7 +6,7 @@ include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
 
 # Domain definition
-Nx = 400
+Nx = 50
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -15,7 +15,7 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersArticle
 
 # Finite volumes resolution
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
+sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
 
 # Multidimensional bounds for ΔG
 estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));

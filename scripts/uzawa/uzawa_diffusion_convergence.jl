@@ -5,48 +5,14 @@ using Plots
 include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
 
-# Domain definition
-Nx = 100
-xmin, xmax = -4, 4
-t0, tf = 0.0, 0.2
-CFL_factor = 0.5
-mesh = OneDMesh(Nx, xmin, xmax)
-params = Parameters(mesh, t0, tf, CFL_factor)
-
-
-# A sequence of function which converges to the constant function equal to 1, as n tends to infinity
-u0n(n::Int, x::Real) =  exp(-x^2)/n + 1.0
-
-function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::AbstractEquationFun; alpha::Real=0)
-    N = length(nvec)
-    gapvec = zeros(N)
+function uzawa_diffusion_convergence(Nxvec, equation::Equation; xmin::Real=-4, xmax::Real=4, t0::Real=0.0, tf::Real=0.2, CFL_factor::Real=0.5, alpha=0.0)
+    N = length(Nxvec)
     Dgap = zeros(N)
     for i in 1:N
-        n = nvec[i]
-        u0(x::Real) = u0n(n, x)
-        # function u0(x::Real)
-        #     if x <= -1
-        #         return zero(x)
-        #     elseif x >=1
-        #         return zero(x)
-        #     else
-        #         return one(x)
-        #     end
-        # end
-        u0(x::AbstractVector) = u0.(x)
-        # equation = Equation(OneD(), 1, Scalar(), Burgers(), u0)
-        # aa = 3
-        # equation = Equation(OneD(), 1, Scalar(), Advection(aa), u0)
-        equation = Equation(OneD(), 1, Scalar(), eqfun, u0)
-
-        sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfig(true, false, true, false, false));
-
-        # @show sol.niter
-        # plot(mesh.x, sol.uinit, label="uinit")
-        # display(plot!(mesh.x, sol.u, label="u"))
-
-        # estimate_post = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
-        
+        Nx = Nxvec[i]
+        mesh = OneDMesh(Nx, xmin, xmax)
+        params = Parameters(mesh, t0, tf, CFL_factor)
+        sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
 
         # Multidimensional bounds for ΔG
         estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
@@ -75,12 +41,10 @@ function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::Abst
 
         # Continuous G
         Gcont = zero(uinit)
-        G!(entropy(eqfun), uinit, Gcont)
+        G!(entropy(equation.funcs), uinit, Gcont)
 
         # Uzawa solving
         optsol = optimize_uzawa(Gc, A, b; W=W, eps=1e-12, eps_cons=1e-12, maxiter=500000);
-        # gapvec[i] = norm(optsol.Gcgap)
-        gapvec[i] = norm(optsol.gamma_opt .- Gcont)
 
         # DG and diffusion for optimised flux
         @unpack gamma_opt = optsol
@@ -170,49 +134,24 @@ function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::Abst
         display(plot(pltA..., layout=(2,2), size=(1600, 1200)))
 
     end
-    gapvec, Dgap
+    Dgap
 end
 
-alpha = 0.0
-nvec = [1, 10, 100, 1000]
-# nvec = [1]
+equation = BurgersArticle
+alpha = 0
+Nxvec = [10, 20, 30, 50, 80, 100, 300]
+Dgap = uzawa_diffusion_convergence(Nxvec, equation; alpha=alpha)
 
-pltB = []
-
-pltB1=plot()
-for n in nvec
-    plot!(mesh.x, [u0n(n,xi) for xi in mesh.x],label="n="*string(n), lw=2)
-end
-xlabel!("x")
-ylabel!("u0(x)")
-title!("u0")
-push!(pltB, pltB1)
-
-# gapvec = quantify_consistency(nvec, params, Advection(3.0))
-gapvec, Dgap = quantify_consistency(nvec, params, Burgers(); alpha=alpha)
-
-pltB2 = plot()
-scatter!(log10.(nvec), log10.(gapvec), label="log(||G(u)-Gopt||₂)")
-xlabel!("log(n)")
-display(title!("Consistency gap, Nx="*string(Nx)*", alpha="*string(alpha)))
-push!(pltB, pltB2)
-
-pltB3 = plot()
-scatter!(log10.(nvec), log10.(Dgap), label="log(||D - Dopt||₂)")
-xlabel!("log(n)")
+scatter(log10.(Nxvec), log10.(Dgap), label ="log(||D - Dopt||₂)")
+xlabel!("log(Nx)")
 display(title!("Diffusion gap, Nx="*string(Nx)*", alpha="*string(alpha)))
-push!(pltB, pltB3)
-
-display(plot(pltB..., layout=(3,1), size=(800, 1200)))
-
 
 using GLM, DataFrames
 
-df = DataFrame(x = log10.(nvec), y = log10.(gapvec))  # Création d'un DataFrame
+df = DataFrame(x = log10.(Nxvec), y = log10.(Dgap))  # Création d'un DataFrame
 
 # Ajustement du modèle de régression linéaire
 model = lm(@formula(y ~ x), df)
 
 # Affichage des résultats
-println("Linear regression for log(||G(u)-Gopt||₂) with log(n)")
 println(model)

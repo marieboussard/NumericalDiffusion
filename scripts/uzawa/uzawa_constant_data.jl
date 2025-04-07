@@ -15,7 +15,7 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersConstant
 
 # Finite volumes resolution
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
+sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfig(true, false, true, false, false));
 
 plot(mesh.x, sol.uinit, label="u0")
 display(plot!(mesh.x, sol.u, label="u"))
@@ -42,18 +42,23 @@ fill_W!(W, estimate, alpha)
 # eta!(estimator.entfun, estimator.u, estimator.etacont)
 # compute_G_bounds!(estimator)
 
-etavec = zero(mesh.x)
-Gvec = zero(mesh.x)
-eta!(BurgersEnt(), estimate.uinit, etavec)
-G!(BurgersEnt(), estimate.uinit, Gvec)
-Gexact = zero(mesh.x)
-for i in 1:Nx
-    Gexact[i] = 0.5*(Gvec[i] + Gvec[mod1(i+1,Nx)]) - max(abs(estimate.uinit[i]), abs(estimate.uinit[mod1(i+1,Nx)]))*0.5*(etavec[mod1(i+1,Nx)] - etavec[i])
-end
+# etavec = zero(mesh.x)
+# Gvec = zero(mesh.x)
+# eta!(BurgersEnt(), estimate.uinit, etavec)
+# G!(BurgersEnt(), estimate.uinit, Gvec)
+# Gexact = zero(mesh.x)
+# for i in 1:Nx
+#     Gexact[i] = 0.5*(Gvec[i] + Gvec[mod1(i+1,Nx)]) - max(abs(estimate.uinit[i]), abs(estimate.uinit[mod1(i+1,Nx)]))*0.5*(etavec[mod1(i+1,Nx)] - etavec[i])
+# end
+Gexact = G_from_theory(Rusanov(), equation, params, uinit)
 DGexact = zeros(Nx)
 for i in eachindex(DGexact)
     DGexact[i] = (Gexact[i] - Gexact[mod1(i-1,Nx)])*estimate.dt/mesh.dx
 end
+
+# Diffusion for exact flux
+Dexact = zero(L)
+diffusion!(Posteriori(), Gexact, etacont_init, etacont, estimate.dt, mesh, Dexact)
 
 function interior_init(gammaN::Real, params::Parameters, dt::Real, l::AbstractVector, L::AbstractVector)
     @unpack Nx, dx = params.mesh
@@ -71,7 +76,7 @@ Ginit = interior_init(gammaN, params, estimate.dt, l, L)
 # Uzawa algorithm
 # optsol = optimize_uzawa(Gc, A, b; gamma0=Ginit, W=W, maxiter=1000000, eps=1e-12, start_with_gamma=true);
 # optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
-optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-12);
+optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-12, eps_cons=1e-12);
 
 
 # With posteriori estimation
@@ -116,9 +121,10 @@ titlefontsize=21,
 guidefontsize=21,
 tickfontsize=18)
 
-scatter!(mesh.x, estimate.D, label="priori multidim")
+# scatter!(mesh.x, estimate.D, label="priori multidim")
 plot!(mesh.x, D, label="uzawa", lw=2)
-plot!(mesh.x, estimate_opt.D, label="posteriori", lw=2)
+plot!(mesh.x, Dexact, label="from theory", lw=2)
+# plot!(mesh.x, estimate_opt.D, label="posteriori", lw=2)
 plot!(mesh.x, Dc, label="Gc", lw=2)
 xlabel!("x")
 ylabel!("Numerical Diffusion")

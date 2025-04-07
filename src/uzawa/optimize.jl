@@ -13,7 +13,7 @@ function optimize_uzawa(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector
 end
 
 function performstep!(optimizer::Optimizer)
-    @unpack A, b, Gc, gamma, pprev, p, mu = optimizer
+    @unpack A, b, Gc, gamma, gammaprev, pprev, p, mu = optimizer
     @unpack Winv, Agamma, Atp, WAtp = optimizer.cache
     # 1 # Compute gamma as minimize the lagrangian without constraints
     mul!(Atp, A', pprev)
