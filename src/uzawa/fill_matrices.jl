@@ -34,7 +34,7 @@ function fill_W!(W::AbstractMatrix, estimate::DiffEstimate, alpha::Real, beta::R
     for j in 1:Nx
         c = min(abs(L[j]-l[j])/dx, abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)])/dx)^alpha
         if c < beta
-            W[j,j] = one(typeof(c))*beta
+            W[j,j] = one(typeof(c))/beta#^alpha
         else
             W[j,j] = 1.0/c
             # W[j,j]=c
