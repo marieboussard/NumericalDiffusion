@@ -31,8 +31,10 @@ end
 function fill_W!(W::AbstractMatrix, estimate::DiffEstimate, alpha::Real, beta::Real=1e-10)
     @unpack l, L = estimate
     @unpack Nx, dx = estimate.params.mesh
+    @unpack uinit = estimate
     for j in 1:Nx
         c = min(abs(L[j]-l[j])/dx, abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)])/dx)^alpha
+        # c = abs(uinit[j] - uinit[mod1(j+1,Nx)])
         if c < beta
             W[j,j] = one(typeof(c))/beta#^alpha
         else

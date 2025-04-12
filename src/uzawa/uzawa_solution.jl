@@ -1,9 +1,16 @@
-struct UzawaSol{gtype<:AbstractVector, ptype<:AbstractVector}
+struct UzawaSol{wtype<:AbstractMatrix, atype<:AbstractMatrix, gtype<:AbstractVector, ptype<:AbstractVector}
+    # Problem components
+    W::wtype # Weights matrix
+    A::atype # Constraints matrix
+    b::ptype # Constraint vector 
+    Gc::gtype
+
+    # Output
     status::String
     gamma_opt::gtype
     p0::ptype
     popt::ptype
-    mu::Float64
+    mu::Float64 # step
     niter::Int
     Jopt::Float64
     constraint_residual::Float64
@@ -25,6 +32,6 @@ struct UzawaSol{gtype<:AbstractVector, ptype<:AbstractVector}
             println("Stopped for unknow reason")
         end
         println("Constraint residual: "*string(optimizer.constraint_residual))
-        new{typeof(optimizer.gamma), typeof(optimizer.p0)}(status, optimizer.gamma, optimizer.p0, optimizer.p, optimizer.mu, optimizer.niter, Jopt, optimizer.constraint_residual, Gcgap)
+        new{typeof(optimizer.W), typeof(optimizer.A), typeof(optimizer.gamma), typeof(optimizer.p0)}(optimizer.W, optimizer.A, optimizer.b, optimizer.Gc, status, optimizer.gamma, optimizer.p0, optimizer.p, optimizer.mu, optimizer.niter, Jopt, optimizer.constraint_residual, Gcgap)
     end
 end

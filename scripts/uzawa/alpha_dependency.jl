@@ -9,6 +9,8 @@ function alpha_dependency(alpha_vec::AbstractVector, params::Parameters, equatio
     # Finite volumes resolution
     sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfig(true, false, true, false, false));
     plot(mesh.x, sol.uinit, label="u0")
+    xlabel!("x")
+    title!("Burgers with Nx = "*string(Nx))
     display(plot!(mesh.x, sol.u, label="u"))
 
     # Multidimensional bounds for ΔG
@@ -60,7 +62,7 @@ function alpha_dependency(alpha_vec::AbstractVector, params::Parameters, equatio
         fill_W!(W, estimate, alpha)
         optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=500000, eps=1e-12, eps_cons=1e-12);
         mu_vec[k] = optsol.mu
-        window = 1:10
+        window = 1:24
         consistency_gap[k] = norm(optsol.gamma_opt[window] .- Gcont[window])
         constraint_res[k] = optsol.constraint_residual
         diffusion!(Posteriori(), optsol.gamma_opt, etacont_init, etacont, estimate.dt, mesh, D)
@@ -107,7 +109,7 @@ legendfontsize=15,
 titlefontsize=21,
 guidefontsize=21,
 tickfontsize=18)
-scatter!(alpha_vec, log10.(consistency_gap), label="log||Gopt-G(u)||₂", marker=(:circle, 8))
+scatter!(alpha_vec, log10.(consistency_gap), label="log||Gopt[const area]-G(u)||₂", marker=(:circle, 8))
 xlabel!("α")
 push!(pltA, plt2)
 
