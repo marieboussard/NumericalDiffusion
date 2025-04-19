@@ -15,7 +15,7 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersArticle
 
 # Finite volumes resolution
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
+sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfig(true, false, true, false, false));
 
 # Multidimensional bounds for ΔG
 estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
@@ -66,8 +66,8 @@ gammaN = Gc[Nx]
 Ginit = interior_init(gammaN, params, estimate.dt, l, L)
 
 # Uzawa algorithm
-optsol = optimize_uzawa(Gc, A, b; gamma0=Ginit, W=W, maxiter=1000000, eps=1e-12, start_with_gamma=true);
-# optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
+# optsol = optimize_uzawa(Gc, A, b; gamma0=Ginit, W=W, maxiter=1000000, eps=1e-12, start_with_gamma=true);
+optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
 # optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=100000, eps=1e-12);
 
 

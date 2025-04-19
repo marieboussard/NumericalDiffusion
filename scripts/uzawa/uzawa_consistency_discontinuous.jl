@@ -174,7 +174,7 @@ function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::Abst
 end
 
 alpha = 0.0
-nvec = [1, 10, 100, 1000]
+nvec = [1, 10, 100]#, 1000]
 # nvec = [1]
 
 pltB = []

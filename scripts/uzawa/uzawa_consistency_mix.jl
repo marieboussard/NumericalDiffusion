@@ -65,15 +65,7 @@ function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::Abst
 
         # # display(plot!(mesh.x, uinit, label="estimate"))
 
-        # Defining optimization components
-        Gc = zeros(eltype(u), Nx)
-        A = zeros(eltype(u), 2*Nx, Nx)
-        b = zeros(eltype(u), 2*Nx)
-        W = zeros(eltype(u), Nx, Nx)
-        Gflux!(CenteredG(), Gc, estimate)
-        fill_A!(A, estimate)
-        fill_b!(b, estimate)
-        fill_W!(W, estimate, alpha)
+        Gc, A, b, W = init_optim_components(estimate, AlphaWeights(alpha))
 
         # Continuous G
         Gcont = zero(uinit)
@@ -177,7 +169,7 @@ function quantify_consistency(nvec::Vector{Int}, params::Parameters, eqfun::Abst
 end
 
 alpha = 0
-nvec = [1, 10, 100, 1000]
+nvec = [1, 10, 100]#, 1000]
 # nvec = [1]
 
 pltB = []

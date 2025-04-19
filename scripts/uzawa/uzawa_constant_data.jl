@@ -13,6 +13,10 @@ CFL_factor = 0.5
 mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersConstant
+# u0(x::Real) = exp(-2*x^2)
+# u0(x::AbstractVector) = u0.(x)
+# # equation = Equation(OneD(), 1, Scalar(), Advection(2), u0)
+# equation = Equation(OneD(), 1, Scalar(), Burgers(), u0)
 
 # Finite volumes resolution
 sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfig(true, false, true, false, false));
@@ -22,7 +26,7 @@ sol = solve(equation, params, Euler(), Rusanov(); maxiter=1, log_config=LogConfi
 
 # Multidimensional bounds for ΔG
 estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
-@unpack uinit, u, l, L = estimate
+@unpack uinit, u, l, L, etacont, etacont_init = estimate
 
 # Defining optimization components
 Gc = zeros(eltype(u), Nx)
@@ -56,6 +60,11 @@ G!(entropy(equation.funcs), uinit, Gcont)
 # optsol = optimize_uzawa(Gexact, A, b; W=W, maxiter=100000, eps=1e-12);
 optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=500000, eps=1e-12, eps_cons=1e-12);
 @show optsol.mu
+@unpack gamma_opt = optsol
+DG = zeros(Nx)
+for i in eachindex(DG)
+    DG[i] = (gamma_opt[i] - gamma_opt[mod1(i-1,Nx)])*estimate.dt/mesh.dx
+end
 
 # Diffusion
 D = zero(L)
@@ -132,10 +141,27 @@ display(plot(pltA..., layout=(2,2), size=(1600, 1200)))
 # plot(mesh.x, optsol.Gcgap)
 
 window = 1:10
-plot(mesh.x[window], optsol.gamma_opt[window], label="uzawa")
+pltB=[]
+plt1 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:topright,
+legendfontsize=15,
+titlefontsize=21,
+guidefontsize=21,
+tickfontsize=18)
+scatter!(mesh.x[window], estimate.uinit[window], label="u0")
+push!(pltB, plt1)
+
+plt2 = plot(size=(900, 600), margin=0.5Plots.cm, legend=:topright,
+legendfontsize=15,
+titlefontsize=21,
+guidefontsize=21,
+tickfontsize=18)
+plot!(mesh.x[window], optsol.gamma_opt[window], label="uzawa")
 scatter!(mesh.x[window], Gexact[window], label="from theory", marker=:square)
 scatter!(mesh.x[window], Gc[window], label="centred", marker=:diamond)
 scatter!(mesh.x[window], Gcont[window], label="G(u)", marker=:cross)
 xlabel!("x")
 ylabel!("G")
 title!("Entropy flux in the constant area")
+push!(pltB, plt2)
+
+display(plot(pltB..., layout=(2,1), size=(1200, 1200)))

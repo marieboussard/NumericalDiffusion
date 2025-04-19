@@ -16,31 +16,36 @@ function uzawa_bounds(estimate::DiffEstimate, optsol::UzawaSol)
         CW += Gc[i]*W[i,i]
         wtot += W[i,i]
     end
-    m[Nx] = L[1]*W[1,1]
-    M[Nx] = l[1]*W[1,1]
-    # for i in 1:Nx-1
-    #     for j in i+1:Nx-1
-    #         m[Nx] += W[j,j]*L[i]
-    #         M[Nx] += W[j,j]*l[i]
+    # m[Nx] = L[1]*W[1,1]
+    # M[Nx] = l[1]*W[1,1]
+    # # for i in 1:Nx-1
+    # #     for j in i+1:Nx-1
+    # #         m[Nx] += W[j,j]*L[i]
+    # #         M[Nx] += W[j,j]*l[i]
+    # #     end
+    # # end
+    # for i in 2:Nx
+    #     for j in 1:i-1
+    #         m[Nx] += W[j,j]*l[i]
+    #         M[Nx] += W[j,j]*L[i]
     #     end
     # end
-    for i in 2:Nx
-        for j in 1:i-1
-            m[Nx] += W[j,j]*l[i]
-            M[Nx] += W[j,j]*L[i]
-        end
-    end
-    # m[Nx] = 1.0/wtot * (CW - ilambda*m[Nx])
-    # M[Nx] = 1.0/wtot * (CW - ilambda*M[Nx])
-    m[Nx] = 1.0/wtot * (CW + ilambda*m[Nx])
-    M[Nx] = 1.0/wtot * (CW + ilambda*M[Nx])
-    # for k in 1:Nx-1
-    #     m[k] = m[mod1(k-1, Nx)] + ilambda*l[k]
-    #     M[k] = M[mod1(k-1, Nx)] + ilambda*L[k]
+    # # m[Nx] = 1.0/wtot * (CW - ilambda*m[Nx])
+    # # M[Nx] = 1.0/wtot * (CW - ilambda*M[Nx])
+    # m[Nx] = 1.0/wtot * (CW + ilambda*m[Nx])
+    # M[Nx] = 1.0/wtot * (CW + ilambda*M[Nx])
+    # # for k in 1:Nx-1
+    # #     m[k] = m[mod1(k-1, Nx)] + ilambda*l[k]
+    # #     M[k] = M[mod1(k-1, Nx)] + ilambda*L[k]
+    # # end
+    # for k in Nx-1:-1:1
+    #     m[k] = m[k+1] - ilambda*L[k+1]
+    #     M[k] = M[k+1] - ilambda*l[k+1]
     # end
-    for k in Nx-1:-1:1
-        m[k] = m[k+1] - ilambda*L[k+1]
-        M[k] = M[k+1] - ilambda*l[k+1]
+
+    for k in 1:Nx
+        m[k] = Nx * (Gc[k] * W[k,k]/wtot + ilambda * W[k,k]/wtot*l[k])*10000
+        M[k] = Nx*(Gc[k] * W[k,k]/wtot + ilambda * W[k,k]/wtot*L[k])*10000
     end
     m, M
 end
