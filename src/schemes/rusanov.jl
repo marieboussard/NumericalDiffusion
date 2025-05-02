@@ -8,12 +8,12 @@ struct Rusanov <: SpaceScheme end
 get_sL(::Rusanov) = 1
 get_sR(::Rusanov) = 1
 
-function numflux(::Rusanov, equation, u, args...)
-    @unpack flux = equation.funcs
-    @views uL = u[1,:]
-    @views uR = u[2,:]
-    (flux(uL) .+ flux(uR)) ./ 2 - CFL_cond(u, equation)./ 2 * (uR .- uL)
-end
+# function numflux(::Rusanov, equation, u, args...)
+#     @unpack flux = equation.funcs
+#     @views uL = u[1,:]
+#     @views uR = u[2,:]
+#     (flux(uL) .+ flux(uR)) ./ 2 - CFL_cond(u, equation)./ 2 * (uR .- uL)
+# end
 
 function numflux!(::Rusanov, integrator::Integrator, j::Int, args...)
     @unpack equation, params, cache, space_cache, fnum, fcont, uprev = integrator
@@ -43,6 +43,7 @@ end
 # end
 
 function numflux!(::Rusanov, uL::AbstractVector, uR::AbstractVector,  fL::AbstractVector, fR::AbstractVector, fnum::AbstractVector, subcache::SpaceCache, equation::Equation, args...)
+    # This version is suitable for Saint-Venant only
     subcache.cfl_loc = max(abs(uL[2]/uL[1]) + sqrt(g*uL[1]), abs(uR[2]/uR[1]) + sqrt(g*uR[1]))
     for r in 1:equation.p
         fnum[r] = (fL[r] + fR[r]) *0.5 - subcache.cfl_loc.*0.5 * (uR[r] - uL[r])

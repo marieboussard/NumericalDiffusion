@@ -39,7 +39,7 @@ uexact = [uexact_fun(xi, tf) for xi in mesh.x]
 
 # FINITE VOLUMES RESOLUTION
 equation = Equation(OneD(), 1, Scalar(), Burgers(), u0)
-sol = FiniteVolumes.solve(equation, params, Euler(), Roe(); log_config=LogConfig(true, true, true, false));
+sol = FiniteVolumes.solve(equation, params, Euler(), Roe(); log_config=LogConfig(true, true, true, false, false));
 
 @show sol.niter
 
@@ -89,9 +89,9 @@ end
 
 umat, Dprio_mat, Dpost_mat = quantify_each_step(sol);
 
-animation(umat, sol.log.tlog, mesh.x, "u_"*string(Nx);d=5,fps=20, ylabel="u")
-animation(Dprio_mat, sol.log.tlog, mesh.x, "Dprio_"*string(Nx);d=5,fps=20, ylabel="D priori multidim")
-animation(Dpost_mat, sol.log.tlog, mesh.x, "Dprio_std_max_"*string(Nx);d=5,fps=20, ylabel="D priori std");
+animation(umat, sol.log.tlog, mesh.x, "u_"*string(Nx);d=5,filename="test1", fps=20, ylabel="u")
+# animation(Dprio_mat, sol.log.tlog, mesh.x, "Dprio_"*string(Nx);filename="test2", d=5,fps=20, ylabel="D priori multidim")
+# animation(Dpost_mat, sol.log.tlog, mesh.x, "Dprio_std_max_"*string(Nx);d=5, filename="test3",fps=20, ylabel="D priori std");
 
 
 #estimate_priori = quantify_diffusion(sol, PrioriMultidim(MaxMD()), i=3; name="priori multidim");
