@@ -10,7 +10,11 @@ using FiniteVolumes:SpaceCache
 using FiniteVolumes:TimeCache
 using FiniteVolumes:CFLCache
 using FiniteVolumes:SourceCache
+using FiniteVolumes:EulerCache
+using FiniteVolumes:RK2Cache
 using FiniteVolumes:init_cfl_cache
+using FiniteVolumes:init_subcache
+using FiniteVolumes:update_subcache!
 import FiniteVolumes:init_cache
 import FiniteVolumes:init_sourceterm
 
@@ -28,6 +32,7 @@ include("bounds_computing/modified_data_type.jl")
 include("entropy.jl")
 
 include("estimator.jl")
+include("subcaches.jl")
 include("diff_estimate.jl")
 
 # BOUNDS COMPUTING

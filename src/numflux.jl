@@ -1,16 +1,16 @@
-function numflux!(integrator::Integrator)
-    for j ∈ 1:integrator.params.mesh.Nx
-        numflux!(integrator.time_scheme, integrator, j)
-    end
-    nothing
-end
+# function numflux!(integrator::Integrator)
+#     for j ∈ 1:integrator.params.mesh.Nx
+#         numflux!(integrator.time_scheme, integrator, j)
+#     end
+#     nothing
+# end
 
-function numflux!(time_scheme::TimeScheme, space_scheme::SpaceScheme, params::Parameters, args...)
-    for j ∈ 1:params.mesh.Nx
-        numflux!(time_scheme, space_scheme, j, params, args...)
-    end
-nothing
-end
+# function numflux!(time_scheme::TimeScheme, space_scheme::SpaceScheme, params::Parameters, args...)
+#     for j ∈ 1:params.mesh.Nx
+#         numflux!(time_scheme, space_scheme, j, params, args...)
+#     end
+# nothing
+# end
 
 # numflux!(integrator::Integrator) = numflux!(integrator.time_scheme, integrator.space_scheme, integrator.params, integrator.equation, integrator.cache, integrator.space_cache, integrator.fnum, integrator.fcont, integrator.uprev)
 

@@ -20,7 +20,8 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 
 equation = BurgersArticle
 
-sol = solve(equation, params, Euler(), Rusanov());#; log_config=LogConfig(true, true, true));
+#sol = solve(equation, params, Euler(), Rusanov());#; log_config=LogConfig(true, true, true));
+sol = solve(equation, params, RK2(), Rusanov())
 
 using Plots
 plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))

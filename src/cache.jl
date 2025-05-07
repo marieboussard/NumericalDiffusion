@@ -1,5 +1,6 @@
 # INIT CACHE FOR TIME SCHEMES
-init_cache(::Euler) = EulerCache()
+init_cache(::Euler, args...) = EulerCache()
+init_cache(::RK2, args...) = RK2Cache(args...)
 
 # INIT CACHE FOR SPACE SCHEMES
 init_cache(::Rusanov, args...) = RusanovCache()
@@ -14,3 +15,6 @@ init_cache(::NoSource, args...) = nothing
 
 # FILLING CACHES AFTER INTEGRATOR INITIALIZATION
 fillcache!(::SpaceScheme, args...) = nothing
+
+# SUBCACHE 
+init_subcache(args...) = nothing

@@ -11,7 +11,8 @@ mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersArticle
 
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
+sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
+# sol = solve(equation, params, RK2(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
 
 estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
 

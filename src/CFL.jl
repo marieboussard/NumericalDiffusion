@@ -1,7 +1,7 @@
 mutable struct CFLCacheScalar <: CFLCache
     cfl::Float64
     absDfcont::Vector{Float64}
-    function CFLCacheScalar(equation, uinit)
+    function CFLCacheScalar(equation::Equation, uinit::AbstractVector)
         absDfcont= zero(uinit)
         absDfcont .= abs.(Dflux(equation.funcs, uinit))
         new(zero(Float64), absDfcont)
@@ -37,9 +37,10 @@ function CFL_local(::OneD, ::Scalar, eqfun::AbstractEquationFun, params::Paramet
     res
 end
 
-function CFL_local!(::OneD, ::Scalar, ::AbstractEquationFun, j::Int, params::Parameters, cache::Cache, space_cache::SpaceCache)
-    @unpack cfl_cache = cache
-    @unpack absDfcont = cfl_cache
+function CFL_local!(::OneD, ::Scalar, ::AbstractEquationFun, j::Int, params::Parameters, subcache::Cache, space_cache::SpaceCache)
+    # @unpack cfl_cache = cache
+    # @unpack absDfcont = cfl_cache
+    @unpack absDfcont = subcache
     @unpack Nx = params.mesh
     space_cache.cfl_loc = absDfcont[j]
     space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])

@@ -13,9 +13,10 @@ end
 
 function performstep!(::OneD, integrator::Integrator)
     @unpack dx, Nx = integrator.params.mesh
-    @unpack u, uprev, dt, fnum, equation = integrator
+    @unpack u, uprev, dt, fnum, equation, time_scheme = integrator
     
-    numflux!(integrator)
+    # numflux!(integrator)
+    numflux!(time_scheme, integrator)
     for i in 1:Nx
         for j in 1:equation.p
             u[i,j] = uprev[i,j] - dt / dx * (fnum[i,j] - fnum[mod1(i-1, Nx),j])

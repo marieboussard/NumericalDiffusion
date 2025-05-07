@@ -40,6 +40,7 @@ module FiniteVolumes
 
     # NUMERICAL SCHEMES
     include("schemes/euler.jl")
+    include("schemes/RK2.jl")
     include("schemes/rusanov.jl")
     include("schemes/rusanov_2D.jl")
     include("schemes/roe.jl")
@@ -76,6 +77,7 @@ module FiniteVolumes
 
     # NUMERICAL SCHEMES
     export Euler
+    export RK2
     export Rusanov
     export Rusanov2D
     export Roe

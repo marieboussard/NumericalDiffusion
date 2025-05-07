@@ -1,4 +1,4 @@
-mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, sourcetermType, mdcacheType<:ModifiedDataCache} <: Cache
+mutable struct EstimatorCache{utype <: AbstractArray, subcacheType<:Cache, sourcetermType, mdcacheType<:ModifiedDataCache} <: Cache
     sL::Int
     sR::Int
     indices::Vector{Int}
@@ -6,7 +6,8 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, so
     uhat::utype
     fcont_tilde::utype
     ftilde::utype
-    cfl_cache::cflCacheType
+    # cfl_cache::cflCacheType
+    subcache::subcacheType
     eta_tilde::utype
     eta_hat::utype
     sourceterm_tilde::sourcetermType
@@ -19,13 +20,14 @@ mutable struct EstimatorCache{utype <: AbstractArray, cflCacheType<:CFLCache, so
         uhat = init_uhat(method.mdtype, method.boundstype, equation.dim, equation.eqtype, u, sL, sR)
         fcont_tilde = zero(utilde)
         ftilde = init_ftilde(method.mdtype, method.boundstype, equation.dim, equation.eqtype, u, sL, sR)
-        cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, utilde)
+        # cfl_cache = init_cfl_cache(equation.dim, equation.eqtype, equation.funcs, equation, utilde)
+        subcache = init_subcache(space_scheme, equation.dim, equation.eqtype, equation.funcs, u)
         eta_tilde = zero(uhat)
         eta_hat = zero(uhat)
         sourceterm_tilde = init_sourceterm(equation.source, utilde)
         mdcache = init_cache(method.mdtype, equation, u)
 
-        new{typeof(utilde), typeof(cfl_cache), typeof(sourceterm_tilde), typeof(mdcache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, cfl_cache, eta_tilde, eta_hat, sourceterm_tilde, mdcache)
+        new{typeof(utilde), typeof(subcache), typeof(sourceterm_tilde), typeof(mdcache)}(sL, sR, indices, utilde, uhat, fcont_tilde, ftilde, subcache, eta_tilde, eta_hat, sourceterm_tilde, mdcache)
     end
 end
 
@@ -106,7 +108,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u, method)
         method_cache = init_cache(method, sol.equation, sol.u)
         space_cache = init_cache(sol.space_scheme)
-        time_cache = init_cache(sol.time_scheme)
+        time_cache = init_cache(sol.time_scheme, sol.space_scheme, sol.equation, sol.uinit)
         source_cache = init_cache(sol.equation.source, sol.params.mesh)
         
         # INIT ENTROPY
