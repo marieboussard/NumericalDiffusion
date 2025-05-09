@@ -50,23 +50,12 @@ function numflux!(::RK2, integrator::Integrator,)
 end
 
 ### LOCAL VERSION 
-function numflux!(::RK2, space_scheme::SpaceScheme, j::Int, i::Int, params::Parameters, equation::Equation, cache::Cache, space_cache::SpaceCache, fnum::AbstractArray, fcont::AbstractArray, u::AbstractArray)
-    # First, compute u_bar by applying an iteration of the space scheme
-    numflux!(Euler(), space_scheme, j, i, )
 
-    for i in 1:Nx
-        for j in 1:equation.p
-            u_bar[i,j] = uprev[i,j] - dt / dx * (fnum[i,j] - fnum[mod1(i-1, Nx),j])
-        end
+function numflux!(::RK2, space_scheme::SpaceScheme, j::Int, i::Int, params::Parameters, equation::Equation, cache::Cache, space_cache::SpaceCache, fnum::AbstractArray, fcont::AbstractArray, u::AbstractArray)
+
+    # In this version, it is assumed that update_timecache! has been called before, for the computations that need to be done in a global way
+    for r in 1:equation.p
+        fnum[i,r] = 0.5*(fnum[j,r] + fnum_bar[j,r])
     end
 
-    # Then, compute auxiliary values like f(u_bar) and others depending on the space scheme
-    flux!(equation.funcs, u_bar, fcont_bar)
-    update_subcache!(space_scheme, equation.dim, equation.eqtype, subcache, equation, u_bar)
-
-    # Apply the flux to u_bar
-    numflux!(Euler(), integrator.space_scheme, integrator.params, fnum_bar, integrator.space_cache, subcache, integrator.equation, u_bar, fcont_bar)
-
-    # Final form of the flux
-    @. fnum = 0.5*(fnum + fnum_bar)
 end

@@ -36,7 +36,8 @@ function ARusanov!(::OneD, ::Scalar, ::AbstractEquationFun, rcache::RusanovCache
 end
 
 function numflux!(::Rusanov, params::Parameters, fnum::AbstractVector, rcache::RusanovCache, cache::Cache, equation::Equation, uprev::AbstractVector, fcont::AbstractVector, j::Int)
-    @unpack Nx = params.mesh
+    # @unpack Nx = params.mesh
+    Nx = length(uprev)
     ARusanov!(equation.dim, equation.eqtype, equation.funcs, rcache, cache, params, j)
     for r in 1:equation.p
         fnum[j,r] = (fcont[j, r] + fcont[mod1(j+1,Nx),r]) *0.5 - rcache.cfl_loc.*0.5 * (uprev[mod1(j+1,Nx),r] - uprev[j,r])
