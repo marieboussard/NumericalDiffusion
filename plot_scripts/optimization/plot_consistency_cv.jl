@@ -26,7 +26,7 @@ function consistency_convergence(Nxvec::AbstractVector, alpha::Real, equation::E
 
         # Uzawa algorithm
         @show estimate.params.mesh.Nx
-        Gc, A, b, W = init_optim_components(estimate, AlphaWeights(alpha))
+        Gc, A, b, W = init_optim_components_upperbound_only(estimate, AlphaWeights(alpha))
         optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=1000000, eps=1e-8, eps_cons=1e-6);
         Gopt = optsol.gamma_opt
 

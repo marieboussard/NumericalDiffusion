@@ -23,6 +23,17 @@ function fill_A!(A::AbstractMatrix, estimate::DiffEstimate)
     end
 end
 
+function fill_A_upperbound!(A::AbstractMatrix, estimate::DiffEstimate)
+    @unpack dt, uinit = estimate
+    @unpack Nx, dx = estimate.params.mesh
+    T = eltype(uinit)
+    lamb = dt/dx
+    for j in 1:Nx
+        A[mod1(j+1,Nx),j] = -one(T)*lamb
+        A[j,j] = one(T)*lamb
+    end
+end
+
 function fill_b!(b::AbstractVector, estimate::DiffEstimate)
     @unpack l, L = estimate
     @unpack Nx = estimate.params.mesh
@@ -30,6 +41,12 @@ function fill_b!(b::AbstractVector, estimate::DiffEstimate)
     @views b_up = b[Nx+1:end]
     b_low .= -l
     b_up .= L
+end
+
+function fill_b_upperbound!(b::AbstractVector, estimate::DiffEstimate)
+    @unpack L = estimate
+    @unpack Nx = estimate.params.mesh
+    b .= L
 end
 
 function fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10)
@@ -93,5 +110,21 @@ function init_optim_components(estimate::DiffEstimate, weights_type::AbstractNor
     fill_b!(b, estimate)
     fill_W!(weights_type, W, estimate)
 
+    Gc, A, b, W
+end
+
+function init_optim_components_upperbound_only(estimate::DiffEstimate, weights_type::AbstractNormWeights)
+    @unpack uinit = estimate 
+    @unpack Nx = estimate.params.mesh
+    Gc = zeros(eltype(uinit), Nx)
+    A = zeros(eltype(uinit), Nx, Nx)
+    b = zeros(eltype(uinit), Nx)
+    W = zeros(eltype(uinit), Nx, Nx)
+
+    Gflux!(CenteredG(), Gc, estimate)
+    fill_A_upperbound!(A, estimate)
+    fill_b_upperbound!(b, estimate)
+    fill_W!(weights_type, W, estimate)
+    
     Gc, A, b, W
 end
