@@ -12,7 +12,7 @@ function newton_lcp(Q::AbstractMatrix, Id::AbstractMatrix, b::AbstractVector, p0
     In = y .- c .*p .<= 0
     Ac = .!In
 
-    while niter < niter_max && (minimum(p) < -1e-16 || minimum(y) < -1e-16)#  maximum(Q*p .- y .- b) > 1e-16    #test<0 && 
+    while niter < niter_max && (minimum(p) < -1e-16 || minimum(y) < -1e-16 || test<0)#  maximum(Q*p .- y .- b) > 1e-16    #test<0 && 
 
         # First update the zero part
         p[Ac] .= 0
@@ -76,7 +76,7 @@ c=1
 # Initialization of variables
 eps = 0.1
 p0 = inv(Q .+ eps.*Id)*b
-y0 = zero(p0)
+y0 = zero(p0) .+ eps
 # p0 = zero(b)
 # y0 = -b
 
