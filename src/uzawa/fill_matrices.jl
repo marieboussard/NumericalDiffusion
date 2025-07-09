@@ -1,3 +1,4 @@
+# Choice of weights
 abstract type AbstractNormWeights end
 struct AlphaWeights{T<:Real} <: AbstractNormWeights
     alpha::T
@@ -8,9 +9,14 @@ end
 struct AbsWeights{T<:Real} <: AbstractNormWeights
     alpha::T
 end
-AbsWeights()=new{Int}(1)
+AbsWeights()=AbsWeights(1)
 
-function fill_A!(A::AbstractMatrix, estimate::DiffEstimate)
+# Choice of constraints : Upper bound only, or two bounds
+abstract type BoundMode end
+struct SingleBound <: BoundMode end
+struct DoubleBound <: BoundMode end
+
+function fill_A!(::DoubleBound, A::AbstractMatrix, estimate::DiffEstimate)
     @unpack dt, uinit = estimate
     @unpack Nx, dx = estimate.params.mesh
     T = eltype(uinit)
@@ -23,7 +29,7 @@ function fill_A!(A::AbstractMatrix, estimate::DiffEstimate)
     end
 end
 
-function fill_A_upperbound!(A::AbstractMatrix, estimate::DiffEstimate)
+function fill_A!(::SingleBound, A::AbstractMatrix, estimate::DiffEstimate)
     @unpack dt, uinit = estimate
     @unpack Nx, dx = estimate.params.mesh
     T = eltype(uinit)
@@ -34,7 +40,7 @@ function fill_A_upperbound!(A::AbstractMatrix, estimate::DiffEstimate)
     end
 end
 
-function fill_b!(b::AbstractVector, estimate::DiffEstimate)
+function fill_b!(::DoubleBound, b::AbstractVector, estimate::DiffEstimate)
     @unpack l, L = estimate
     @unpack Nx = estimate.params.mesh
     @views b_low = b[begin:Nx]
@@ -43,7 +49,7 @@ function fill_b!(b::AbstractVector, estimate::DiffEstimate)
     b_up .= L
 end
 
-function fill_b_upperbound!(b::AbstractVector, estimate::DiffEstimate)
+function fill_b!(::SingleBound, b::AbstractVector, estimate::DiffEstimate)
     @unpack L = estimate
     @unpack Nx = estimate.params.mesh
     b .= L
@@ -97,7 +103,7 @@ function fill_W!(aw::MinimizedAlphaWeights, W::AbstractMatrix, estimate::DiffEst
     end
 end
 
-function init_optim_components(estimate::DiffEstimate, weights_type::AbstractNormWeights)
+function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)
     @unpack uinit = estimate
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -106,14 +112,14 @@ function init_optim_components(estimate::DiffEstimate, weights_type::AbstractNor
     W = zeros(eltype(uinit), Nx, Nx)
 
     Gflux!(CenteredG(), Gc, estimate)
-    fill_A!(A, estimate)
-    fill_b!(b, estimate)
+    fill_A!(bound_mode, A, estimate)
+    fill_b!(bound_mode, b, estimate)
     fill_W!(weights_type, W, estimate)
 
     Gc, A, b, W
 end
 
-function init_optim_components_upperbound_only(estimate::DiffEstimate, weights_type::AbstractNormWeights)
+function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)
     @unpack uinit = estimate 
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -122,8 +128,8 @@ function init_optim_components_upperbound_only(estimate::DiffEstimate, weights_t
     W = zeros(eltype(uinit), Nx, Nx)
 
     Gflux!(CenteredG(), Gc, estimate)
-    fill_A_upperbound!(A, estimate)
-    fill_b_upperbound!(b, estimate)
+    fill_A!(bound_mode, A, estimate)
+    fill_b!(bound_mode, b, estimate)
     fill_W!(weights_type, W, estimate)
     
     Gc, A, b, W

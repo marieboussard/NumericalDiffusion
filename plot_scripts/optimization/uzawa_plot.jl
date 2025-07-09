@@ -1,6 +1,4 @@
-using FiniteVolumes
 using BenchmarkTools
-using UnPack
 using Plots
 include("../../src/numdiff/include_file.jl")
 include("../../src/uzawa/uzawa.jl")
@@ -22,16 +20,17 @@ estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
 @unpack uinit, u, l, L = estimate
 
 # Defining optimization components
-Gc = zeros(eltype(u), Nx)
-A = zeros(eltype(u), 2*Nx, Nx)
-b = zeros(eltype(u), 2*Nx)
-W = zeros(eltype(u), Nx, Nx)
-alpha=0
+# Gc = zeros(eltype(u), Nx)
+# A = zeros(eltype(u), 2*Nx, Nx)
+# b = zeros(eltype(u), 2*Nx)
+# W = zeros(eltype(u), Nx, Nx)
+alpha=1
 
-Gflux!(CenteredG(), Gc, estimate)
-fill_A!(A, estimate)
-fill_b!(b, estimate)
-fill_W!(W, estimate, alpha)
+# Gflux!(CenteredG(), Gc, estimate)
+# fill_A!(A, estimate)
+# fill_b!(b, estimate)
+# fill_W!(W, estimate, alpha)
+Gc, A, b, W = init_optim_components(estimate, AbsWeights(alpha))
 
 # Exact flux
 estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);

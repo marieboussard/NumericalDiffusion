@@ -11,8 +11,9 @@ function newton_lcp(Q::AbstractMatrix, Id::AbstractMatrix, b::AbstractVector, p0
     y = copy(y0)
     In = y .- c .*p .<= 0
     Ac = .!In
+    Inprev = zero(In)
 
-    while niter < niter_max && (minimum(p) < -1e-16 || minimum(y) < -1e-16 || test<0)#  maximum(Q*p .- y .- b) > 1e-16    #test<0 && 
+    while niter < niter_max && test<0 #(minimum(p) < -1e-16 || minimum(y) < -1e-16 || test<0)#  maximum(Q*p .- y .- b) > 1e-16    #test<0 && 
 
         # First update the zero part
         p[Ac] .= 0
@@ -29,15 +30,18 @@ function newton_lcp(Q::AbstractMatrix, Id::AbstractMatrix, b::AbstractVector, p0
         p[In] .= X[1:sum(In)]
         y[Ac] .= X[sum(In) + 1 : end]
 
-        Inprev = In
+        Inprev .= In
 
         # Update indices
         @. In = y - c *p <= 0
         @. Ac = .!In
 
+        @show Inprev
+        @show In
+
         # Testing stopping criterion
         if sum(In) == sum(Inprev)
-            test = - norm((In .-Inprev) .> 0)
+            @show test = - norm((In .-Inprev) .> 0) + 1e-16
         else
             test = -1
         end
@@ -52,20 +56,30 @@ end
 
 # Problem definition
 m=10
-#Q0 = rand(m,m)
+Q0 = rand(m,m)
 
 # Matrix for the upper bound only
-Q0 = zeros(m,m)
-for j in 1:m
-    Q0[j,j] = 1
-    for i in 1:m
-        if j == i+1
-            Q0[i,j] = -1
-        end
-    end    
-end
-Q0[m,1] = -1
+# Q0 = zeros(m,m)
+# for j in 1:m
+#     Q0[j,j] = 1
+#     for i in 1:m
+#         if j == i+1
+#             Q0[i,j] = -1
+#         end
+#     end    
+# end
+# Q0[m,1] = -1
 
+# for j in 1:m
+#     Q0[j,j] = 2
+#     for i in 1:m 
+#         if j == i+1 || j == i-1
+#             Q0[i,j] = -1
+#         end
+#     end
+# end
+# Q0[m,1] = -1
+# Q0[1,m] = -1
 
 Q = Q0'*Q0
 Id = Matrix{eltype(Q)}(I,m,m)
@@ -77,11 +91,11 @@ c=1
 eps = 0.1
 p0 = inv(Q .+ eps.*Id)*b
 y0 = zero(p0) .+ eps
-# p0 = zero(b)
-# y0 = -b
+p0 = zero(b)
+y0 = -b
 
 # Other parameters
-niter_max = 20
+niter_max = 100
 
 # Solving with Newton method
 p, y, niter = newton_lcp(Q, Id, b, p0, y0; niter_max=niter_max, c=c)
@@ -90,3 +104,12 @@ p, y, niter = newton_lcp(Q, Id, b, p0, y0; niter_max=niter_max, c=c)
 @show p
 @show y 
 @show p' * y
+
+
+# for i in 1:1
+#     # b = 1 .- 2*rand(m)
+#     b = 1.5 .- 2 .*rand(m) .- Q0*rand(m)
+#     p0 = inv(Q .+ eps.*Id)*b
+#     y0 = zero(p0) .+ eps
+#     p, y, niter = newton_lcp(Q, Id, b, p0, y0; niter_max=niter_max, c=c)
+# end
