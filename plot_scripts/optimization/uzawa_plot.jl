@@ -25,12 +25,13 @@ estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));
 # b = zeros(eltype(u), 2*Nx)
 # W = zeros(eltype(u), Nx, Nx)
 alpha=1
+bound_mode = DoubleBound()
 
 # Gflux!(CenteredG(), Gc, estimate)
 # fill_A!(A, estimate)
 # fill_b!(b, estimate)
 # fill_W!(W, estimate, alpha)
-Gc, A, b, W = init_optim_components(estimate, AbsWeights(alpha))
+Gc, A, b, W = init_optim_components(bound_mode, estimate, AbsWeights(alpha))
 
 # Exact flux
 estimator = Estimator(sol, Posteriori(AsymmetricMD()), 0);

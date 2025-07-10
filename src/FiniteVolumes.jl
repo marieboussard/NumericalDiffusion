@@ -147,4 +147,8 @@ module FiniteVolumes
     export LogConfig
     export has_source
 
+
+    # SOME FUNCTIONS USEFUL FOR PLOTTING
+    export get_name
+
 end

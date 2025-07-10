@@ -3,6 +3,7 @@ uuid = "81a9071b-ecac-4065-85aa-914c1970b9f5"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
@@ -17,6 +18,7 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
 BenchmarkTools = "1.6.0"
+CairoMakie = "0.15.3"
 LaTeXStrings = "1.4.0"
 Optim = "1.13.2"
 Plots = "1.40.16"

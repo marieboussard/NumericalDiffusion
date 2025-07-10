@@ -55,11 +55,9 @@ function fill_b!(::SingleBound, b::AbstractVector, estimate::DiffEstimate)
     b .= L
 end
 
-function fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10)
+function fill_W!(aw::AbsWeights, W::AbstractMatrix, params::Parameters, uinit::AbstractVector, beta::Real=1e-10)
     @unpack alpha = aw
-    @unpack l, L = estimate
-    @unpack Nx, dx = estimate.params.mesh
-    @unpack uinit = estimate
+    @unpack Nx, dx = params.mesh
     for j in 1:Nx
         c = abs(uinit[j] - uinit[mod1(j+1,Nx)])^alpha
         if c < beta
@@ -69,6 +67,9 @@ function fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, beta
         end
     end
 end
+
+fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10) = fill_W!(aw, W, estimate.params, estimate.uinit, beta)
+
 
 function fill_W!(aw::AlphaWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10)
     @unpack alpha = aw

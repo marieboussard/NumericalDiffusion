@@ -8,6 +8,8 @@ struct Roe <: SpaceScheme end
 get_sL(::Roe) = 1
 get_sR(::Roe) = 1
 
+get_name(::Roe) = "Roe"
+
 function numflux!(::Roe, integrator::Integrator, j::Int, args...)
     @unpack equation, cache, space_cache, fnum, fcont, uprev = integrator
     @unpack Nx = integrator.params.mesh

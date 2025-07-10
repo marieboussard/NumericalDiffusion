@@ -2,6 +2,8 @@ using LinearAlgebra
 
 function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0::AbstractVector; maxiter::Int=1000, c=1)
 
+    println("SOLVING WITH NEWTON LCP...")
+
     m = size(M)[1]
     Id = Matrix{eltype(M)}(I,m,m)
 

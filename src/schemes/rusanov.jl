@@ -8,6 +8,8 @@ struct Rusanov <: SpaceScheme end
 get_sL(::Rusanov) = 1
 get_sR(::Rusanov) = 1
 
+get_name(::Rusanov) = "Rusanov"
+
 # function numflux(::Rusanov, equation, u, args...)
 #     @unpack flux = equation.funcs
 #     @views uL = u[1,:]
