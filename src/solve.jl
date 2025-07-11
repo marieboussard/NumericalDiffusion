@@ -1,3 +1,8 @@
+"""
+    solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme; <keyword arguments>)
+
+Use the finite volume scheme (`time_scheme`, `space_scheme`) to solve `equation` with parameters `params`.
+"""
 function solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, space_scheme::SpaceScheme; maxiter::Int = 10000, log_config::LogConfig = DefaultLogConfig, name::String="", kwargs...)
 
     integrator = Integrator(equation, params, time_scheme, space_scheme, maxiter, log_config; kwargs...)
@@ -11,6 +16,12 @@ function solve(equation::Equation, params::Parameters, time_scheme::TimeScheme, 
     Solution(integrator, name)
 end
 
+
+"""
+    performstep(dim::EquationDim, integrator::Integrator)
+
+Do one step of the finite volume resolution for the problem contained in `integrator`, which should describe an equation of dimension `dim`. Currently, dimensions 1 and 2 are possible.
+"""
 function performstep!(::OneD, integrator::Integrator)
     @unpack dx, Nx = integrator.params.mesh
     @unpack u, uprev, dt, fnum, equation = integrator
@@ -57,11 +68,24 @@ function performstep!(::TwoD, integrator::Integrator)
     end
 end
 
+"""
+    loopheader!(integrator::Integrator)
 
+Prepare `integrator` for a finite volumes step with performstep!
+
+See also [`performstep!`](@ref).
+"""
 function loopheader!(integrator::Integrator)
     dt_CFL!(integrator.equation.dim, integrator)
 end
 
+"""
+    loopfooter!(integrator::Integrator)
+
+Update `integrator` components after a finite volumes step with performstep!
+
+See also [`performstep!`](@ref).
+"""
 function loopfooter!(integrator::Integrator)
     @unpack equation, uprev, u = integrator
     @unpack source = equation

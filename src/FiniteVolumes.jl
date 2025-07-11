@@ -75,6 +75,8 @@ module FiniteVolumes
     export EquationFun
 
     # NUMERICAL SCHEMES
+    export TimeScheme
+    export SpaceScheme
     export Euler
     export Rusanov
     export Rusanov2D

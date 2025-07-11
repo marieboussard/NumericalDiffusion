@@ -1,7 +1,7 @@
 mutable struct CFLCacheScalar <: CFLCache
     cfl::Float64
     absDfcont::Vector{Float64}
-    function CFLCacheScalar(equation, uinit)
+    function CFLCacheScalar(equation::Equation, uinit::AbstractVector)
         absDfcont= zero(uinit)
         absDfcont .= abs.(Dflux(equation.funcs, uinit))
         new(zero(Float64), absDfcont)
