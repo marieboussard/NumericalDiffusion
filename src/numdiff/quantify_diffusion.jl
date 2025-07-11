@@ -1,3 +1,8 @@
+"""
+    quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", <keyword arguments>)
+
+Compute an estimation of the numerical diffusion produced by the numerical scheme used to obtain `sol`, using `method`.
+"""
 function quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", kwargs...)
     estimator = Estimator(sol, method, i)
     initialize_estimator!(estimator)
@@ -18,6 +23,11 @@ function perform_estimation!(method::Posteriori, estimator::Estimator; kwargs...
     diffusion!(method, estimator)
 end
 
+"""
+    compute_G_bounds!(estimator::Estimator)
+
+Compute bounds on the numerical entropy flux G, that must be satisfied if G is a consistent entropic flux.
+"""
 function compute_G_bounds!(estimator::Estimator)
     @unpack Nx = estimator.params.mesh
     @unpack mdtype, boundstype = estimator.method

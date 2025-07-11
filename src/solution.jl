@@ -1,3 +1,4 @@
+"All problem parameters and output."
 struct Solution{utype<:AbstractArray}
     # PROBLEM COMPONENTS
     equation::Equation

@@ -1,4 +1,4 @@
-include("../../src/optimisation/optimisation_process.jl")
+include("../../../src/optimisation/optimisation_process.jl")
 using Plots
 using Test
 

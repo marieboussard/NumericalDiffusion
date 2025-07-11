@@ -1,3 +1,11 @@
+"""
+    numflux!(integrator::Integrator)
+
+Return the numerical flux for all interfaces of the mesh.
+Called by `performstep!`.
+
+See also [`performstep!`](@ref).
+"""
 function numflux!(integrator::Integrator)
     for j ∈ 1:integrator.params.mesh.Nx
         numflux!(integrator.time_scheme, integrator, j)
@@ -23,6 +31,13 @@ function numflux2D!(integrator::Integrator)
     nothing
 end
 
+
+"""
+    flux!(::OneD, eqfun::AbstractEquationFun, integrator::Integrator)
+
+Return an array of size (size(`integrator.u`) * equation numbers) where the cell [I,j] contains the jth component of f(u[I]) (note that I can be a couple of indices).
+Here, f is the continuous flux function.
+"""
 flux!(::OneD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, integrator.fcont)
 # flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, integrator.fcont.fcont, integrator.fcont.hcont)
 # flux!(::TwoD, eqfun::AbstractEquationFun, integrator::Integrator)= flux!(eqfun, integrator.u, selectdim(integrator.fcont, ndims(integrator.fcont), 1), selectdim(integrator.fcont, ndims(integrator.fcont), 2))
