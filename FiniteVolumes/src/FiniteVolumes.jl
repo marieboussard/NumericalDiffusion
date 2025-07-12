@@ -26,7 +26,7 @@ module FiniteVolumes
     include("log.jl")
 
     include("integrator.jl")
-    include("problem.jl")
+    #include("problem.jl")
     include("solution.jl")
 
     include("CFL.jl")

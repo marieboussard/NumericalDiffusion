@@ -1,0 +1,4 @@
+name = "NumericalDiffusionFV"
+uuid = "c864e7bb-a9d4-4182-92c5-9c30e22614e5"
+authors = ["Marie Boussard <74459375+marieboussard@users.noreply.github.com>"]
+version = "0.1.0"
