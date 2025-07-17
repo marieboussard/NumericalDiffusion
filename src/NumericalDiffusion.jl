@@ -1,7 +1,12 @@
-module FiniteVolumes
+module NumericalDiffusion
 
     using LinearAlgebra
     using UnPack
+    using Optim
+
+    #===============================================================#
+    #                         FINITE VOLUMES                        #
+    #===============================================================#
 
     include("tools.jl")
     include("parameters.jl")
@@ -51,6 +56,47 @@ module FiniteVolumes
     # MAIN FUNCTIONS
     include("solve.jl")
     include("solve_functions.jl")
+
+
+    #===============================================================#
+    #                     NUMERICAL DIFFUSION                       #
+    #===============================================================#
+
+    abstract type QuantifMethod end
+    abstract type MethodCache <: Cache end
+
+    abstract type BoundsType end
+    struct DefaultBounds <: BoundsType end
+    struct MultiBounds <: BoundsType end
+
+
+    include("numdiff/bounds_computing/modified_data_type.jl")
+    include("numdiff/entropy.jl")
+
+    include("numdiff/estimator.jl")
+    include("numdiff/diff_estimate.jl")
+
+    # BOUNDS COMPUTING
+    include("numdiff/bounds_computing/symmetric_md.jl")
+    include("numdiff/bounds_computing/asymmetric_md.jl")
+    include("numdiff/bounds_computing/multisymmetric_md.jl")
+    include("numdiff/bounds_computing/multiasymmetric_md.jl")
+
+    # METHODS OF QUANTIFICATION
+    include("numdiff/methods/posteriori.jl")
+    include("numdiff/methods/priori.jl")
+    include("numdiff/methods/priori_multidim.jl")
+
+    # MAIN FILE
+    include("numdiff/quantify_diffusion.jl")
+
+    # AUXILIARY FUNCTIONS
+    include("numdiff/G_from_theory.jl")
+
+
+    #===============================================================#
+    #                           EXPORTATIONS                        #
+    #===============================================================#
 
 
     # SOLVING INTERFACE
@@ -153,4 +199,14 @@ module FiniteVolumes
     # SOME FUNCTIONS USEFUL FOR PLOTTING
     export get_name
 
-end
+
+
+    # NUMERICAL DIFFUSION
+    export quantify_diffusion
+
+    # QUANTIFICATION METHODS
+    export Priori
+    export PrioriMultidim
+    export Posteriori
+
+end # module NumericalDiffusion
