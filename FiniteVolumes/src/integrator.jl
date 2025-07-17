@@ -34,7 +34,7 @@ init_sourceterm(::NoSource, args...) = nothing
 init_sourceterm(::AbstractSource, uinit, args...) = zero(uinit)
 
 "Structure gathering information about equation, parameters, scheme, initial data, etc."
-mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, scacheType <: SpaceCache, tcacheType <: TimeCache, srcacheType, icacheType <: IntegratorCache}
+mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, tcacheType <: TimeCache, srcacheType, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS
     equation::equationType
@@ -58,7 +58,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
     opts::IntegratorOptions
     
     # CACHE
-    space_cache::scacheType
+    # space_cache::scacheType
     time_cache::tcacheType
     source_cache::srcacheType
     cache::icacheType
@@ -84,14 +84,14 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
 
         # INIT CACHE
         space_cache         = init_cache(space_scheme, uinit, equation.dim)
-        time_cache          = init_cache(time_scheme)
+        time_cache          = init_cache(time_scheme, space_cache)
         source_cache        = init_cache(equation.source, params.mesh)
         integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh, source_cache)
 
         # INIT LOGBOOK
         logbook = LogBook(log_config, u, fnum)
 
-        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(space_cache), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, space_cache, time_cache, source_cache, integrator_cache, logbook)
+        new{typeof(equation), typeof(params), typeof(time_scheme), typeof(space_scheme), typeof(u), typeof(fnum), typeof(time_cache), typeof(source_cache), typeof(integrator_cache)}(equation, params, time_scheme, space_scheme, u, uprev, uinit, fnum, fcont, 0, 0.0, params.t0, opts, time_cache, source_cache, integrator_cache, logbook)
     end
 
 

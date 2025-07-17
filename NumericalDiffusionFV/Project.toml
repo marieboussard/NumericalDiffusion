@@ -2,3 +2,15 @@ name = "NumericalDiffusionFV"
 uuid = "c864e7bb-a9d4-4182-92c5-9c30e22614e5"
 authors = ["Marie Boussard <74459375+marieboussard@users.noreply.github.com>"]
 version = "0.1.0"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+
+[compat]
+BenchmarkTools = "1.6.0"
+LinearAlgebra = "1.11.0"
+Optim = "1.13.2"
+UnPack = "1.0.2"
