@@ -1,6 +1,5 @@
-using FiniteVolumes
+using NumericalDiffusion
 using BenchmarkTools
-using UnPack
 
 # Domain definition
 Nx = 100
