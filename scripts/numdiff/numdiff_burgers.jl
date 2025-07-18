@@ -1,5 +1,5 @@
 using BenchmarkTools
-include("../../src/numdiff/include_file.jl")
+using NumericalDiffusion
 
 # Domain definition
 Nx = 100
@@ -11,7 +11,7 @@ mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersArticle
 
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false));
+sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
 
 estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
 
@@ -32,8 +32,11 @@ end
 using Plots
 plot(mesh.x, estimate.uinit, label="uinit")
 display(plot!(mesh.x, sol.u, label="t = "*string(sol.t)))
-plot(mesh.x, estimate.m, label="m")
-plot!(mesh.x, estimate.M, label="M")
-plot!(mesh.x, Gexact, label="Gexact")
-display(plot!(mesh.x, estimate.Gopt, label="Optimal Numerical Entropy Flux"))
-plot(mesh.x, estimate.D, label="Numerical Diffusion")
+# plot(mesh.x, estimate.m, label="m")
+# plot!(mesh.x, estimate.M, label="M")
+# plot!(mesh.x, Gexact, label="Gexact")
+# display(plot!(mesh.x, estimate.Gopt, label="Optimal Numerical Entropy Flux"))
+display(plot(mesh.x, estimate.D, label="Numerical Diffusion"))
+
+
+@btime estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));

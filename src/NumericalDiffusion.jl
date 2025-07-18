@@ -204,9 +204,23 @@ module NumericalDiffusion
     # NUMERICAL DIFFUSION
     export quantify_diffusion
 
+
     # QUANTIFICATION METHODS
     export Priori
     export PrioriMultidim
     export Posteriori
+
+    # MODIFIED DATA TYPE
+    export AsymmetricMD
+    export SymmetricMD
+
+    # ENTROPY
+    export eta!
+    export G!
+    export BurgersEnt
+
+    # INTERNAL COMPONENTS
+    export Estimator
+    export compute_G_bounds!
 
 end # module NumericalDiffusion
