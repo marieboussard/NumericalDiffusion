@@ -1,9 +1,5 @@
 using BenchmarkTools
-<<<<<<< HEAD
-#include("../../src/numdiff/include_file.jl")
-=======
 using NumericalDiffusion
->>>>>>> main
 
 # Domain definition
 Nx = 100

@@ -7,13 +7,20 @@ mutable struct RusanovCache <: SpaceCache
     A::Float64
     fcont::Vector{Float64}
     absDfcont::Vector{Float64}
-    function RusanovCache(u::AbstractVector, jstart::Int=1, jend::Int=length(u))
-        # new(zero(Float64), zero(u[jstart:jend]))
-        fcont = zeros(eltype(u), jend-jstart+1)
+    # function RusanovCache(u::AbstractVector, jstart::Int=1, jend::Int=length(u))
+    #     # new(zero(Float64), zero(u[jstart:jend]))
+    #     fcont = zeros(eltype(u), jend-jstart+1)
+    #     absDfcont = zero(fcont)
+    #     new(zero(Float64), fcont, absDfcont)
+    # end
+    function RusanovCache(N::Int)
+        fcont = zeros(Float64, N)
         absDfcont = zero(fcont)
         new(zero(Float64), fcont, absDfcont)
     end
 end
+
+
 
 struct Rusanov <: SpaceScheme end
 
@@ -38,10 +45,8 @@ function ARusanov!(::OneD, ::Scalar, ::AbstractEquationFun, rcache::RusanovCache
     rcache.A = max(rcache.A, absDfcont[mod1(j+1,N)])
 end
 
-function numflux!(::Rusanov, rcache::RusanovCache, equation::Equation, u::AbstractVector, fnum::AbstractVector, ju::Int, jf::Int=ju)
-    # @unpack Nx = params.mesh
+function numflux!(::Rusanov, rcache::RusanovCache, equation::Equation, u::AbstractVector, fnum::AbstractVector, ju::Int, Nx=length(u), jf::Int=ju)
     @unpack fcont = rcache
-    Nx = length(u)
     ARusanov!(equation.dim, equation.eqtype, equation.funcs, rcache, ju)
     for r in 1:equation.p
         fnum[jf,r] = (fcont[ju, r] + fcont[mod1(ju+1,Nx),r]) *0.5 - rcache.A.*0.5 * (u[mod1(ju+1,Nx),r] - u[ju,r])

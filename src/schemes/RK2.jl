@@ -27,7 +27,9 @@ end
 get_sL(::RK2, scheme::SpaceScheme) = 2*get_sL(scheme)
 get_sR(::RK2, scheme::SpaceScheme) = 2*get_sR(scheme)
 
-
+function global_numflux!(::RK2, space_scheme::SpaceScheme, time_cache::TimeCache, equation::Equation, u::AbstractArray, fnum::AbstractArray, jstart::Int=1, jend::Int=length(u), Nx=length(u), shift::Int=0)
+end
+    
 
 function numflux!(::RK2, flux_cache::FluxCache)
     @unpack time_cache, space_cache, uentry, fnum_store, jstart, jend = flux_cache
