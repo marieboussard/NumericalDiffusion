@@ -105,7 +105,7 @@ mutable struct Estimator{equationType <: Equation, parametersType <: Parameters,
         cache = EstimatorCache(sol.equation, sol.time_scheme, sol.space_scheme, sol.u, method)
         method_cache = init_cache(method, sol.equation, sol.u)
         #space_cache = init_cache(sol.space_scheme, length(cache.utilde), sol.equation.dim)
-        time_cache = init_cache(sol.time_scheme, sol.space_scheme, length(cache.utilde), equation.dim)
+        time_cache = init_cache(sol.time_scheme, sol.space_scheme, cache.utilde, equation.dim, params, dt)
         source_cache = init_cache(sol.equation.source, sol.params.mesh)
         
         # INIT ENTROPY

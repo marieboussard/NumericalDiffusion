@@ -1,22 +1,17 @@
-# mutable struct RusanovCache <: SpaceCache
-#     cfl_loc::Float64
-#     RusanovCache() = new(zero(Float64))
-# end
-
-mutable struct RusanovCache <: SpaceCache
+mutable struct RusanovCache{utype<:AbstractArray} <: SpaceCache
     A::Float64
-    fcont::Vector{Float64}
-    absDfcont::Vector{Float64}
+    fcont::utype
+    absDfcont::utype
     # function RusanovCache(u::AbstractVector, jstart::Int=1, jend::Int=length(u))
     #     # new(zero(Float64), zero(u[jstart:jend]))
     #     fcont = zeros(eltype(u), jend-jstart+1)
     #     absDfcont = zero(fcont)
     #     new(zero(Float64), fcont, absDfcont)
     # end
-    function RusanovCache(N::Int)
-        fcont = zeros(Float64, N)
+    function RusanovCache(u::AbstractArray)
+        fcont = zero(u)
         absDfcont = zero(fcont)
-        new(zero(Float64), fcont, absDfcont)
+        new{typeof(fcont)}(zero(Float64), fcont, absDfcont)
     end
 end
 
@@ -38,16 +33,15 @@ function update_cache!(rcache::RusanovCache, u::AbstractArray, equation::Equatio
 end
 
 # Diffusion coefficient A(uL, uR) (depends on the equation)
-function ARusanov!(::OneD, ::Scalar, ::AbstractEquationFun, rcache::RusanovCache, j::Int)
+function ARusanov!(::OneD, ::Scalar, ::AbstractEquationFun, rcache::RusanovCache, j::Int, Nx::Int)
     @unpack absDfcont = rcache
-    N = length(absDfcont)
     rcache.A = absDfcont[j]
-    rcache.A = max(rcache.A, absDfcont[mod1(j+1,N)])
+    rcache.A = max(rcache.A, absDfcont[mod1(j+1,Nx)])
 end
 
 function numflux!(::Rusanov, rcache::RusanovCache, equation::Equation, u::AbstractVector, fnum::AbstractVector, ju::Int, Nx=length(u), jf::Int=ju)
     @unpack fcont = rcache
-    ARusanov!(equation.dim, equation.eqtype, equation.funcs, rcache, ju)
+    ARusanov!(equation.dim, equation.eqtype, equation.funcs, rcache, ju, Nx)
     for r in 1:equation.p
         fnum[jf,r] = (fcont[ju, r] + fcont[mod1(ju+1,Nx),r]) *0.5 - rcache.A.*0.5 * (u[mod1(ju+1,Nx),r] - u[ju,r])
     end

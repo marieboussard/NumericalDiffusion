@@ -2,7 +2,7 @@ using BenchmarkTools
 using NumericalDiffusion
 
 # Domain definition
-Nx = 100
+Nx = 50
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -10,8 +10,10 @@ CFL_factor = 0.5
 mesh = OneDMesh(Nx, xmin, xmax)
 params = Parameters(mesh, t0, tf, CFL_factor)
 equation = BurgersArticle
+#timescheme = Euler()
+timescheme = RK2()
 
-sol = solve(equation, params, Euler(), Rusanov(); log_config=LogConfig(true, false, true, false, false));
+sol = solve(equation, params, timescheme, Rusanov(); log_config=LogConfig(true, false, true, false, false));
 
 estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
 
@@ -30,13 +32,14 @@ for i in 1:Nx
 end
 
 using Plots
-plot(mesh.x, estimate.uinit, label="uinit")
+plot(mesh.x, sol.uinit, label="uinit")
 display(plot!(mesh.x, sol.u, label="t = "*string(sol.t)))
-# plot(mesh.x, estimate.m, label="m")
-# plot!(mesh.x, estimate.M, label="M")
-# plot!(mesh.x, Gexact, label="Gexact")
-# display(plot!(mesh.x, estimate.Gopt, label="Optimal Numerical Entropy Flux"))
+plot(mesh.x, estimate.m, label="m")
+plot!(mesh.x, estimate.M, label="M")
+#plot!(mesh.x, Gexact, label="Gexact")
+display(plot!(mesh.x, estimate.Gopt, label="Optimal Numerical Entropy Flux"))
 display(plot(mesh.x, estimate.D, label="Numerical Diffusion"))
+# axislegend(position = :rb)
+# current_figure()
 
-
-@btime estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));
+#@btime estimate = quantify_diffusion(sol, Posteriori(AsymmetricMD()));

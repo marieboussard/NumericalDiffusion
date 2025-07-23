@@ -84,7 +84,7 @@ mutable struct Integrator{equationType <: Equation, parametersType <: Parameters
 
         # INIT CACHE
         #space_cache         = init_cache(space_scheme, params.mesh.Nx, equation.dim)
-        time_cache          = init_cache(time_scheme, space_scheme, params.mesh.Nx, equation.dim)
+        time_cache          = init_cache(time_scheme, space_scheme, uinit, equation.dim, params, 0.0)
         source_cache        = init_cache(equation.source, params.mesh)
         integrator_cache    = IntegratorCache(sL, sR, equation, uinit, params.mesh, source_cache)
 
