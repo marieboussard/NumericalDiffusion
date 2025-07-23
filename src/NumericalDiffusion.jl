@@ -249,5 +249,6 @@ module NumericalDiffusion
     export init_cache
     export utilde!
     export uhat!
+    export J
 
 end # module NumericalDiffusion

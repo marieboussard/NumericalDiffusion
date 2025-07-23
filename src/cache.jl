@@ -1,7 +1,7 @@
 # INIT CACHE FOR SPACE SCHEMES
 init_cache(::Rusanov, u::AbstractArray, dim::EquationDim, args...) = RusanovCache(u)
 init_cache(::Rusanov2D, args...) = Rusanov2DCache()
-init_cache(::Roe, args...) = RoeCache()
+init_cache(::Roe, u::AbstractArray, args...) = RoeCache(u)
 init_cache(scheme::HR, args...) = HRCache(scheme, args...)
 init_cache(scheme::HR2D, args...) = HRCache(scheme, args...)
 init_cache(scheme::MUSCL, args...) = MUSCLCache(scheme, args...)

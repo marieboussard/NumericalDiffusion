@@ -4,9 +4,9 @@
 Compute an estimation of the numerical diffusion produced by the numerical scheme used to obtain `sol`, using `method`.
 """
 function quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", kwargs...)
-    @btime estimator = Estimator(sol, method, i)
-    @btime initialize_estimator!(estimator)
-    @btime perform_estimation!(estimator.method, estimator; kwargs...)
+    estimator = Estimator(sol, method, i)
+    initialize_estimator!(estimator)
+    perform_estimation!(estimator.method, estimator; kwargs...)
     DiffEstimate(estimator, name)
 end
 
