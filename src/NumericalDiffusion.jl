@@ -3,6 +3,7 @@ module NumericalDiffusion
     using LinearAlgebra
     using UnPack
     using Optim
+    using BenchmarkTools
 
     #===============================================================#
     #                         FINITE VOLUMES                        #
@@ -45,11 +46,13 @@ module NumericalDiffusion
 
     # NUMERICAL SCHEMES
     include("schemes/euler.jl")
+    include("schemes/RK2.jl")
     include("schemes/rusanov.jl")
     include("schemes/rusanov_2D.jl")
     include("schemes/roe.jl")
     include("schemes/HR.jl")
     include("schemes/HR_2D.jl")
+    include("schemes/MUSCL.jl")
     include("numflux.jl")
     include("cache.jl")
 
@@ -124,11 +127,20 @@ module NumericalDiffusion
     export TimeScheme
     export SpaceScheme
     export Euler
+    export RK2
     export Rusanov
     export Rusanov2D
     export Roe
     export HR
     export HR2D
+    export MUSCL
+
+    # Limiters
+    export Minmod
+    export Superbee
+
+    export get_sL
+    export get_sR
 
     export CFL_cond
     export CFL_cond!
@@ -214,6 +226,9 @@ module NumericalDiffusion
     export AsymmetricMD
     export SymmetricMD
 
+    # BOUNDS TYPE
+    export DefaultBounds
+
     # ENTROPY
     export eta!
     export G!
@@ -222,5 +237,18 @@ module NumericalDiffusion
     # INTERNAL COMPONENTS
     export Estimator
     export compute_G_bounds!
+    export global_numflux!
+    export numflux!
+    export RK2Cache
+    export EulerCache
+    export RusanovCache
+    export init_utilde
+    export init_uhat
+    export init_ftilde
+    export init_indices
+    export init_cache
+    export utilde!
+    export uhat!
+    export J
 
 end # module NumericalDiffusion
