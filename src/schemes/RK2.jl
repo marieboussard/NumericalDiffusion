@@ -27,8 +27,8 @@ mutable struct RK2Cache{utype<:AbstractArray, tctype<:TimeCache} <: TimeCache
             u_bar = zero(u)
             fnum_bar = zero(u)
             
-            time_cache_euler = EulerCache(init_cache(space_scheme, u, dim))
-            time_cache_bar = EulerCache(init_cache(space_scheme, u, dim))
+            time_cache_euler = EulerCache(init_cache(space_scheme, u, dim, params))
+            time_cache_bar = EulerCache(init_cache(space_scheme, u, dim, params))
 
         else # If we are working on a subdomain (we cannot use periodic BCs)
 
@@ -37,8 +37,8 @@ mutable struct RK2Cache{utype<:AbstractArray, tctype<:TimeCache} <: TimeCache
             u_bar = zeros(eltype(u), length(fnum_euler) - 1)
             fnum_bar = zeros(eltype(u), length(u_bar) - sL_space - sR_space + 1)
 
-            time_cache_euler = EulerCache(init_cache(space_scheme, u, dim))
-            time_cache_bar = EulerCache(init_cache(space_scheme, u_bar, dim))
+            time_cache_euler = EulerCache(init_cache(space_scheme, u, dim, params))
+            time_cache_bar = EulerCache(init_cache(space_scheme, u_bar, dim, params))
 
         end
         new{typeof(u_bar), typeof(time_cache_euler)}(dx, dt, fnum_euler, u_bar, fnum_bar, time_cache_euler, time_cache_bar)

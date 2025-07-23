@@ -4,6 +4,7 @@ init_cache(::Rusanov2D, args...) = Rusanov2DCache()
 init_cache(::Roe, args...) = RoeCache()
 init_cache(scheme::HR, args...) = HRCache(scheme, args...)
 init_cache(scheme::HR2D, args...) = HRCache(scheme, args...)
+init_cache(scheme::MUSCL, args...) = MUSCLCache(scheme, args...)
 
 # INIT CACHE FOR TIME SCHEMES
 # init_cache(::Euler, space_cache::SpaceCache, args...) = EulerCache(space_cache, args...)

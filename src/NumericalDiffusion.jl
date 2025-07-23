@@ -3,6 +3,7 @@ module NumericalDiffusion
     using LinearAlgebra
     using UnPack
     using Optim
+    using BenchmarkTools
 
     #===============================================================#
     #                         FINITE VOLUMES                        #
@@ -51,6 +52,7 @@ module NumericalDiffusion
     include("schemes/roe.jl")
     include("schemes/HR.jl")
     include("schemes/HR_2D.jl")
+    include("schemes/MUSCL.jl")
     include("numflux.jl")
     include("cache.jl")
 
@@ -131,6 +133,11 @@ module NumericalDiffusion
     export Roe
     export HR
     export HR2D
+    export MUSCL
+
+    # Limiters
+    export Minmod
+    export Superbee
 
     export get_sL
     export get_sR
