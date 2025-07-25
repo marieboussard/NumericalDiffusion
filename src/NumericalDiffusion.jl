@@ -96,6 +96,15 @@ module NumericalDiffusion
     # AUXILIARY FUNCTIONS
     include("numdiff/G_from_theory.jl")
 
+    # PROJECTION ALGORITHM 
+    include("numdiff/projection_algorithm/uzawa/fill_matrices.jl")
+    include("numdiff/projection_algorithm/uzawa/optimizer.jl")
+    include("numdiff/projection_algorithm/uzawa/uzawa_solution.jl")
+    include("numdiff/projection_algorithm/uzawa/optimize.jl")
+    include("numdiff/projection_algorithm/uzawa/consistent_fluxes.jl")
+    include("numdiff/projection_algorithm/newton_for_LCP.jl")
+    include("numdiff/projection_algorithm/uzawa_newton.jl")
+
 
     #===============================================================#
     #                           EXPORTATIONS                        #
@@ -250,5 +259,13 @@ module NumericalDiffusion
     export utilde!
     export uhat!
     export J
+
+    # PROJECTION ALGORITHM
+    export BoundMode
+    export SingleBound
+    export DoubleBound
+    export init_optim_components
+    export optimize_uzawa
+    export compute_entropic_G
 
 end # module NumericalDiffusion

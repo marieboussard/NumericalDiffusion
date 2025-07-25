@@ -25,19 +25,31 @@ function utilde!(::AsymmetricMD, ::MultiBounds, estimator::Estimator, j::Int)# c
 end
 
 function uhat!(::AsymmetricMD, ::MultiBounds, estimator::Estimator)
-    @unpack time_scheme, space_scheme, params, equation, cache, space_cache, source_cache, dt = estimator
-    @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
+    # @unpack time_scheme, space_scheme, params, equation, cache, space_cache, source_cache, dt = estimator
+    # @unpack sL, sR, utilde, ftilde, fcont_tilde, uhat = cache
+    # @unpack dx = params.mesh
+    # flux!(equation.funcs, utilde, fcont_tilde)
+    # update_cflcache!(equation.dim, equation.eqtype, equation.funcs, utilde, cache.cfl_cache)
+    # for i in 1:2*(sL+sR)
+    #     numflux!(time_scheme, space_scheme, i+sL-1, params, equation, cache, space_cache, ftilde, fcont_tilde, utilde, i)
+    # end
+    # for i in 1:2*(sL+sR)-1
+    #     for r in 1:equation.p
+    #         uhat[i,r] = utilde[i+sL,r] - dt/dx * (ftilde[i+1,r] - ftilde[i,r])
+    #     end
+    # end
+
+    @unpack time_scheme, space_scheme, time_cache, params, equation, cache, source_cache, dt = estimator
+    @unpack sL, sR, utilde, ftilde, uhat = cache
     @unpack dx = params.mesh
-    flux!(equation.funcs, utilde, fcont_tilde)
-    update_cflcache!(equation.dim, equation.eqtype, equation.funcs, utilde, cache.cfl_cache)
-    for i in 1:2*(sL+sR)
-        numflux!(time_scheme, space_scheme, i+sL-1, params, equation, cache, space_cache, ftilde, fcont_tilde, utilde, i)
-    end
+
+    global_numflux!(time_scheme, space_scheme, time_cache, equation, utilde, ftilde, sL, 3*sL+2*sR-1, params.mesh.Nx, -sL+1)
     for i in 1:2*(sL+sR)-1
         for r in 1:equation.p
             uhat[i,r] = utilde[i+sL,r] - dt/dx * (ftilde[i+1,r] - ftilde[i,r])
         end
     end
+
 end
 
 # BOUNDS
