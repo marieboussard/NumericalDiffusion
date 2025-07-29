@@ -104,6 +104,14 @@ function fill_W!(aw::MinimizedAlphaWeights, W::AbstractMatrix, estimate::DiffEst
     end
 end
 
+"""
+Assemble matrices of the quadratic programming problem associated to the quantification of numerical diffusion.
+
+- `init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)`
+
+- `init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)`
+
+"""
 function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)
     @unpack uinit = estimate
     @unpack Nx = estimate.params.mesh

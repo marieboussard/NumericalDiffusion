@@ -33,7 +33,7 @@ init_cfl_cache(::TwoD, ::Scalar, ::AbstractEquationFun, args...) = CFLCacheScala
 init_sourceterm(::NoSource, args...) = nothing
 init_sourceterm(::AbstractSource, uinit, args...) = zero(uinit)
 
-"Structure gathering information about equation, parameters, scheme, initial data, etc."
+"Contain all information necessary for finite volume solving: equation, parameters, scheme, initial data, etc."
 mutable struct Integrator{equationType <: Equation, parametersType <: Parameters, tschemeType <: TimeScheme, sschemeType <: SpaceScheme, dataType <: AbstractArray, fnumType<:AbstractArray, tcacheType <: TimeCache, srcacheType, icacheType <: IntegratorCache}
 
     # PROBLEM COMPONENTS

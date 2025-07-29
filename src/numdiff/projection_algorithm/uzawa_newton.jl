@@ -1,3 +1,7 @@
+"
+output of function `compute_entropic_G`
+See also [`compute_entropic_G`](@ref).
+"
 struct UzawaNewtonSolution{soltype<:Solution, wtype<:AbstractMatrix, atype<:AbstractMatrix, gtype<:AbstractVector, Mtype<:AbstractMatrix, ptype<:AbstractVector, bound_mode_type<:BoundMode, weights_type<:AbstractNormWeights}
 
     # Data info
@@ -35,6 +39,15 @@ struct UzawaNewtonSolution{soltype<:Solution, wtype<:AbstractMatrix, atype<:Abst
 
 end
 
+"""
+    compute_entropic_G(params::Parameters, equation::Equation; <keywords arguments>)
+
+Compute an entropic numerical entropy flux for the finite volume resolution of `equation` with parameters `params`.
+
+The method used is Uzawa algorithm for the projection, and a Newton step can be added for speed-up.
+
+By default, the scheme is Euler + Rusanov, but it can also be specified.
+"""
 function compute_entropic_G(params::Parameters, equation::Equation; bound_mode=SingleBound(), weights=AbsWeights(), maxiter_uzawa=1000, maxiter_newton=1000, time_scheme::TimeScheme=Euler(), space_scheme::SpaceScheme=Rusanov(), use_newton=true)
 
     # Finite volumes resolution

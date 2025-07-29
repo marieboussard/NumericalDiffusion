@@ -224,9 +224,11 @@ module NumericalDiffusion
 
     # NUMERICAL DIFFUSION
     export quantify_diffusion
+    export DiffEstimate
 
 
     # QUANTIFICATION METHODS
+    export QuantifMethod
     export Priori
     export PrioriMultidim
     export Posteriori
@@ -266,6 +268,11 @@ module NumericalDiffusion
     export DoubleBound
     export init_optim_components
     export optimize_uzawa
+    export newton_lcp
     export compute_entropic_G
+    export UzawaNewtonSolution
+
+    #Weights
+    export AbstractNormWeights
 
 end # module NumericalDiffusion

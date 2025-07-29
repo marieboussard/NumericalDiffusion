@@ -1,5 +1,8 @@
-using LinearAlgebra
+"""
+     newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0::AbstractVector; maxiter::Int=1000, c=1)
 
+Solve the linear complementarity problem LCP(`q`,`M`) with a Newton algorithm.
+"""
 function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0::AbstractVector; maxiter::Int=1000, c=1)
 
     println("SOLVING WITH NEWTON LCP...")
