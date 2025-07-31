@@ -272,6 +272,10 @@ module NumericalDiffusion
     export compute_entropic_G
     export UzawaNewtonSolution
 
+    # NUMERICAL ENTROPY FLUXES  
+    export CenteredG
+    export ConvexCombinationG
+
     #Weights
     export AbstractNormWeights
 

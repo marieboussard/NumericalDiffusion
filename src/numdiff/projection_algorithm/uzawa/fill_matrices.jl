@@ -112,7 +112,7 @@ Assemble matrices of the quadratic programming problem associated to the quantif
 - `init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)`
 
 """
-function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)
+function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG())
     @unpack uinit = estimate
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -120,7 +120,7 @@ function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, 
     b = zeros(eltype(uinit), 2*Nx)
     W = zeros(eltype(uinit), Nx, Nx)
 
-    Gflux!(CenteredG(), Gc, estimate)
+    Gflux!(ent_numflux, Gc, estimate)
     fill_A!(bound_mode, A, estimate)
     fill_b!(bound_mode, b, estimate)
     fill_W!(weights_type, W, estimate)
@@ -128,7 +128,7 @@ function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, 
     Gc, A, b, W
 end
 
-function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)
+function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG())
     @unpack uinit = estimate 
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -136,7 +136,7 @@ function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, 
     b = zeros(eltype(uinit), Nx)
     W = zeros(eltype(uinit), Nx, Nx)
 
-    Gflux!(CenteredG(), Gc, estimate)
+    Gflux!(ent_numflux, Gc, estimate)
     fill_A!(bound_mode, A, estimate)
     fill_b!(bound_mode, b, estimate)
     fill_W!(weights_type, W, estimate)
