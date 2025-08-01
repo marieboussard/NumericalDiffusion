@@ -278,5 +278,6 @@ module NumericalDiffusion
 
     #Weights
     export AbstractNormWeights
+    export AbsWeights
 
 end # module NumericalDiffusion

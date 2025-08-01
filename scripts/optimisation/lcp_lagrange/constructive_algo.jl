@@ -135,29 +135,29 @@ function solve_optimality_system_b_not_in_image(b::AbstractVector, f::AbstractVe
 
 end
 
-# Test data 
+# # Test data 
 
-#b = [1; -1]
-m = 5
-f = (rand(m) .- 1.0) .*2.0
+# #b = [1; -1]
+# m = 5
+# f = (rand(m) .- 1.0) .*2.0
 
-# Matrix A for the upper bound only
-A = zeros(m,m)
-for j in 1:m
-    A[j,j] = 1
-    for i in 1:m
-        if i == j+1
-            A[i,j] = -1
-        end
-    end    
-end
-A[1,m] = -1;
+# # Matrix A for the upper bound only
+# A = zeros(m,m)
+# for j in 1:m
+#     A[j,j] = 1
+#     for i in 1:m
+#         if i == j+1
+#             A[i,j] = -1
+#         end
+#     end    
+# end
+# A[1,m] = -1;
 
-# # Case 1: b is in Im(A)
-# b = rand(m)
-# b = pA(b)
-# gamma, p = solve_optimality_system_b_in_image(b, f, A)
+# # # Case 1: b is in Im(A)
+# # b = rand(m)
+# # b = pA(b)
+# # gamma, p = solve_optimality_system_b_in_image(b, f, A)
 
-# Case 2: b is not in Im(A)
-@show b = rand(m) .+ 1.0
-gamma, p = solve_optimality_system_b_not_in_image(b, f, A);
+# # Case 2: b is not in Im(A)
+# @show b = rand(m) .+ 1.0
+# gamma, p = solve_optimality_system_b_not_in_image(b, f, A);

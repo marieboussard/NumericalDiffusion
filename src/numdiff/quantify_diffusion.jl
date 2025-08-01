@@ -2,6 +2,9 @@
     quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", <keyword arguments>)
 
 Compute an estimation of the numerical diffusion produced by the numerical scheme used to obtain `sol`, using `method`.
+
+# Arguments
+- `i::Integer=0`: the timestep for which the diffusion is to be quantify. If 0, the last timestep is selected.
 """
 function quantify_diffusion(sol::Solution, method::QuantifMethod, i=0; name="", kwargs...)
     estimator = Estimator(sol, method, i)
