@@ -1,0 +1,1 @@
+abs!(u::AbstractArray, res::AbstractArray) = @. res = abs(u)
