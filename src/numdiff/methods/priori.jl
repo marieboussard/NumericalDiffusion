@@ -3,6 +3,9 @@ struct Priori{mdtype_type<:ModifiedDataType, btype_type<:BoundsType} <: QuantifM
     boundstype::btype_type
     Priori(mdtype::ModifiedDataType=MeanMD(), boundstype=DefaultBounds()) = new{typeof(mdtype), typeof(boundstype)}(mdtype, boundstype)
 end
+
+get_name(method::Priori) = "Priori"*" ("*get_name(method.mdtype)*")"
+
 struct PrioriCache{mtype<:AbstractArray} <: MethodCache
     m::mtype
     M::mtype

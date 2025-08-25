@@ -48,10 +48,10 @@ The method used is Uzawa algorithm for the projection, and a Newton step can be 
 
 By default, the scheme is Euler + Rusanov, but it can also be specified.
 """
-function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::BoundMode=SingleBound(), weights::AbstractNormWeights=AbsWeights(), maxiter_uzawa::Int=1000, maxiter_newton::Int=1000, time_scheme::TimeScheme=Euler(), space_scheme::SpaceScheme=Rusanov(), use_newton::Bool=true, ent_numflux::AbstractEntNumFlux=CenteredG())
+function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::BoundMode=SingleBound(), weights::AbstractNormWeights=AbsWeights(), maxiter_uzawa::Int=1000, maxiter_newton::Int=1000, time_scheme::TimeScheme=Euler(), space_scheme::SpaceScheme=Rusanov(), use_newton::Bool=true, ent_numflux::AbstractEntNumFlux=CenteredG(), kwargs...)
 
     # Finite volumes resolution
-    sol = solve(equation, params, time_scheme, space_scheme; log_config=LogConfig(true, false, true, false, false));
+    sol = solve(equation, params, time_scheme, space_scheme; log_config=LogConfig(true, false, true, false, false), kwargs...);
 
     # Multidimensional bounds for ΔG
     estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()));

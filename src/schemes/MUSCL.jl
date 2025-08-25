@@ -12,6 +12,8 @@ s2(uL::Real, uC::Real, uR::Real) = minmod(2 * (uR - uC), uC - uL)
 compute_slope(::Minmod, uL::Real, uC::Real, uR::Real) = minmod(uC - uL, uR - uC)
 compute_slope(::Superbee, uL::Real, uC::Real, uR::Real) = maxmod(s1(uL, uC, uR), s2(uL, uC, uR))
 
+get_name(::Minmod) = "minmod"
+get_name(::Superbee) = "superbee"
 
 struct MUSCL{stype<:SpaceScheme, ltype<:Limiter} <: SpaceScheme
     subscheme::stype
@@ -21,7 +23,7 @@ end
 get_sL(::MUSCL) = 2
 get_sR(::MUSCL) = 2
 
-get_name(::MUSCL) = "MUSCL"
+get_name(ms::MUSCL) = "MUSCL"*" ("*get_name(ms.limiter)*")"
 
 
 # CACHE

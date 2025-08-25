@@ -4,6 +4,8 @@ struct Posteriori{mdtype_type<:ModifiedDataType, btype_type<:BoundsType} <: Quan
     Posteriori(mdtype::ModifiedDataType=MeanMD(), boundstype=DefaultBounds()) = new{typeof(mdtype), typeof(boundstype)}(mdtype, boundstype)
 end
 
+get_name(method::Posteriori) = "Posteriori"*" ("*get_name(method.mdtype)*")"
+
 
 # struct Posteriori{qparamType <: PosterioriParams} <: QuantifMethod
 #     qparams::qparamType

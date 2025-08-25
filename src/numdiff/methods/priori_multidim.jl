@@ -4,6 +4,8 @@ struct PrioriMultidim{mdtype_type<:ModifiedDataType, btype_type<:BoundsType} <: 
     PrioriMultidim(mdtype::ModifiedDataType=MeanMD(), boundstype=MultiBounds()) = new{typeof(mdtype), typeof(boundstype)}(mdtype, boundstype)
 end
 
+get_name(method::PrioriMultidim) = "Priori Multidim"*" ("*get_name(method.mdtype)*")"
+
 # CACHE
 
 struct PrioriMultidimCache{ltype<:AbstractArray} <: MethodCache

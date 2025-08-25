@@ -50,6 +50,8 @@ end
 get_sL(::RK2, scheme::SpaceScheme) = 2*get_sL(scheme)
 get_sR(::RK2, scheme::SpaceScheme) = 2*get_sR(scheme)
 
+get_name(::RK2) = "RK2"
+
 # NUMERICAL FLUX COMPUTATION
 
 function global_numflux!(::RK2, space_scheme::SpaceScheme, time_cache::TimeCache, equation::Equation, u::AbstractArray, fnum::AbstractArray, jstart::Int=1, jend::Int=length(u), Nx=length(u), shift::Int=0)

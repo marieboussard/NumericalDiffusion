@@ -8,6 +8,10 @@ struct MaxMD <: SymmetricMD end
 struct MinMD <: SymmetricMD end
 struct AsymmetricMD <: ModifiedDataType end
 
+
+get_name(::SymmetricMD) = "symmetric"
+get_name(::AsymmetricMD) = "asymmetric"
+
 computeK(::MeanMD, u::AbstractVector) = mean(u)
 computeK!(::MeanMD, u::AbstractVector, res::AbstractVector) = res .= mean(u)
 # computeK!(::MeanMD, u::AbstractMatrix, res::AbstractVector) = res .= mean(u, dims=1)'
