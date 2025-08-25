@@ -12,7 +12,9 @@ struct UzawaNewtonSolution{soltype<:Solution, wtype<:AbstractMatrix, atype<:Abst
     W::wtype # Weights matrix
     A::atype # Constraints matrix
     b::ptype # Constraint vector 
-    Gc::gtype
+    Gc::gtype # Consistent flux 
+    Dc::gtype # Diffusion associated to consistent flux 
+
     #> Primal variables
     G_uz::gtype
     D_uz::gtype
@@ -69,6 +71,10 @@ function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::
     @unpack etacont_init, etacont = estimate
     diffusion!(Posteriori(), Gopt, etacont_init, etacont, estimate.dt, params.mesh, Dopt)
 
+    # Diffusion associated with consistent flux 
+    Dc = zero(L)
+    diffusion!(Posteriori(), Gc, etacont_init, etacont, estimate.dt, params.mesh, Dc)
+
     if use_newton
 
         # Now, solve the dual LCP
@@ -84,10 +90,10 @@ function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::
         Dopt_newt = zero(L)
         diffusion!(Posteriori(), Gopt_newt, etacont_init, etacont, estimate.dt, params.mesh, Dopt_newt)
 
-        return UzawaNewtonSolution(sol, W, A, b, Gc, Gopt, Dopt, Gopt_newt, Dopt_newt, M, q, optsol.popt, w0, pend, wend, bound_mode, weights, optsol.niter, niter)
+        return UzawaNewtonSolution(sol, W, A, b, Gc, Dc, Gopt, Dopt, Gopt_newt, Dopt_newt, M, q, optsol.popt, w0, pend, wend, bound_mode, weights, optsol.niter, niter)
 
     end
     
-    UzawaNewtonSolution(sol, W, A, b, Gc, Gopt, Dopt, Gopt, Dopt, zero(A'), zero(optsol.popt), optsol.popt, zero(optsol.popt), optsol.popt, zero(optsol.popt), bound_mode, weights, optsol.niter, 0)
+    UzawaNewtonSolution(sol, W, A, b, Gc, Dc, Gopt, Dopt, Gopt, Dopt, zero(A'), zero(optsol.popt), optsol.popt, zero(optsol.popt), optsol.popt, zero(optsol.popt), bound_mode, weights, optsol.niter, 0)
 
 end
