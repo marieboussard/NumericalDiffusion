@@ -274,6 +274,7 @@ export compute_entropic_G
 export UzawaNewtonSolution
 
 # NUMERICAL ENTROPY FLUXES  
+export AbstractEntNumFlux
 export CenteredG
 export ConvexCombinationG
 
