@@ -49,7 +49,7 @@ function compute_beta_slope(Nxvec::Vector{Int}, equation::Equation; xmin::Real=-
             @show newton_residual
 
             for i in 1:Nx
-                H += W[i, i] * (G_newt[i] - Gc[i])
+                H += W[i, i] * (G_newt[i] - Gc[i])^2
             end
         end
 
@@ -94,10 +94,10 @@ function add_slope!(ax::Axis, ax2::Axis, time_scheme_vec::AbstractVector, space_
 
 end
 
-Nxlog = LinRange(1, 2, 5)
+Nxlog = LinRange(1, 3, 5)
 Nxvec = Int.(floor.(10 .^ (Nxlog)))
 xmin, xmax = -2, 2
-t0, tf = 0.0, 0.4
+t0, tf = 0.0, 0.05
 equation = BurgersArticle
 weights = AbsWeights(1.5)
 
