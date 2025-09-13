@@ -29,7 +29,8 @@ function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0
 
         # Solving a system for the remaining indices
         Mat = [M[:, In] -Id[:, Ac]]
-        X = inv(Mat) * q
+        #X = inv(Mat) * q
+        X = pinv(Mat) * q
 
         z[In] .= X[1:sum(In)]
         w[Ac] .= X[sum(In) + 1 : end]

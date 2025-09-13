@@ -16,6 +16,9 @@ abstract type BoundMode end
 struct SingleBound <: BoundMode end
 struct DoubleBound <: BoundMode end
 
+get_name(::SingleBound) = "Single bound"
+get_name(::DoubleBound) = "Double bound"
+
 function fill_A!(::DoubleBound, A::AbstractMatrix, estimate::DiffEstimate)
     @unpack dt, uinit = estimate
     @unpack Nx, dx = estimate.params.mesh
@@ -55,49 +58,49 @@ function fill_b!(::SingleBound, b::AbstractVector, estimate::DiffEstimate)
     b .= L
 end
 
-function fill_W!(aw::AbsWeights, W::AbstractMatrix, params::Parameters, uinit::AbstractVector, beta::Real=1e-10)
+function fill_W!(aw::AbsWeights, W::AbstractMatrix, params::Parameters, uinit::AbstractVector, treshold::Real=1e-10)
     @unpack alpha = aw
     @unpack Nx, dx = params.mesh
     for j in 1:Nx
         c = abs(uinit[j] - uinit[mod1(j+1,Nx)])^alpha
-        if c < beta
-            W[j,j] = one(typeof(c))/beta
+        if c < treshold
+            W[j,j] = one(typeof(c))/treshold
         else
             W[j,j] = 1.0/c
         end
     end
 end
 
-fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10) = fill_W!(aw, W, estimate.params, estimate.uinit, beta)
+fill_W!(aw::AbsWeights, W::AbstractMatrix, estimate::DiffEstimate, treshold::Real=1e-10) = fill_W!(aw, W, estimate.params, estimate.uinit, treshold)
 
 
-function fill_W!(aw::AlphaWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10)
+function fill_W!(aw::AlphaWeights, W::AbstractMatrix, estimate::DiffEstimate, treshold::Real=1e-10)
     @unpack alpha = aw
     @unpack l, L = estimate
     @unpack Nx, dx = estimate.params.mesh
     @unpack uinit = estimate
     for j in 1:Nx
         c = min(abs(L[j]-l[j])/dx, abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)])/dx)^alpha
-        if c < beta
-            W[j,j] = one(typeof(c))/beta
+        if c < treshold
+            W[j,j] = one(typeof(c))/treshold
         else
             W[j,j] = 1.0/c
         end
     end
 end
 
-function fill_W!(aw::MinimizedAlphaWeights, W::AbstractMatrix, estimate::DiffEstimate, beta::Real=1e-10, betamax::Real = 5)
+function fill_W!(aw::MinimizedAlphaWeights, W::AbstractMatrix, estimate::DiffEstimate, treshold::Real=1e-10, treshmax::Real = 5)
     @unpack alpha = aw
     @unpack l, L = estimate
     @unpack Nx, dx = estimate.params.mesh
     @unpack uinit = estimate
     for j in 1:Nx
         c = min(abs(L[j]-l[j])/dx, abs(L[mod1(j+1,Nx)] - l[mod1(j+1,Nx)])/dx)^alpha
-        if c < beta
-            W[j,j] = one(typeof(c))/beta
-        elseif c > betamax
+        if c < treshold
+            W[j,j] = one(typeof(c))/treshold
+        elseif c > treshmax
             println("max treshold reached")
-            W[j,j] = one(typeof(c))/betamax
+            W[j,j] = one(typeof(c))/treshmax
         else
             W[j,j] = 1.0/c
         end
@@ -112,7 +115,7 @@ Assemble matrices of the quadratic programming problem associated to the quantif
 - `init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights)`
 
 """
-function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG())
+function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG(), kwargs...)
     @unpack uinit = estimate
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -123,12 +126,12 @@ function init_optim_components(bound_mode::DoubleBound, estimate::DiffEstimate, 
     Gflux!(ent_numflux, Gc, estimate)
     fill_A!(bound_mode, A, estimate)
     fill_b!(bound_mode, b, estimate)
-    fill_W!(weights_type, W, estimate)
+    fill_W!(weights_type, W, estimate; kwargs...)
 
     Gc, A, b, W
 end
 
-function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG())
+function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, weights_type::AbstractNormWeights; ent_numflux=CenteredG(), kwargs...)
     @unpack uinit = estimate 
     @unpack Nx = estimate.params.mesh
     Gc = zeros(eltype(uinit), Nx)
@@ -139,7 +142,7 @@ function init_optim_components(bound_mode::SingleBound, estimate::DiffEstimate, 
     Gflux!(ent_numflux, Gc, estimate)
     fill_A!(bound_mode, A, estimate)
     fill_b!(bound_mode, b, estimate)
-    fill_W!(weights_type, W, estimate)
+    fill_W!(weights_type, W, estimate; kwargs...)
     
     Gc, A, b, W
 end

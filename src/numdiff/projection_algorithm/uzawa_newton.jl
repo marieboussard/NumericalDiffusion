@@ -65,7 +65,7 @@ function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::
 
         optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=maxiter_uzawa, eps=1e-12)
 
-        @show optsol.constraint_residual
+        #@show optsol.constraint_residual
 
         # Associated flux and diffusion
         Gopt = optsol.gamma_opt

@@ -45,7 +45,7 @@ function solve_poisson!(u::AbstractVector, x::AbstractVector, dx::Real; F::Abstr
 end
 
 
-function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::OneDMesh, q::AbstractVector; dt::Real=1)
+function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::OneDMesh, q::AbstractVector, M::AbstractMatrix; dt::Real=1)
 
     @unpack x = mesh
 
@@ -71,8 +71,15 @@ function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::O
 
     for k in eachindex(start_vec)
         #x0, xend = x[mod1(start_vec[k] - 1, N)], x[mod1(end_vec[k] + 1, N)]
-        F = -1 / dt^2 * view(q, start_vec[k]:end_vec[k])
-        solve_poisson!(view(z, start_vec[k]:end_vec[k]), view(x, start_vec[k]:end_vec[k]), mesh.dx; F=F)#; x0=x0, xend=xend)
+        #F = -1 / dt^2 * view(q, start_vec[k]:end_vec[k])
+        F = -view(q, start_vec[k]:end_vec[k])
+        #solve_poisson!(view(z, start_vec[k]:end_vec[k]), view(x, start_vec[k]:end_vec[k]), mesh.dx; F=F)#; x0=x0, xend=xend)
+
+        zshort = view(z, start_vec[k]:end_vec[k])
+        Mshort = view(M, start_vec[k]:end_vec[k], start_vec[k]:end_vec[k])
+
+        mul!(zshort, inv(Mshort), F)
+
     end
 
 end
@@ -91,7 +98,7 @@ space_scheme = Rusanov()
 
 bound_mode = SingleBound()
 
-weights = AbsWeights(0)
+weights = AbsWeights(1)
 
 
 # Finite volumes resolution
@@ -106,12 +113,15 @@ Gc, A, b, W = init_optim_components(bound_mode, estimate, weights)
 q = b - A * Gc
 w0 = zero(b)
 z0 = zero(b)
+M = A * inv(W) * A'
 
-
-@time create_initial_condition!(z0, w0, mesh, q; dt=estimate.dt)
+println()
+println("COMPUTING INITIAL CONDITION")
+@time create_initial_condition!(z0, w0, mesh, q, M; dt=estimate.dt)
 
 # Run newton with it 
-M = A * inv(W) * A'
+println()
+println("NEWTON SOL FROM INITIAL CONDITION")
 @time pend, wend, niter = newton_lcp(M, -q, z0, w0; maxiter=1000)
 # We get the flux back 
 Gend = Gc - inv(W) * A' * pend
@@ -122,6 +132,8 @@ Dend = zero(L)
 diffusion!(Posteriori(), Gend, etacont_init, etacont, estimate.dt, params.mesh, Dend)
 
 # Compare to the final result
+println()
+println("REFERENCE UZAWA + NEWTON")
 @time refsol = compute_entropic_G(params, equation; bound_mode=bound_mode, weights=weights)
 zref = refsol.p_newt
 wref = refsol.b - refsol.A * refsol.G_newt
@@ -139,7 +151,7 @@ lines!(ax, mesh.x, zref, color=:navy, label="zref")
 scatter!(ax, mesh.x, zref, color=:navy)
 #lines!(ax, mesh.x, pend, color=:green, label="zend")
 scatter!(ax, mesh.x, pend, color=:green, label="zend")
-axislegend(position=:ct)
+axislegend(ax, position=:lt)
 
 ax2 = Axis(fig[2, 1], title="w", xlabel="x")
 lines!(ax2, mesh.x, w0, color=:tomato, label="w0")
@@ -148,7 +160,7 @@ lines!(ax2, mesh.x, wref, color=:navy, label="wref")
 scatter!(ax2, mesh.x, wref, color=:navy)
 #lines!(ax2, mesh.x, wend, color=:green, label="wend")
 scatter!(ax2, mesh.x, wend, color=:green, label="wend")
-axislegend(position=:cb)
+axislegend(ax2, position=:lt)
 
 fig
 
