@@ -70,11 +70,11 @@ function J(y::Real, fvec::AbstractVector, xvec::AbstractVector; plot=false)
         ax = Axis(temp_fig[1,1], xlabel="x", ylabel="z(x)", title="beta = "*string(y))
         lines!(ax, xvec_thin, zvec)
 
-        return temp_fig, sol.u
+        return temp_fig, sol.u, alpha, beta
 
     else
 
-        return sol.u 
+        return sol.u, alpha, beta
 
     end
 
@@ -82,25 +82,60 @@ end
 
 
 N = 5
-fvec = (2*rand(N) .- 1)*5
+fvec = (2*rand(N) .- 1)*10
+@show sum(fvec)
+#fvec = [-1.0]
 xvec = LinRange(0, 1, N+1)
 
 yvec = LinRange(-1.0, 1, 20)
-# Jvec = zeros(N)
-# figvec = Figure[]
-# for k in 1:N 
-#     t_fig, Jvec[k] = J(yvec[k], fvec, xvec; plot=true)
-#     push!(figvec, t_fig)
-# end
+Jvec = zero(yvec)
+figvec = Figure[]
+for k in eachindex(yvec)
+    t_fig, Jvec[k], alpha, beta = J(yvec[k], fvec, xvec; plot=true)
+    push!(figvec, t_fig)
+end
 
-Jvec = [J(y, fvec, xvec) for y in yvec]
+#Jvec = [J(y, fvec, xvec)[1] for y in yvec]
 
-fig = Figure()
+# Treshold 
+x_thin = LinRange(0, 1, 1000)
+Jbar, alphabar, betabar = J(0.0, fvec, x_thin)
+beta_t = -Inf
+for j in eachindex(x_thin)
+    if f(x_thin[j], fvec, xvec) >= 0
+        test = -z0(x_thin[j], fvec, xvec, alphabar, betabar)
+        if test > beta_t
+            global beta_t = test
+        end
+    end
+end
 
-ax = Axis(fig[1,1], xlabel="beta", ylabel="J(beta)")
-lines!(ax, yvec, Jvec)
-scatter!(ax, yvec, Jvec)
-fig
+@show beta_t
+
+z0bar_vec = [z0(xi, fvec, xvec, alphabar, betabar) for xi in x_thin]
+fvec_thin = [f(xi, fvec, xvec) for xi in x_thin]
+fpos = fvec_thin .>= 0
+
+fig = Figure(size=(800,1000))
+ax = Axis(fig[1,1], xlabel="x", title="f(x)")
+lines!(ax, x_thin, fvec_thin)
+scatter!(ax, x_thin[fpos], fvec_thin[fpos], color=:tomato)
+
+axb = Axis(fig[2,1], xlabel="x", title="z0(x,beta=0)")
+lines!(axb, x_thin, z0bar_vec)
+scatter!(axb, x_thin[fpos], z0bar_vec[fpos], color=:tomato)
+lines!(axb, [0.0, 1.0], [-beta_t, -beta_t], color=:green)
+
+
+
+
+fig2 = Figure()
+
+ax2 = Axis(fig2[1,1], xlabel="beta", ylabel="J(beta)")
+lines!(ax2, yvec, Jvec)
+scatter!(ax2, yvec, Jvec)
+lines!(ax2, [beta_t, beta_t], [minimum(Jvec), maximum(Jvec)])
+fig2
 
 
 
