@@ -3,6 +3,7 @@ struct OptimizerOptions
     eps::Float64
     eps_cons::Float64
     start_with_gamma::Bool
+    printing::Bool
 end
 
 mutable struct OptimizerCache{wtype<:AbstractMatrix, ptype<:AbstractVector, gtype<:AbstractVector}
@@ -43,7 +44,7 @@ mutable struct Optimizer{wtype<:AbstractMatrix, atype<:AbstractMatrix, ptype<:Ab
     mu::Float64
     cache::cachetype
 
-    function Optimizer(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), gamma0=zero(Gc)::AbstractVector, W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=100, eps::Float64=1e-5, eps_cons::Float64=1e-5, start_with_gamma::Bool=false)
+    function Optimizer(Gc::AbstractVector, A::AbstractMatrix, b::AbstractVector; p0::AbstractVector=zero(b), gamma0=zero(Gc)::AbstractVector, W::AbstractMatrix=Matrix{eltype(Gc)}(I,length(Gc),length(Gc)), maxiter::Int=100, eps::Float64=1e-5, eps_cons::Float64=1e-5, start_with_gamma::Bool=false, printing::Bool=false)
 
         # Variables
         gammaprev = zero(Gc)
@@ -54,7 +55,7 @@ mutable struct Optimizer{wtype<:AbstractMatrix, atype<:AbstractMatrix, ptype<:Ab
         niter = 0
         iterate_gap = Inf
         constraint_residual = Inf
-        opts = OptimizerOptions(maxiter, eps, eps_cons, start_with_gamma)
+        opts = OptimizerOptions(maxiter, eps, eps_cons, start_with_gamma, printing)
         mu = zero(Float64)
         cache = OptimizerCache(W, p0, Gc)
 

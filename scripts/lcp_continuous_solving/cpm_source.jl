@@ -42,19 +42,43 @@ zp(x::Real, fvec::AbstractVector, xvec::AbstractVector, alpha::AbstractVector, b
 g(x::Real, fvec::AbstractVector, xvec::AbstractVector, alpha::AbstractVector, beta::AbstractVector) = 0.5 * (zp(x, fvec, xvec, alpha, beta))^2 - f(x, fvec, xvec)*z(x, fvec, xvec, alpha, beta)
 
 
-function J(y::Real, fvec::AbstractVector, xvec::AbstractVector; plot=false)
+function J(y::Real, fvec::AbstractVector, xvec::AbstractVector; plot=false, bcs="periodic")
     N = length(fvec)
 
     # Compute coefficients of z0 on each interval
-    beta = zeros(N)
-    beta[1] = y
-    for k in 2:N
-        beta[k] = beta[k-1] +0.5*xvec[k]^2*(fvec[k-1]-fvec[k])
+    if bcs=="periodic"
+        beta = zeros(N)
+        beta[1] = y
+        for k in 2:N
+            beta[k] = beta[k-1] +0.5*xvec[k]^2*(fvec[k-1]-fvec[k])
+        end
+        alpha = zeros(N)
+        alpha[N] = fvec[N]/2 + beta[1] - beta[N]
+        for k in N-1:-1:1
+            alpha[k] = alpha[k+1] - (fvec[k+1]-fvec[k])*xvec[k+1]
+        end
     end
-    alpha = zeros(N)
-    alpha[N] = fvec[N]/2 + beta[1] - beta[N]
-    for k in N-1:-1:1
-        alpha[k] = alpha[k+1] - (fvec[k+1]-fvec[k])*xvec[k+1]
+
+    if bcs=="dirichlet"
+
+        alpha = zeros(N)
+        beta = zeros(N)
+
+        alpha[1] = 0.5*(fvec[1]*xvec[1]^2-fvec[N]*xvec[N+1]^2)
+        for j in 1:N-1
+            alpha[1] += (fvec[j+1]-fvec[j])*xvec[j+1]*(xvec[N+1]-xvec[j+1])
+        end
+        alpha[1] *= 1.0/(xvec[1]-xvec[N+1])
+
+        for j in 1:N-1
+            alpha[j+1] = alpha[j] + (fvec[j+1]-fvec[j])*xvec[j+1]
+        end
+
+        beta[1] = 0.5*fvec[1]*xvec[1]^2 - alpha[1]*xvec[1]
+        for j in 1:N-1
+            beta[j+1] = beta[j] - 0.5*xvec[j+1]^2*(fvec[j+1]-fvec[j])
+        end
+        
     end
 
     domain = (0.0, 1.0)
@@ -87,30 +111,30 @@ fvec = (2*rand(N) .- 1)*10
 #fvec = [-1.0]
 xvec = LinRange(0, 1, N+1)
 
-yvec = LinRange(-1.0, 1, 20)
-Jvec = zero(yvec)
-figvec = Figure[]
-for k in eachindex(yvec)
-    t_fig, Jvec[k], alpha, beta = J(yvec[k], fvec, xvec; plot=true)
-    push!(figvec, t_fig)
-end
+# yvec = LinRange(-1.0, 1, 20)
+# Jvec = zero(yvec)
+# figvec = Figure[]
+# for k in eachindex(yvec)
+#     t_fig, Jvec[k], alpha, beta = J(yvec[k], fvec, xvec; plot=true)
+#     push!(figvec, t_fig)
+# end
 
 #Jvec = [J(y, fvec, xvec)[1] for y in yvec]
 
-# Treshold 
-x_thin = LinRange(0, 1, 1000)
-Jbar, alphabar, betabar = J(0.0, fvec, x_thin)
-beta_t = -Inf
-for j in eachindex(x_thin)
-    if f(x_thin[j], fvec, xvec) >= 0
-        test = -z0(x_thin[j], fvec, xvec, alphabar, betabar)
-        if test > beta_t
-            global beta_t = test
-        end
-    end
-end
+# # Treshold 
+# x_thin = LinRange(0, 1, 1000)
+# Jbar, alphabar, betabar = J(0.0, fvec, x_thin)
+# beta_t = -Inf
+# for j in eachindex(x_thin)
+#     if f(x_thin[j], fvec, xvec) >= 0
+#         test = -z0(x_thin[j], fvec, xvec, alphabar, betabar)
+#         if test > beta_t
+#             global beta_t = test
+#         end
+#     end
+# end
 
-@show beta_t
+# @show beta_t
 
 z0bar_vec = [z0(xi, fvec, xvec, alphabar, betabar) for xi in x_thin]
 fvec_thin = [f(xi, fvec, xvec) for xi in x_thin]

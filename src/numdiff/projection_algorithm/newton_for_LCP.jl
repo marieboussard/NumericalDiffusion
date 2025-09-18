@@ -3,9 +3,11 @@
 
 Solve the linear complementarity problem LCP(`q`,`M`) with a Newton algorithm.
 """
-function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0::AbstractVector; maxiter::Int=1000, c=1)
+function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0::AbstractVector; maxiter::Int=1000, c=1, printing=false)
 
-    println("SOLVING WITH NEWTON LCP...")
+    if printing
+        println("SOLVING WITH NEWTON LCP...")
+    end
 
     m = size(M)[1]
     Id = Matrix{eltype(M)}(I,m,m)
@@ -52,10 +54,12 @@ function newton_lcp(M::AbstractMatrix, q::AbstractVector, z0::AbstractVector, w0
 
     end
 
-    if niter == maxiter
-        println("Maximal number of iterations reached ("*string(maxiter)*").")
-    else
-        println(string(niter)*" iterations.")
+    if printing
+        if niter == maxiter
+            println("Maximal number of iterations reached ("*string(maxiter)*").")
+        else
+            println(string(niter)*" iterations.")
+        end
     end
 
     z, w, niter

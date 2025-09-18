@@ -44,10 +44,37 @@ function solve_poisson!(u::AbstractVector, x::AbstractVector, dx::Real; F::Abstr
 
 end
 
+function solve_poisson_dirichlet_exact!(u::AbstractVector, fvec::AbstractVector, xvec::AbstractVector)
+    N = length(fvec)
 
-function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::OneDMesh, q::AbstractVector, M::AbstractMatrix; dt::Real=1)
+    # Compute coefficients of the piecewise quadratic solution
+    alpha = zeros(N)
+    beta = zeros(N)
+    alpha[1] = 0.5*(fvec[1]*xvec[1]^2-fvec[N]*xvec[N+1]^2)
+    for j in 1:N-1
+        alpha[1] += (fvec[j+1]-fvec[j])*xvec[j+1]*(xvec[N+1]-0.5*xvec[j+1])
+    end
+    alpha[1] *= 1.0/(xvec[1]-xvec[N+1])
+    for j in 1:N-1
+        alpha[j+1] = alpha[j] + (fvec[j+1]-fvec[j])*xvec[j+1]
+    end
+    beta[1] = 0.5*fvec[1]*xvec[1]^2 - alpha[1]*xvec[1]
+    for j in 1:N-1
+        beta[j+1] = beta[j] - 0.5*xvec[j+1]^2*(fvec[j+1]-fvec[j])
+    end
 
-    @unpack x = mesh
+    # Fill uj ≈ u(xj)
+    for j in 1:N
+        xj = 0.5*(xvec[j]+xvec[j+1])
+        u[j] = -fvec[j]*0.5*xj^2 + alpha[j]*xj + beta[j]
+    end
+
+end
+
+
+function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::OneDMesh, q::AbstractVector, M::AbstractMatrix; dt::Real=1, CFL_factor::Real=0.5)
+
+    @unpack interfaces = mesh
 
     N = length(q)
     qpos = q .>= 0
@@ -72,20 +99,26 @@ function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::O
     for k in eachindex(start_vec)
         #x0, xend = x[mod1(start_vec[k] - 1, N)], x[mod1(end_vec[k] + 1, N)]
         #F = -1 / dt^2 * view(q, start_vec[k]:end_vec[k])
-        F = -view(q, start_vec[k]:end_vec[k])
+        F = -view(q, start_vec[k]:end_vec[k])/dt^2
         #solve_poisson!(view(z, start_vec[k]:end_vec[k]), view(x, start_vec[k]:end_vec[k]), mesh.dx; F=F)#; x0=x0, xend=xend)
 
-        zshort = view(z, start_vec[k]:end_vec[k])
-        Mshort = view(M, start_vec[k]:end_vec[k], start_vec[k]:end_vec[k])
+        @show F
 
-        mul!(zshort, inv(Mshort), F)
+        xshort = view(interfaces, start_vec[k]:end_vec[k]+1)
+        zshort = view(z, start_vec[k]:end_vec[k])
+
+        solve_poisson_dirichlet_exact!(zshort, F, xshort)
+
+        #Mshort = view(M, start_vec[k]:end_vec[k], start_vec[k]:end_vec[k])
+
+        #mul!(zshort, inv(Mshort), F)
 
     end
 
 end
 
 
-Nx = 100
+Nx = 1000
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -117,7 +150,7 @@ M = A * inv(W) * A'
 
 println()
 println("COMPUTING INITIAL CONDITION")
-@time create_initial_condition!(z0, w0, mesh, q, M; dt=estimate.dt)
+@time create_initial_condition!(z0, w0, mesh, q, M; dt=estimate.dt, CFL_factor=params.CFL_factor)
 
 # Run newton with it 
 println()

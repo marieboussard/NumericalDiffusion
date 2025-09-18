@@ -95,8 +95,6 @@ function loopfooter!(integrator::Integrator)
     update_log!(integrator)
     flux!(equation.dim, equation.funcs, integrator)
     update_cflcache!(equation.dim, equation.eqtype, equation.funcs, integrator)
-
-    @show u.^2
     
     nothing
 end

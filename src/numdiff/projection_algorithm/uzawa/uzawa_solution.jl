@@ -23,15 +23,23 @@ struct UzawaSol{wtype<:AbstractMatrix, atype<:AbstractMatrix, gtype<:AbstractVec
         # constraint_residual = norm(max.(0.0,cache.Agamma .- b))
         if optimizer.iterate_gap <= optimizer.opts.eps && optimizer.constraint_residual <= optimizer.opts.eps_cons
             status = "SUCCESS"
-            println("Convergence criteria reached! (eps<"*string(optimizer.opts.eps)*" and eps_cons<"*string(optimizer.opts.eps_cons)*") with "*string(optimizer.niter)*" iterations")
+            if optimizer.opts.printing
+                println("Convergence criteria reached! (eps<"*string(optimizer.opts.eps)*" and eps_cons<"*string(optimizer.opts.eps_cons)*") with "*string(optimizer.niter)*" iterations")
+            end
         elseif optimizer.niter == optimizer.opts.maxiter 
             status = "MAXITER"
-            println("Stopped because maximum number of iterations was reached ("*string(optimizer.opts.maxiter)*")")
+            if optimizer.opts.printing
+                println("Stopped because maximum number of iterations was reached ("*string(optimizer.opts.maxiter)*")")
+            end
         else
             status = "FAILED"
-            println("Stopped for unknow reason")
+            if optimizer.opts.printing
+                println("Stopped for unknow reason")
+            end
         end
-        println("Constraint residual: "*string(optimizer.constraint_residual))
+        if optimizer.opts.printing
+            println("Constraint residual: "*string(optimizer.constraint_residual))
+        end
         new{typeof(optimizer.W), typeof(optimizer.A), typeof(optimizer.gamma), typeof(optimizer.p0)}(optimizer.W, optimizer.A, optimizer.b, optimizer.Gc, status, optimizer.gamma, optimizer.p0, optimizer.p, optimizer.mu, optimizer.niter, Jopt, optimizer.constraint_residual, Gcgap)
     end
 end
