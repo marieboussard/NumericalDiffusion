@@ -85,6 +85,7 @@ function dt_CFL!(::OneD, integrator::Integrator)
     @unpack mesh, tf, CFL_factor = params
     @unpack cfl_cache = cache
     CFL_cond!(integrator.equation.eqtype, integrator)
-    integrator.dt = min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
+    integrator.dt = CFL_factor * mesh.dx / cfl_cache.cfl
+    #integrator.dt = min(CFL_factor * mesh.dx / cfl_cache.cfl, tf - t)
 end
 

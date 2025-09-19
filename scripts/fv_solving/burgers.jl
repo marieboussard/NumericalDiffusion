@@ -27,7 +27,7 @@ using Plots
 plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
 display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.t)))
 
-@btime solve(equation, params, timescheme, Rusanov());
+#solve(equation, params, timescheme, Rusanov());
 
 
 # integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig);
