@@ -111,30 +111,30 @@ fvec = (2*rand(N) .- 1)*10
 #fvec = [-1.0]
 xvec = LinRange(0, 1, N+1)
 
-# yvec = LinRange(-1.0, 1, 20)
-# Jvec = zero(yvec)
-# figvec = Figure[]
-# for k in eachindex(yvec)
-#     t_fig, Jvec[k], alpha, beta = J(yvec[k], fvec, xvec; plot=true)
-#     push!(figvec, t_fig)
-# end
+yvec = LinRange(-1.0, 1, 20)
+Jvec = zero(yvec)
+figvec = Figure[]
+for k in eachindex(yvec)
+    t_fig, Jvec[k], alpha, beta = J(yvec[k], fvec, xvec; plot=true)
+    push!(figvec, t_fig)
+end
 
-#Jvec = [J(y, fvec, xvec)[1] for y in yvec]
+Jvec = [J(y, fvec, xvec)[1] for y in yvec]
 
-# # Treshold 
-# x_thin = LinRange(0, 1, 1000)
-# Jbar, alphabar, betabar = J(0.0, fvec, x_thin)
-# beta_t = -Inf
-# for j in eachindex(x_thin)
-#     if f(x_thin[j], fvec, xvec) >= 0
-#         test = -z0(x_thin[j], fvec, xvec, alphabar, betabar)
-#         if test > beta_t
-#             global beta_t = test
-#         end
-#     end
-# end
+# Treshold 
+x_thin = LinRange(0, 1, 1000)
+Jbar, alphabar, betabar = J(0.0, fvec, x_thin)
+beta_t = -Inf
+for j in eachindex(x_thin)
+    if f(x_thin[j], fvec, xvec) >= 0
+        test = -z0(x_thin[j], fvec, xvec, alphabar, betabar)
+        if test > beta_t
+            global beta_t = test
+        end
+    end
+end
 
-# @show beta_t
+@show beta_t
 
 z0bar_vec = [z0(xi, fvec, xvec, alphabar, betabar) for xi in x_thin]
 fvec_thin = [f(xi, fvec, xvec) for xi in x_thin]

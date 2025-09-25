@@ -2,10 +2,14 @@
 output of function `compute_entropic_G`
 See also [`compute_entropic_G`](@ref).
 "
-struct UzawaNewtonSolution{soltype<:Solution,wtype<:AbstractMatrix,atype<:AbstractMatrix,gtype<:AbstractVector,Mtype<:AbstractMatrix,ptype<:AbstractVector,bound_mode_type<:BoundMode,weights_type<:AbstractNormWeights}
+struct UzawaNewtonSolution{soltype<:Solution,ltype<:AbstractArray, wtype<:AbstractMatrix,atype<:AbstractMatrix,gtype<:AbstractVector,Mtype<:AbstractMatrix,ptype<:AbstractVector,bound_mode_type<:BoundMode,weights_type<:AbstractNormWeights}
 
     # Data info
     sol::soltype
+
+    # Estimate info 
+    L::ltype
+    l::ltype
 
     # Primal formulation
     #> QP components
@@ -94,10 +98,10 @@ function compute_entropic_G(params::Parameters, equation::Equation; bound_mode::
         Dopt_newt = zero(L)
         diffusion!(Posteriori(), Gopt_newt, etacont_init, etacont, estimate.dt, params.mesh, Dopt_newt)
 
-        return UzawaNewtonSolution(sol, W, A, b, Gc, Dc, Gopt, Dopt, Gopt_newt, Dopt_newt, M, q, optsol.popt, w0, pend, wend, bound_mode, weights, optsol.niter, niter)
+        return UzawaNewtonSolution(sol, L, l, W, A, b, Gc, Dc, Gopt, Dopt, Gopt_newt, Dopt_newt, M, q, optsol.popt, w0, pend, wend, bound_mode, weights, optsol.niter, niter)
 
     end
 
-    UzawaNewtonSolution(sol, W, A, b, Gc, Dc, Gopt, Dopt, Gopt, Dopt, zero(A'), zero(optsol.popt), optsol.popt, zero(optsol.popt), optsol.popt, zero(optsol.popt), bound_mode, weights, optsol.niter, 0)
+    UzawaNewtonSolution(sol, L, l, W, A, b, Gc, Dc, Gopt, Dopt, Gopt, Dopt, zero(A'), zero(optsol.popt), optsol.popt, zero(optsol.popt), optsol.popt, zero(optsol.popt), bound_mode, weights, optsol.niter, 0)
 
 end

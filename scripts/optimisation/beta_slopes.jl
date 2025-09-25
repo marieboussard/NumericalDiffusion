@@ -24,7 +24,7 @@ function compute_beta_slope(Nxvec::Vector{Int}, equation::Equation; xmin::Real=-
 
         dxvec[k] = mesh.dx
 
-        @show @allocated sol = NumericalDiffusion.solve(equation, params, time_scheme, space_scheme, log_config=LogConfig(true, true, true, false, false))
+        sol = NumericalDiffusion.solve(equation, params, time_scheme, space_scheme, log_config=LogConfig(true, true, true, false, false))
         @unpack niter = sol
 
         nitervec[k] = niter
@@ -34,19 +34,19 @@ function compute_beta_slope(Nxvec::Vector{Int}, equation::Equation; xmin::Real=-
         for n in 1:niter
 
             # Multidimensional bounds for ΔG
-            @show @allocated estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()), n)
+            estimate = quantify_diffusion(sol, PrioriMultidim(AsymmetricMD()), n)
             @unpack uinit, u, l, L = estimate
             Gc, A, b, W = init_optim_components(bound_mode, estimate, weights; ent_numflux=ent_numflux)
 
             # UZAWA
-            @show @allocated optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=maxiter_uzawa, eps=1e-12, printing=printing)
+            optsol = optimize_uzawa(Gc, A, b; W=W, maxiter=maxiter_uzawa, eps=1e-12, printing=printing)
 
             # NEWTON
             # Now, solve the dual LCP
             M = A * inv(W) * A'
             q = b - A * Gc
             w0 = b - A * optsol.gamma_opt
-            @show @allocated pend, wend, niter = newton_lcp(M, -q, optsol.popt, w0; maxiter=maxiter_newton, printing=printing)
+            pend, wend, niter = newton_lcp(M, -q, optsol.popt, w0; maxiter=maxiter_newton, printing=printing)
             # We get the flux back 
             G_newt = Gc - inv(W) * A' * pend
 
@@ -123,7 +123,7 @@ function plot_beta_slopes(Nxvec::AbstractVector, equation, time_scheme_vec::Abst
 
     axes = [ax, ax2, ax3, ax4]
 
-    @time nitermat = add_slope!(axes, time_scheme_vec, space_scheme_vec, Nxvec, equation; xmin=xmin, xmax=xmax, t0=t0, tf=tf, weights=weights, bound_mode=bound_mode, kwargs...)
+    nitermat = add_slope!(axes, time_scheme_vec, space_scheme_vec, Nxvec, equation; xmin=xmin, xmax=xmax, t0=t0, tf=tf, weights=weights, bound_mode=bound_mode, kwargs...)
     axislegend(ax, position=:lb)
     axislegend(ax2, position=:lt)
     axislegend(ax3, position=:rt)

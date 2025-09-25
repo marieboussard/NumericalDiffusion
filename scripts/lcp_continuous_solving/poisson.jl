@@ -2,6 +2,7 @@ using NumericalDiffusion
 using UnPack
 using LinearAlgebra
 
+
 """
     solve_poisson(; x0::Real=0, xend::Real=1; u0::Real=0, uend::Real=0)
 solve Poisson equation with Dirichlet BCs u(`x0`)=`u0` and u(`xend`)=`uend`
@@ -99,7 +100,7 @@ function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::O
     for k in eachindex(start_vec)
         #x0, xend = x[mod1(start_vec[k] - 1, N)], x[mod1(end_vec[k] + 1, N)]
         #F = -1 / dt^2 * view(q, start_vec[k]:end_vec[k])
-        F = -view(q, start_vec[k]:end_vec[k])/dt^2
+        F = -view(q, start_vec[k]:end_vec[k])/(dt^2)
         #solve_poisson!(view(z, start_vec[k]:end_vec[k]), view(x, start_vec[k]:end_vec[k]), mesh.dx; F=F)#; x0=x0, xend=xend)
 
         @show F
@@ -118,7 +119,7 @@ function create_initial_condition!(z::AbstractVector, w::AbstractVector, mesh::O
 end
 
 
-Nx = 1000
+Nx = 100
 xmin, xmax = -2, 2
 t0, tf = 0.0, 0.4
 CFL_factor = 0.5
@@ -175,7 +176,7 @@ wref = refsol.b - refsol.A * refsol.G_newt
 
 using CairoMakie
 
-fig = Figure(resolution=(1000, 1000))
+fig = Figure(size=(1000, 1000))
 ax = Axis(fig[1, 1], title="z", xlabel="x")# =get_name(time_scheme) * " + " * get_name(space_scheme), xlabel="x")
 
 lines!(ax, mesh.x, z0, color=:tomato, label="z0")
@@ -197,23 +198,23 @@ axislegend(ax2, position=:lt)
 
 fig
 
-fig2 = Figure()
-ax = Axis(fig2[1, 1], title="Numerical Diffusion", xlabel="x")
-lines!(ax, mesh.x, Dend, color=:green, label="Dend")
-scatter!(ax, mesh.x, Dend, color=:green)
-lines!(ax, mesh.x, refsol.D_newt, color=:navy, label="Dref")
-scatter!(ax, mesh.x, refsol.D_newt, color=:navy)
-axislegend(position=:lb)
+# fig2 = Figure()
+# ax = Axis(fig2[1, 1], title="Numerical Diffusion", xlabel="x")
+# lines!(ax, mesh.x, Dend, color=:green, label="Dend")
+# scatter!(ax, mesh.x, Dend, color=:green)
+# lines!(ax, mesh.x, refsol.D_newt, color=:navy, label="Dref")
+# scatter!(ax, mesh.x, refsol.D_newt, color=:navy)
+# axislegend(position=:lb)
 
-fig2
+# fig2
 
-fig3 = Figure()
-ax = Axis(fig3[1, 1], title="Numerical entropy flux", xlabel="x")
-lines!(ax, mesh.x, refsol.G_newt, color=:navy, label="Gref")
-scatter!(ax, mesh.x, Gend, color=:green, label="Gend")
-#scatter!(ax, mesh.x, Gend, color=:green)
-#lines!(ax, mesh.x, refsol.G_newt, color=:navy, label="Gref")
+# fig3 = Figure()
+# ax = Axis(fig3[1, 1], title="Numerical entropy flux", xlabel="x")
+# lines!(ax, mesh.x, refsol.G_newt, color=:navy, label="Gref")
+# scatter!(ax, mesh.x, Gend, color=:green, label="Gend")
+# #scatter!(ax, mesh.x, Gend, color=:green)
+# #lines!(ax, mesh.x, refsol.G_newt, color=:navy, label="Gref")
 
-axislegend(position=:lb)
+# axislegend(position=:lb)
 
-fig3
+# fig3
