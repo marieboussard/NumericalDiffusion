@@ -1,9 +1,9 @@
 using NumericalDiffusion
 include("./optimisation/beta_slopes.jl")
 
-Nx = 50
+Nx = 1000
 xmin, xmax = -3.0, 3.0
-t0, tf = 0.0, 0.2
+t0, tf = 0.0, 0.5
 CFL_factor = 0.5
 
 mesh = OneDMesh(Nx, xmin, xmax)
@@ -49,20 +49,31 @@ u0(x::AbstractVector) = u0.(x)
 
 # Exact solution 
 function uexact(x::Real, t::Real)
-    if x <= -t - 3/2
-        return -1
-    elseif x <= t - 1/2
-        return (2*x+2)/(2*t+1)
-    elseif x <= 1
-        return 1
+    if x <= -2-t
+        return x/(t+2)
+    elseif  x <= 0 
+        return -1 
+    elseif x <= 2 + t 
+        return 1 
     else
-        return -1
+        return x/(t+2)
     end
 end
+# function uexact(x::Real, t::Real)
+#     if x <= -t - 3/2
+#         return -1
+#     elseif x <= t - 1/2
+#         return (2*x+2)/(2*t+1)
+#     elseif x <= 1
+#         return 1
+#     else
+#         return -1
+#     end
+# end
 
 equation = Equation(OneD(), 1, Scalar(), Burgers(), u0)
 time_scheme = Euler()
-space_scheme = Roe()
+space_scheme = Rusanov()
 
 
 sol = solve(equation, params, time_scheme, space_scheme; log_config=LogConfig(true, false, true, false, false));
@@ -89,7 +100,7 @@ fig = Figure(size = (800, 1500))
 ax = Axis(fig[1,1], title = get_name(time_scheme)*" + "*get_name(space_scheme), xlabel="x", ylabel="u")
 lines!(ax, mesh.x, sol.uinit, label="uinit", color=:navy)
 lines!(ax, mesh.x, sol.u, label="t = "*string(round(sol.t, digits=2)), color=:tomato)
-#lines!(ax, mesh.x, uevec, label="exact", color=:green)
+lines!(ax, mesh.x, uevec, label="exact", color=:green)
 axislegend(ax, position = :rb)
 
 # ax2 = Axis(fig[2,1], title="Numerical Diffusion")
@@ -110,17 +121,17 @@ axislegend(ax3, position=:rb)
 
 fig
 
-Nxlog = LinRange(1, 2.1, 10)
-#Nxlog = LinRange(1,1.5,4)
-Nxvec = Int.(floor.(10 .^ (Nxlog)))
-alpha = 1
-weights = AbsWeights(alpha)
-bound_mode = SingleBound()
-tf = 0.1
+# Nxlog = LinRange(1, 2.1, 10)
+# #Nxlog = LinRange(1,1.5,4)
+# Nxvec = Int.(floor.(10 .^ (Nxlog)))
+# alpha = 1
+# weights = AbsWeights(alpha)
+# bound_mode = SingleBound()
+# tf = 0.1
 
-time_scheme_vec = [Euler()]
-space_scheme_vec = [Roe()]
+# time_scheme_vec = [Euler()]
+# space_scheme_vec = [Roe()]
 
-fig2 = plot_beta_slopes(Nxvec, equation, time_scheme_vec, space_scheme_vec; tf=tf)
+# fig2 = plot_beta_slopes(Nxvec, equation, time_scheme_vec, space_scheme_vec; tf=tf)
 
-fig2
+# fig2

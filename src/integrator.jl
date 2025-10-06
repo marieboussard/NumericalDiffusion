@@ -103,7 +103,7 @@ end
 initialize_u(::OneD, ::Scalar, ::NoSource, equation::AbstractEquation, params::Parameters, args...) = equation.initcond(params.mesh.x)
 
 function initialize_u(::OneD, ::System,  ::NoSource, equation::AbstractEquation, params::Parameters, args...)
-    uinit = zeros(eltype(x), (params.mesh.Nx, equation.p))
+    uinit = zeros(eltype(params.mesh.x), (params.mesh.Nx, equation.p))
     for j in 1:Nx
         uinit[j,:] .= equation.initcond(params.mesh.x)
     end
