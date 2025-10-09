@@ -18,34 +18,35 @@ params = Parameters(mesh, t0, tf, CFL_factor)
 # equation = Equation(1, Scalar(), EquationFun(f, Df), u0)
 
 equation = BurgersArticle
-# timescheme = Euler()
-timescheme = RK2()
+#time_scheme = Euler()
+time_scheme = RK2()
+#space_scheme = Rusanov()
+space_scheme = MUSCL(Rusanov(), Minmod())
 
-sol = solve(equation, params, timescheme, Rusanov());#; log_config=LogConfig(true, true, true));
-
-using Plots
-plt = plot(sol.params.mesh.x, sol.uinit, label=string(sol.params.t0))
-display(plot!(plt, sol.params.mesh.x, sol.u, label=string(sol.t)))
-
-#solve(equation, params, timescheme, Rusanov());
+sol = solve(equation, params, time_scheme, space_scheme);#; log_config=LogConfig(true, true, true));
 
 
-# integrator = Integrator(equation, params, Euler(), Rusanov(), 100, DefaultLogConfig);
+sol2 = solve(equation, params, time_scheme, MUSCL(Rusanov(), Superbee()))
 
-# #u, fu = FiniteVolumes.view_stencil!(integrator, 3)
+# Exact solution 
+function uexact(x::Real, t::Real)
+    if x <= -2*t
+        return -(x+2)/(1-t)
+    elseif x <= 3*t 
+        return x/t 
+    else
+        return -3*(x-2)/(2-3*t)
+    end
+end
 
+uexact_vec = [uexact(xi, sol.t) for xi in params.mesh.x]
 
-# using FiniteVolumes: view_stencil!
-
-
-# function CFL_localv2!(::Scalar, integrator::Integrator, j::Int)
-#     @unpack cache, space_cache = integrator
-#     @unpack cfl_cache = cache
-#     @unpack absDfcont = cfl_cache
-#     @unpack Nx = integrator.params.mesh
-
-#     space_cache.cfl_loc = absDfcont[j]
-#     space_cache.cfl_loc = max(space_cache.cfl_loc, absDfcont[mod1(j+1,Nx)])
-# end
-
-# @show @allocated CFL_localv2!(integrator.equation.eqtype, integrator,2)
+using CairoMakie 
+fig = Figure()
+ax = Axis(fig[1,1], xlabel="x", ylabel="u", title="MUSCL(Rusanov), Nx="*string(Nx))#title=get_name(space_scheme)*", Nx="*string(Nx))
+lines!(ax, params.mesh.x, sol.uinit, label="t = "*string(round(sol.params.t0, sigdigits=2)))
+lines!(ax, params.mesh.x, sol.u, label="Minmod, t = "*string(round(sol.t, sigdigits=2)))
+lines!(ax, params.mesh.x, sol2.u, label="Superbee, t = "*string(round(sol2.t, sigdigits=2)))
+lines!(ax, params.mesh.x, uexact_vec, label="exact")
+axislegend(ax, position=:lt)
+fig

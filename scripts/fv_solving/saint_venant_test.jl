@@ -26,16 +26,31 @@ Dz(x) = pi*freq*(sin(2*pi*freq * x))*height
 
 # equation = saintvenant_with_topo(z, Dz; sourcedisc=HRDisc())
 equation = saintvenant_with_topo(z, Dz)
-sol = solve(equation, params, Euler(), Rusanov(); maxiter=1);#; log_config=LogConfig(true,true,true,true));
+#sol = solve(equation, params, Euler(), Rusanov());#; log_config=LogConfig(true,true,true,true));
 
-# sol = hrsolve(params, Euler(), Rusanov(), z, Dz)
+sol = hrsolve(params, Euler(), Rusanov(), z, Dz)
 
 znum = z(mesh.x);
 
-using Plots
-plot(mesh.x, znum, label="topo")
-display(plot!(mesh.x, sol.uinit[:,1] .+ znum, label="initial water height"))
-display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
+using CairoMakie 
+fig = Figure(size=(1000,1000))
+ax = Axis(fig[1,1], xlabel="x")
+lines!(ax, mesh.x, znum, label="topo")
+lines!(ax, mesh.x, sol.uinit[:,1] .+ znum, label="initial water height")
+lines!(ax, mesh.x, sol.u[:,1] .+ znum, label="water height")
+axislegend(ax)
+
+ax2 = Axis(fig[2,1], xlabel="x")
+lines!(ax2, mesh.x, sol.uinit[:,2], label="Initial water flow")
+lines!(ax2, mesh.x, sol.u[:,2], label="Water flow")
+axislegend(ax2)
+
+fig
+
+# using Plots
+# plot(mesh.x, znum, label="topo")
+# display(plot!(mesh.x, sol.uinit[:,1] .+ znum, label="initial water height"))
+# display(plot!(mesh.x, sol.u[:,1] .+ znum, label="water height"))
 
 # function flux1!(y::Vector, x::Vector)
 #     x[1] = y[1] + 1.0

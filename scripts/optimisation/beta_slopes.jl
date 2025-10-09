@@ -70,9 +70,10 @@ function compute_beta_slope(Nxvec::Vector{Int}, equation::Equation; xmin::Real=-
 end
 
 
-function add_slope!(axes::AbstractVector, time_scheme_vec::AbstractVector, space_scheme_vec::AbstractVector, Nxvec::Vector{Int}, equation::Equation; kwargs...)
+function add_slope!(axes::AbstractVector, time_scheme_vec::AbstractVector, space_scheme_vec::AbstractVector, Nxvec::Vector{Int}, equation::Equation; colors=[:tomato, :navy], kwargs...)
 
-    ax, ax2, ax3, ax4 = axes
+    #ax, ax2, ax3, ax4 = axes
+    ax, ax4 = axes
 
     N = length(time_scheme_vec)
     nitermat = zeros(N, length(Nxvec))
@@ -96,15 +97,15 @@ function add_slope!(axes::AbstractVector, time_scheme_vec::AbstractVector, space
 
         label = get_name(time_scheme) * " + " * get_name(space_scheme)*", "*get_name(bound_mode)*", alpha="*string(weights.alpha)
 
-        scatter!(ax, log10.(dxvec), log10.(abs.(Hvec)), label=label * ", beta=" * string(-round(coeffs[2], digits=2)))
-        lines!(ax, dx_be, dx_be * coeffs[2] .+ coeffs[1])
+        scatter!(ax, log10.(dxvec), log10.(abs.(Hvec)), label=label * ", beta=" * string(-round(coeffs[2], digits=2)), color=colors[k])
+        lines!(ax, dx_be, dx_be * coeffs[2] .+ coeffs[1], color=colors[k])
 
-        scatter!(ax2, Nxvec, abs.(Hvec), label=label * ", beta=" * string(round(coeffs[2], digits=2)))
+        #scatter!(ax2, Nxvec, abs.(Hvec), label=label * ", beta=" * string(round(coeffs[2], digits=2)))
 
-        barplot!(ax3, log10.(dxvec), nitervec, label=label, width=0.1)
+        #barplot!(ax3, log10.(dxvec), nitervec, label=label, width=0.1)
 
-        scatter!(ax4, log10.(dxvec), maxweightvec, label=label)
-        lines!(ax4, log10.(dxvec), maxweightvec)
+        scatter!(ax4, log10.(dxvec), maxweightvec, label=label, color=colors[k])
+        lines!(ax4, log10.(dxvec), maxweightvec, color=colors[k])
     end
 
     nitermat
@@ -113,42 +114,45 @@ end
 
 function plot_beta_slopes(Nxvec::AbstractVector, equation, time_scheme_vec::AbstractVector, space_scheme_vec::AbstractVector; xmin::Real=-2, xmax::Real=2, t0::Real=0.0, tf::Real=0.03, weights::AbstractNormWeights=AbsWeights(), bound_mode=SingleBound(), kwargs...)
 
-    fig = Figure(size = (800, 1500))
+    #fig = Figure(size = (800, 1500))
+    fig = Figure(size = (700, 900))
     ax = Axis(fig[1, 1], title="Beta slopes", xlabel="log(dx)", ylabel="log|H|")
-    ax3 = Axis(fig[2,1], title="Number of time iterations", xlabel="log(dx)", ylabel="Niter")
-    ax4 = Axis(fig[3,1], title="Maximal inverse weights", xlabel="log(dx)", ylabel="max(1/w)")
+    #ax3 = Axis(fig[2,1], title="Number of time iterations", xlabel="log(dx)", ylabel="Niter")
+    ax4 = Axis(fig[2,1], title="Maximal inverse weights", xlabel="log(dx)", ylabel="max(1/w)")
 
-    fig2 = Figure()
-    ax2 = Axis(fig2[1, 1], title="H", xlabel="Nx", ylabel="H")
+    # fig2 = Figure()
+    # ax2 = Axis(fig2[1, 1], title="H", xlabel="Nx", ylabel="H")
 
-    axes = [ax, ax2, ax3, ax4]
+    #axes = [ax, ax2, ax3, ax4]
+    axes = [ax, ax4]
 
     nitermat = add_slope!(axes, time_scheme_vec, space_scheme_vec, Nxvec, equation; xmin=xmin, xmax=xmax, t0=t0, tf=tf, weights=weights, bound_mode=bound_mode, kwargs...)
     axislegend(ax, position=:lb)
-    axislegend(ax2, position=:lt)
-    axislegend(ax3, position=:rt)
+    #axislegend(ax2, position=:lt)
+    #axislegend(ax3, position=:rt)
     axislegend(ax4, position=:rt)
     fig
 
 end
 
-# Nxlog = LinRange(1, 2, 4)
-# #Nxlog = LinRange(1,1.5,4)
-# Nxvec = Int.(floor.(10 .^ (Nxlog)))
-# xmin, xmax = -2, 2
-# t0, tf = 0.0, 0.03
-# equation = BurgersArticle
-# alpha = 1
-# weights = AbsWeights(alpha)
-# bound_mode = SingleBound()
+Nxlog = LinRange(1, 2.5, 6)
+# Nxlog = LinRange(1,1.5,4)
+Nxvec = Int.(floor.(10 .^ (Nxlog)))
+#Nxvec = [10, 20, 30, 40]
+xmin, xmax = -2, 2
+t0, tf = 0.0, 0.03
+equation = BurgersArticle
+alpha = 1
+weights = AbsWeights(alpha)
+bound_mode = SingleBound()
 
-# # time_scheme_vec = [Euler()]
-# # space_scheme_vec = [Rusanov()]
+# time_scheme_vec = [Euler()]
+# space_scheme_vec = [Rusanov()]
 
-# # time_scheme_vec = [Euler(), Euler()]
-# # space_scheme_vec = [Roe(), Rusanov()]
+# time_scheme_vec = [Euler(), Euler()]
+# space_scheme_vec = [Roe(), Rusanov()]
 
-# time_scheme_vec = [RK2(), RK2()]
-# space_scheme_vec = [MUSCL(Rusanov(), Superbee()), MUSCL(Rusanov(), Minmod())]
+time_scheme_vec = [RK2(), RK2()]
+space_scheme_vec = [MUSCL(Rusanov(), Superbee()), MUSCL(Rusanov(), Minmod())]
 
-# fig = plot_beta_slopes(Nxvec, equation, time_scheme_vec, space_scheme_vec; xmin=xmin, xmax=xmax, t0=t0, tf=tf, weights=weights, bound_mode=bound_mode)
+fig = plot_beta_slopes(Nxvec, equation, time_scheme_vec, space_scheme_vec; xmin=xmin, xmax=xmax, t0=t0, tf=tf, weights=weights, bound_mode=bound_mode)

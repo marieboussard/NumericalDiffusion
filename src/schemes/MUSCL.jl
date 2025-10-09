@@ -45,7 +45,7 @@ mutable struct MUSCLCache{sctype<:SpaceCache, ltype<:Limiter, slptype<:AbstractV
 
 end
 
-function update_cache!(mcache::MUSCLCache, u::AbstractArray, equation::Equation, jstart::Int=1, jend::Int=length(u))
+function update_cache!(mcache::MUSCLCache, u::AbstractArray, ::AbstractEquationFun, jstart::Int=1, jend::Int=length(u))
 
     @unpack limiter, slope = mcache
     Nx = length(u)
@@ -74,7 +74,7 @@ function numflux!(scheme::MUSCL, mcache::MUSCLCache, equation::Equation, u::Abst
 
     # Update low order cache
 
-    update_cache!(subcache, uLR, equation)
+    update_cache!(subcache, uLR, equation.funcs)
 
     # Compute low order flux
 

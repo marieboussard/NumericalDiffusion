@@ -25,21 +25,43 @@ get_sR(::Rusanov) = 1
 get_name(::Rusanov) = "Rusanov"
 
 
-function update_cache!(rcache::RusanovCache, u::AbstractArray, equation::Equation, jstart::Int=1, jend::Int=length(u))
+function update_cache!(rcache::RusanovCache, u::AbstractArray, eqfun::AbstractEquationFun, jstart::Int=1, jend::Int=length(u))
     @unpack fcont, absDfcont = rcache
-    flux!(equation.funcs, view(u, jstart:jend), fcont)
-    Dflux!(equation.funcs, view(u, jstart:jend), absDfcont)
+    flux!(eqfun, view(u, jstart:jend), fcont)
+    Dflux!(eqfun, view(u, jstart:jend), absDfcont)
     abs!(absDfcont, absDfcont)
 end
 
+# const g = 9.8
+# const treshold = 1e-6 # treshold for dealing with dry water states (h=0)
+
+function update_cache!(rcache::RusanovCache, u::AbstractArray, ::SaintVenant, jstart::Int=1, jend::Int=size(u)[1])
+    @unpack absDfcont = rcache 
+    for j in jstart:jend
+        if u[j,1] > treshold
+            absDfcont[j] = abs(u[j,2]/ u[j,1]) + sqrt(g*u[j,1])
+        else
+            absDfcont[j] = 0.0
+        end
+    end
+end
+
+
 # Diffusion coefficient A(uL, uR) (depends on the equation)
-function ARusanov!(::OneD, ::Scalar, ::AbstractEquationFun, rcache::RusanovCache, j::Int, Nx::Int)
+function ARusanov!(::OneD, ::EquationType, ::AbstractEquationFun, rcache::RusanovCache, j::Int, Nx::Int)
     @unpack absDfcont = rcache
     rcache.A = absDfcont[j]
     rcache.A = max(rcache.A, absDfcont[mod1(j+1,Nx)])
 end
 
-function numflux!(::Rusanov, rcache::RusanovCache, equation::Equation, u::AbstractVector, fnum::AbstractVector, ju::Int, Nx=length(u), jf::Int=ju)
+# function ARusanov!(::OneD, ::System, ::SaintVenant, rcache::RusanovCache, j::Int, Nx::Int)
+#     @unpack absDfcont = rcache
+#     rcache.A = absDfcont[j]
+#     rcache.A = max(rcache.A, absDfcont[mod1(j+1,Nx)])
+# end
+
+
+function numflux!(::Rusanov, rcache::RusanovCache, equation::Equation, u::AbstractArray, fnum::AbstractArray, ju::Int, Nx=size(u)[1], jf::Int=ju)
     @unpack fcont = rcache
     ARusanov!(equation.dim, equation.eqtype, equation.funcs, rcache, ju, Nx)
     for r in 1:equation.p

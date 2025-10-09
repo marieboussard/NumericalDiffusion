@@ -18,9 +18,9 @@ get_name(::Euler) = "Euler"
 # numflux!(::Euler, integrator::Integrator, args...) = numflux!(integrator.space_scheme, integrator, args...)
 
 
-function global_numflux!(::Euler, space_scheme::SpaceScheme, time_cache::TimeCache, equation::Equation, u::AbstractArray, fnum::AbstractArray, jstart::Int=1, jend::Int=length(u), Nx=length(u), shift::Int=0)
+function global_numflux!(::Euler, space_scheme::SpaceScheme, time_cache::TimeCache, equation::Equation, u::AbstractArray, fnum::AbstractArray, jstart::Int=1, jend::Int=size(u)[1], Nx=size(u)[1], shift::Int=0)
     # Global computation of necessary quantities
-    update_cache!(time_cache.space_cache, u, equation)#, jstart, jend)
+    update_cache!(time_cache.space_cache, u, equation.funcs)#, jstart, jend)
     # Iterate on each interface to compute the flux
     for j ∈ jstart:jend
         numflux!(space_scheme, time_cache.space_cache, equation, u, fnum, j, Nx, j+shift)
